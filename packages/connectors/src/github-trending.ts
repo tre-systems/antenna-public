@@ -1,6 +1,7 @@
 import type { Adapter, AdapterResult, DataPoint } from './types';
 import { discardResponse } from './discard-response';
 import { githubRateLimitError } from './github-rate-limit';
+import { extractHtmlElements, hasHtmlClass, htmlAttribute, htmlToText } from './html-text';
 
 type TrendingWindow = 'daily' | 'weekly' | 'monthly';
 
@@ -85,11 +86,13 @@ export const githubTrending: Adapter<GithubTrendingConfig> = async (
 };
 
 export const parseGithubTrending = (html: string): GithubTrendingRepo[] => {
-  const articles = html.split(/<article\b[^>]*class="[^"]*\bBox-row\b[^"]*"[^>]*>/i).slice(1);
+  const articles = extractHtmlElements(html, 'article').filter((article) =>
+    hasHtmlClass(article.openingTag, 'Box-row'),
+  );
   const repos: GithubTrendingRepo[] = [];
 
   for (const article of articles) {
-    const repo = parseRepo(article, repos.length + 1);
+    const repo = parseRepo(article.innerHtml, repos.length + 1);
     if (repo) repos.push(repo);
   }
 
@@ -97,30 +100,32 @@ export const parseGithubTrending = (html: string): GithubTrendingRepo[] => {
 };
 
 const parseRepo = (article: string, rank: number): GithubTrendingRepo | undefined => {
-  const href = matchFirst(article, /<h2\b[\s\S]*?<a\b[^>]*href="\/([^"]+\/[^"]+)"[^>]*>/i);
-  if (!href) return undefined;
-  const repo = normaliseText(href);
-  const description = matchFirst(
-    article,
-    /<p\b[^>]*class="[^"]*\bcolor-fg-muted\b[^"]*"[^>]*>([\s\S]*?)<\/p>/i,
-  );
-  const language = matchFirst(article, /itemprop="programmingLanguage"[^>]*>([\s\S]*?)<\/span>/i);
+  const repo = repositoryName(article);
+  if (repo === undefined) return undefined;
+  const description = extractHtmlElements(article, 'p').find((element) =>
+    hasHtmlClass(element.openingTag, 'color-fg-muted'),
+  )?.innerHtml;
+  const language = extractHtmlElements(article, 'span').find(
+    (element) => htmlAttribute(element.openingTag, 'itemprop') === 'programmingLanguage',
+  )?.innerHtml;
+  const text = htmlToText(article);
   const starsToday = parseNumber(
-    matchFirst(article, /([\d,]+)\s+stars?\s+today/i) ??
-      matchFirst(article, /([\d,]+)\s+stars?\s+this\s+week/i) ??
-      matchFirst(article, /([\d,]+)\s+stars?\s+this\s+month/i),
+    matchFirst(text, /([\d,]+)\s+stars?\s+today/i) ??
+      matchFirst(text, /([\d,]+)\s+stars?\s+this\s+week/i) ??
+      matchFirst(text, /([\d,]+)\s+stars?\s+this\s+month/i),
   );
 
-  const stats = [...article.matchAll(/class="[^"]*\bLink--muted\b[^"]*"[^>]*>([\s\S]*?)<\/a>/gi)]
-    .map((match) => normaliseText(match[1] ?? ''))
+  const stats = extractHtmlElements(article, 'a')
+    .filter((element) => hasHtmlClass(element.openingTag, 'Link--muted'))
+    .map((element) => htmlToText(element.innerHtml))
     .map(parseNumber)
     .filter((n): n is number => n !== undefined);
 
   return {
     rank,
     repo,
-    ...(description ? { description: normaliseText(description) } : {}),
-    ...(language ? { language: normaliseText(language) } : {}),
+    ...(description ? { description: htmlToText(description) } : {}),
+    ...(language ? { language: htmlToText(language) } : {}),
     ...(stats[0] !== undefined ? { stars: stats[0] } : {}),
     ...(stats[1] !== undefined ? { forks: stats[1] } : {}),
     ...(starsToday !== undefined ? { starsToday } : {}),
@@ -155,25 +160,25 @@ const normaliseLimit = (value: unknown): number => {
 
 const matchFirst = (input: string, rx: RegExp): string | undefined => rx.exec(input)?.[1];
 
+const repositoryName = (article: string): string | undefined => {
+  const heading = extractHtmlElements(article, 'h2')[0];
+  const anchor = heading ? extractHtmlElements(heading.innerHtml, 'a')[0] : undefined;
+  const href = anchor ? htmlAttribute(anchor.openingTag, 'href') : undefined;
+  if (!href?.startsWith('/')) return undefined;
+
+  const [owner, repo, extra] = href.slice(1).split('/');
+  if (!owner || !repo || extra !== undefined) return undefined;
+  if (!isRepositorySegment(owner) || !isRepositorySegment(repo)) return undefined;
+  return `${owner}/${repo}`;
+};
+
+const isRepositorySegment = (value: string): boolean => /^[A-Za-z0-9_.-]+$/.test(value);
+
 const parseNumber = (raw: string | undefined): number | undefined => {
   if (!raw) return undefined;
   const value = Number(raw.replace(/[^\d.-]/g, ''));
   return Number.isFinite(value) ? value : undefined;
 };
-
-const normaliseText = (html: string): string =>
-  decodeEntities(html.replace(/<[^>]*>/g, ' '))
-    .replace(/\s+/g, ' ')
-    .trim();
-
-const decodeEntities = (value: string): string =>
-  value
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&#x2F;/g, '/');
 
 const githubAuthHeader = (token: string | undefined): Record<string, string> =>
   typeof token === 'string' && token.trim().length > 0 ? { Authorization: `Bearer ${token}` } : {};

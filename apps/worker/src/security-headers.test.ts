@@ -38,7 +38,11 @@ describe('securityHeaders', () => {
       fileURLToPath(String(new URL('../../web/index.html', import.meta.url))),
       'utf8',
     );
-    const script = /<script>([\s\S]*?)<\/script>/.exec(indexHtml)?.[1];
+    const openTag = '<script>';
+    const start = indexHtml.indexOf(openTag);
+    const end = indexHtml.indexOf('</script>', start + openTag.length);
+    const script =
+      start === -1 || end === -1 ? undefined : indexHtml.slice(start + openTag.length, end);
     expect(script).toBeDefined();
     const hash = createHash('sha256')
       .update(script ?? '')

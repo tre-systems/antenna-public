@@ -1,4 +1,5 @@
 import type { Adapter, AdapterResult, DataPoint } from './types';
+import { extractHtmlElements, htmlAttribute, htmlToText } from './html-text';
 
 type BoeUpcomingPublicationsConfig = {
   readonly sourceUrl?: string;
@@ -92,16 +93,14 @@ export const parseBoeUpcomingPublications = (html: string, now: number): BoePubl
   const section = sectionAfterHeading(html, 'Upcoming key publications');
   if (!section) return [];
 
-  const anchors = [...section.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)].flatMap(
-    (match) => {
-      const href = match[1];
-      const label = normaliseText(match[2] ?? '');
-      if (!href || !label) return [];
-      const parsed = parsePublicationLabel(label, now);
-      if (!parsed) return [];
-      return [{ ...parsed, url: resolveUrl(href) }];
-    },
-  );
+  const anchors = extractHtmlElements(section, 'a').flatMap((anchor) => {
+    const href = htmlAttribute(anchor.openingTag, 'href');
+    const label = htmlToText(anchor.innerHtml);
+    if (!href || !label) return [];
+    const parsed = parsePublicationLabel(label, now);
+    if (!parsed) return [];
+    return [{ ...parsed, url: resolveUrl(href) }];
+  });
 
   // The BoE page sometimes lists the same publication twice (once in the
   // headline strip, once inside the section body), which would duplicate
@@ -177,20 +176,6 @@ const resolveUrl = (href: string): string => {
     return DEFAULT_SOURCE;
   }
 };
-
-const normaliseText = (html: string): string =>
-  decodeEntities(html.replace(/<[^>]*>/g, ' '))
-    .replace(/\s+/g, ' ')
-    .trim();
-
-const decodeEntities = (value: string): string =>
-  value
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&#x2F;/g, '/');
 
 const stringValue = (value: unknown): string | undefined =>
   typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
