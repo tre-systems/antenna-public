@@ -1,5 +1,6 @@
 import { fetchJson as fetchJsonShared } from './fetch-json';
 import { discardResponse } from './discard-response';
+import { htmlToText } from './html-text';
 import type { AdapterError, AdapterResult, DataPoint } from './types';
 
 type CommonContext = {
@@ -234,9 +235,4 @@ const parseIsoDate = (value: string | undefined): number | null => {
   return Number.isFinite(ts) ? ts : null;
 };
 
-const cleanHtml = (value: string | undefined): string =>
-  (value ?? '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+const cleanHtml = (value: string | undefined): string => htmlToText(value ?? '');
