@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# Format + lint staged files, then run unit tests.
+npx lint-staged && npm run test:unit

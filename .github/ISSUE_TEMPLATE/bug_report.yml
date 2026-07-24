@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a reproducible Antenna problem
+title: '[Bug] '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not report vulnerabilities or include credentials or personal data.
+        Follow SECURITY.md for private security reports.
+  - type: textarea
+    id: behaviour
+    attributes:
+      label: Observed behaviour
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Provide minimal, sanitised steps.
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Version or commit
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Node, browser, Cloudflare runtime, and relevant configuration without secrets.

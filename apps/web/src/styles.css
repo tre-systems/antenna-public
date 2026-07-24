@@ -1,0 +1,129 @@
+@import 'tailwindcss';
+
+/* Class-based dark mode: toggle `.dark` on the <html> element. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans:
+    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+@layer base {
+  html {
+    min-height: 100%;
+    color-scheme: light dark;
+  }
+  body {
+    @apply min-h-screen text-slate-900 antialiased;
+    min-height: 100dvh;
+    background-color: #f6f7fb;
+    background-image:
+      radial-gradient(60% 55% at 12% -5%, oklch(0.86 0.09 280 / 0.45), transparent 60%),
+      radial-gradient(45% 45% at 95% 8%, oklch(0.9 0.08 200 / 0.4), transparent 60%),
+      radial-gradient(55% 50% at 50% 100%, oklch(0.92 0.06 145 / 0.35), transparent 65%);
+    background-attachment: fixed;
+  }
+  #app {
+    min-height: 100dvh;
+  }
+  .dark body {
+    @apply text-slate-100;
+    background-color: oklch(0.16 0.012 270);
+    background-image: none;
+  }
+  ::selection {
+    background-color: oklch(0.65 0.18 280 / 0.35);
+  }
+}
+
+/* Soft entrance for newly mounted signal cards. Keep opacity fixed so delayed
+   cards do not create transient contrast failures during accessibility scans. */
+@keyframes signal-enter {
+  from {
+    transform: translateY(6px);
+  }
+  to {
+    transform: none;
+  }
+}
+.signal-enter {
+  animation: signal-enter 360ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.signal-grid-cell:has(article[data-expanded='true']) {
+  grid-column: 1 / -1;
+}
+/* Soft cascade when the collection hydrates — first signals appear instantly,
+   later ones trail by ~50ms each so the page feels like it's settling
+   rather than slamming into place. Caps at the 8th card. */
+.signal-enter:nth-child(2) {
+  animation-delay: 50ms;
+}
+.signal-enter:nth-child(3) {
+  animation-delay: 100ms;
+}
+.signal-enter:nth-child(4) {
+  animation-delay: 150ms;
+}
+.signal-enter:nth-child(5) {
+  animation-delay: 200ms;
+}
+.signal-enter:nth-child(6) {
+  animation-delay: 250ms;
+}
+.signal-enter:nth-child(7) {
+  animation-delay: 300ms;
+}
+.signal-enter:nth-child(n + 8) {
+  animation-delay: 350ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .signal-enter,
+  .signal-enter:nth-child(n) {
+    animation: none;
+  }
+  /* Tailwind's looping utilities (pulse on the loading pill / skeleton,
+     ping on the live dot, spin on the busy refresh icon) should all go
+     still for users who've asked for reduced motion. */
+  .animate-pulse,
+  .animate-ping,
+  .animate-spin {
+    animation: none;
+  }
+}
+
+/* Slideshow slide entrance: fade up + soft scale settle.  The Slideshow
+   component remounts the slide on each tick (keyed by signal id) so the
+   keyframes fire fresh per slide. */
+@keyframes slideshow-slide-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.slideshow-slide {
+  animation: slideshow-slide-in 600ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+/* Progress bar shrinks left-to-right over the dwell window.  Driven by a
+   CSS variable the JS sets to the cumulative dwell duration. */
+@keyframes slideshow-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.slideshow-progress {
+  transform-origin: left center;
+  animation: slideshow-progress linear forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .slideshow-slide,
+  .slideshow-progress {
+    animation: none;
+  }
+}

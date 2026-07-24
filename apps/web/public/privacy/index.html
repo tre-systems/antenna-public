@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy — Antenna</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          'Helvetica Neue',
+          Arial,
+          sans-serif;
+        line-height: 1.6;
+        background: #f6f7fb;
+        color: #0f172a;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          background: #15151c;
+          color: #e2e8f0;
+        }
+        a {
+          color: #5eead4;
+        }
+      }
+      body {
+        margin: 0;
+      }
+      .wrap {
+        max-width: 42rem;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 3rem;
+      }
+      header {
+        margin-bottom: 2rem;
+      }
+      header a {
+        color: inherit;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      h1 {
+        font-size: 2rem;
+        margin: 1.5rem 0 1rem;
+      }
+      h2 {
+        font-size: 1.125rem;
+        margin: 2rem 0 0.75rem;
+      }
+      h3 {
+        font-size: 1rem;
+        margin: 1.25rem 0 0.5rem;
+      }
+      p,
+      li {
+        font-size: 0.95rem;
+      }
+      a {
+        color: #0f766e;
+      }
+      footer {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(15, 23, 42, 0.1);
+        font-size: 0.875rem;
+      }
+      footer a {
+        margin-right: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header><a href="/">← Antenna</a></header>
+      <main>
+        <h1>Privacy Policy</h1>
+        <p><strong>Last updated:</strong> 24 July 2026</p>
+        <p>
+          Antenna is self-hosted software. The person or organisation that made this deployment
+          available is its operator and data controller. This notice explains the data an Antenna
+          deployment processes; the operator must supplement it with their identity, contact
+          details, legal bases, processors, retention periods, and jurisdiction-specific rights.
+        </p>
+
+        <h2>Who this applies to</h2>
+        <p>
+          Interactive access is limited to Google accounts on an operator-maintained allowlist. If
+          you are not on the allowlist, you cannot create an account or use authenticated features.
+        </p>
+
+        <h2>Information we collect</h2>
+        <h3>Account and sign-in</h3>
+        <p>
+          When you sign in with Google, we receive basic profile information from Google, including
+          your name, email address, and profile image. We use this to identify your account, enforce
+          the access allowlist, and display your profile in the app.
+        </p>
+        <h3>Collections, signals, and agent access</h3>
+        <p>
+          Antenna stores the collections, signals, configuration, fetched data points, status, and
+          setup requests associated with your account. If you use MCP or other agent integrations,
+          we store OAuth grants and access metadata needed to authenticate those clients on your
+          behalf.
+        </p>
+        <h3>Prompts and product learning</h3>
+        <p>
+          Text you submit when adding signals or planning collections may be stored so Antenna can
+          improve matching and setup flows. Treat prompts as product data, not as a confidential
+          messaging channel.
+        </p>
+        <h3>Technical and security data</h3>
+        <p>
+          We collect standard service logs and error telemetry (for example through Sentry) to keep
+          the service reliable. We also record coarse app-usage events to understand how Antenna is
+          used. Telemetry is filtered to avoid cookies, authorization headers, request bodies, and
+          other sensitive content where possible.
+        </p>
+
+        <h2>How we use information</h2>
+        <ul>
+          <li>Authenticate you and maintain your session</li>
+          <li>Fetch, store, and display the signals in your collections</li>
+          <li>Enforce visibility, source policy, and sharing rules</li>
+          <li>Operate MCP and agent integrations you authorize</li>
+          <li>Monitor reliability, abuse, and security incidents</li>
+          <li>Improve the service</li>
+        </ul>
+        <p>We do not sell your personal information.</p>
+
+        <h2>How we store and protect data</h2>
+        <p>
+          Antenna runs on Cloudflare Workers with D1, R2, and related Cloudflare services. Google
+          provider access, refresh, and ID tokens are discarded before account persistence. MCP
+          OAuth grants remain high-trust service data. Sessions, collections, and signals are
+          private by default. Public or shared views expose only what the Worker source policy
+          allows.
+        </p>
+
+        <h2>Retention</h2>
+        <p>
+          We retain account and collection data while your account remains active and as needed to
+          operate the service. The operator is responsible for publishing concrete retention periods
+          and deletion procedures. You can sign out at any time; contact the operator if you need
+          account deletion.
+        </p>
+
+        <h2>Sharing</h2>
+        <p>
+          We share data only with service providers needed to run Antenna (for example Cloudflare
+          and Google), when you explicitly enable a shared or public collection link, or when
+          required by law. Shared links are bearer capabilities and should be treated like secrets.
+        </p>
+
+        <h2>Your choices</h2>
+        <ul>
+          <li>Sign out of Antenna at any time from the app</li>
+          <li>Revoke Google or MCP access from Antenna settings or your Google account</li>
+          <li>Keep collections private unless you deliberately share them</li>
+          <li>Contact the operator to request access removal or account deletion</li>
+        </ul>
+
+        <h2>Children</h2>
+        <p>Antenna is not directed at children and is not offered to users under 18.</p>
+
+        <h2>Changes</h2>
+        <p>
+          We may update this policy as the product evolves. The “Last updated” date at the top will
+          change when we do.
+        </p>
+
+        <h2>Contact</h2>
+        <p>
+          Use the contact method supplied by the operator of this deployment. The open-source
+          maintainers do not control or have access to independently hosted Antenna instances.
+        </p>
+      </main>
+      <footer>
+        <a href="/privacy/">Privacy Policy</a>
+        <a href="/terms/">Terms of Service</a>
+        <a href="/">Home</a>
+      </footer>
+    </div>
+  </body>
+</html>

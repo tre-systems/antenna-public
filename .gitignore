@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Cloudflare / Wrangler
+.wrangler/
+.dev.vars
+*.dev.vars
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Vite
+.vite/
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+.playwright/
+.playwright-cli/
+blob-report/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Agent state
+.claude/
+.codex/

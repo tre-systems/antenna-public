@@ -1,0 +1,37 @@
+import type { templates } from '@antenna/registry';
+import type { Db, Env as DbEnv } from '../../db/client';
+import type { signalStatus, collections, signals } from '../../db/schema';
+import type { NotifyEnv } from '../notify';
+
+export type DispatchEnv = DbEnv &
+  NotifyEnv & {
+    readonly PAYLOADS: R2Bucket;
+    readonly GOOGLE_CLIENT_ID: string;
+    readonly GOOGLE_CLIENT_SECRET: string;
+    readonly TRADING_ECONOMICS_API_KEY?: string;
+    readonly ARTIFICIAL_ANALYSIS_API_KEY?: string;
+    readonly GITHUB_TOKEN?: string;
+    readonly CF_ANALYTICS_API_TOKEN?: string;
+  };
+
+export type DispatchSummary = {
+  readonly ran: number;
+  readonly ok: number;
+  readonly failed: number;
+};
+
+export type DispatchContext = {
+  readonly runId: string;
+};
+
+export type Client = Db;
+export type SignalRow = typeof signals.$inferSelect;
+export type CollectionRow = typeof collections.$inferSelect;
+export type StatusRow = typeof signalStatus.$inferSelect;
+export type DispatchTemplate = (typeof templates)[number];
+
+export type Joined = {
+  readonly signal: SignalRow;
+  readonly collection: CollectionRow;
+  readonly status: StatusRow | null;
+};

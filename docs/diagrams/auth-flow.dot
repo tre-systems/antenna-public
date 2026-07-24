@@ -1,0 +1,165 @@
+digraph AuthFlow {
+  graph [
+    rankdir=TB,
+    bgcolor="#ffffff",
+    pad="0.55",
+    nodesep="0.48",
+    ranksep="0.78",
+    splines=polyline,
+    outputorder=edgesfirst,
+    compound=true,
+    newrank=true,
+    forcelabels=true,
+    fontname="Avenir",
+    label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
+        <TR><TD><FONT POINT-SIZE="34"><B>Google OAuth via Better Auth</B></FONT></TD></TR>
+      </TABLE>
+    >,
+    labelloc=t,
+    labeljust=c
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    margin="0.21,0.13",
+    width=2.95,
+    height=0.74,
+    fixedsize=false,
+    fontname="Avenir",
+    fontsize=18,
+    penwidth=2.4,
+    fontcolor="#14213d",
+    color="#2264c7",
+    fillcolor="#eaf3ff:#ffffff",
+    gradientangle=270
+  ];
+
+  edge [
+    color="#263a59",
+    fontname="Avenir",
+    fontsize=13,
+    fontcolor="#3d4a5c",
+    penwidth=2.2,
+    arrowsize=0.78
+  ];
+
+  // ---- Browser ----
+  subgraph cluster_browser {
+    graph [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#1f5fbf"><B>BROWSER</B></FONT></TD></TR>
+        </TABLE>
+      >,
+      labelloc=t,
+      labeljust=l,
+      color="#b9d8ff",
+      fillcolor="#f5faff",
+      style="rounded,filled",
+      penwidth=1.8,
+      margin=20
+    ];
+
+    BR1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Sign in with Google</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">user clicks the button</FONT></TD></TR></TABLE>>, fillcolor="#edf7ff:#ffffff", color="#2f80ed"];
+    BR2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Google consent screen</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">openid + email + profile</FONT></TD></TR></TABLE>>, fillcolor="#edf7ff:#ffffff", color="#2f80ed"];
+    BR3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Signed-in collection</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">session cookie set</FONT></TD></TR></TABLE>>, fillcolor="#d8f5de:#effcf2", color="#15803d", penwidth=3.0];
+  }
+
+  // ---- Worker / Better Auth ----
+  subgraph cluster_worker {
+    graph [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#1e6b43"><B>CLOUDFLARE WORKER (BETTER AUTH)</B></FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#4e7a61">/api/auth routes run before static assets; Better Auth validates and persists.</FONT></TD></TR>
+        </TABLE>
+      >,
+      labelloc=t,
+      labeljust=l,
+      color="#b8e5c8",
+      fillcolor="#f4fbf6",
+      style="rounded,filled",
+      penwidth=1.8,
+      margin=22
+    ];
+
+    WK1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>POST /api/auth/sign-in/social</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">D1 state + PKCE; return Google URL</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+    WK2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>GET /api/auth/callback/google</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">verify D1 state; exchange code for tokens</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+    WK3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Decode id_token</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">extract email + name + sub</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+    WK4 [
+      label=<<B>Email whitelisted?</B>>,
+      shape=diamond,
+      style=filled,
+      width=2.9,
+      height=1.05,
+      fillcolor="#ffffff",
+      color="#1f2f46",
+      penwidth=2.4
+    ];
+    WK5 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Persist user + account</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">provider tokens discarded</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+    WK7 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>ensureUserCollection</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">create first collection</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+    WK6 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Issue session cookie</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">HMAC-signed; row in session</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+    REJ [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>403 Forbidden</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">"not on the sign-in allowlist"</FONT></TD></TR></TABLE>>, fillcolor="#fde2e1:#fff5f5", color="#c53030", penwidth=3.0];
+  }
+
+  // ---- Google ----
+  subgraph cluster_google {
+    graph [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#5f3b8a"><B>GOOGLE</B></FONT></TD></TR>
+        </TABLE>
+      >,
+      labelloc=t,
+      labeljust=l,
+      color="#d6c6ee",
+      fillcolor="#fbf8ff",
+      style="rounded,filled",
+      penwidth=1.8,
+      margin=22
+    ];
+
+    G1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>accounts.google.com/o/oauth2/v2/auth</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">show consent, return code</FONT></TD></TR></TABLE>>, fillcolor="#f5f3ff:#ffffff", color="#7c3aed"];
+    G2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>oauth2.googleapis.com/token</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">code → access + refresh + id_token</FONT></TD></TR></TABLE>>, fillcolor="#f5f3ff:#ffffff", color="#7c3aed"];
+  }
+
+  // ---- Storage ----
+  subgraph cluster_storage {
+    graph [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#0f766e"><B>D1</B></FONT></TD></TR>
+        </TABLE>
+      >,
+      labelloc=t,
+      labeljust=l,
+      color="#99d5cf",
+      fillcolor="#f0fdfa",
+      style="rounded,filled",
+      penwidth=1.8,
+      margin=22
+    ];
+
+    DB1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>user + account + session + collection + signals</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">Better Auth rows + Antenna ownership</FONT></TD></TR></TABLE>>, fillcolor="#e6fffb:#ffffff", color="#0f766e"];
+  }
+
+  // ---- Edges (sign-in flow) ----
+  BR1 -> WK1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1. click</FONT></TD></TR></TABLE>>];
+  WK1 -> G1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">2. redirect (state, PKCE, scopes)</FONT></TD></TR></TABLE>>];
+  G1 -> BR2 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">3. show consent</FONT></TD></TR></TABLE>>];
+  BR2 -> WK2 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">4. ?code=… &amp;state=…</FONT></TD></TR></TABLE>>];
+  WK2 -> G2 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">5. exchange code</FONT></TD></TR></TABLE>>];
+  G2 -> WK2 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#dfe3e9" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#6b7280">6. tokens</FONT></TD></TR></TABLE>>, color="#6b7280", fontcolor="#6b7280"];
+  WK2 -> WK3;
+  WK3 -> WK4;
+  WK4 -> REJ [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">No</FONT></TD></TR></TABLE>>];
+  WK4 -> WK5 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">Yes</FONT></TD></TR></TABLE>>];
+  WK5 -> DB1 [lhead=cluster_storage, label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">upsert</FONT></TD></TR></TABLE>>];
+  WK5 -> WK7;
+  WK7 -> DB1 [lhead=cluster_storage, label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">ensure</FONT></TD></TR></TABLE>>];
+  WK7 -> WK6;
+  WK6 -> BR3 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">7. 302 to /</FONT></TD></TR></TABLE>>];
+
+}

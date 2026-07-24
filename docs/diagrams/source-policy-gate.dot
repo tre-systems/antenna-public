@@ -1,0 +1,122 @@
+digraph SourcePolicyGate {
+  graph [
+    rankdir=TB,
+    bgcolor="#ffffff",
+    pad="0.55",
+    nodesep="0.55",
+    ranksep="0.76",
+    splines=polyline,
+    outputorder=edgesfirst,
+    newrank=true,
+    forcelabels=true,
+    fontname="Avenir",
+    label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
+        <TR><TD><FONT POINT-SIZE="34"><B>Source Policy and Sharing Gate</B></FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="14" COLOR="#5b6b80">The Worker decides what a viewer can see; the browser only renders the result.</FONT></TD></TR>
+      </TABLE>
+    >,
+    labelloc=t,
+    labeljust=c
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    margin="0.24,0.14",
+    width=3.25,
+    height=0.78,
+    fixedsize=false,
+    fontname="Avenir",
+    fontsize=18,
+    penwidth=2.4,
+    fontcolor="#14213d",
+    color="#2264c7",
+    fillcolor="#eaf3ff:#ffffff",
+    gradientangle=270
+  ];
+
+  edge [
+    color="#263a59",
+    fontname="Avenir",
+    fontsize=13,
+    fontcolor="#3d4a5c",
+    penwidth=2.2,
+    arrowsize=0.78
+  ];
+
+  REQUEST [
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Signal read request</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">owner, shared link, or anonymous public viewer</FONT></TD></TR></TABLE>>,
+    fillcolor="#edf7ff:#ffffff",
+    color="#2f80ed"
+  ];
+
+  RESOLVE [
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Resolve viewer + collection + signal</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">auth/session, collection visibility, signal visibility</FONT></TD></TR></TABLE>>,
+    fillcolor="#eaf8ef:#ffffff",
+    color="#22865a"
+  ];
+
+  META [
+    label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+        <TR><TD><B>Load server-owned source metadata</B></TD></TR>
+        <TR><TD><FONT POINT-SIZE="14">source policy, execution mode, attribution, review notes</FONT></TD></TR>
+      </TABLE>
+    >,
+    fillcolor="#f5f3ff:#ffffff",
+    color="#7c3aed"
+  ];
+
+  VIEWER_OK [
+    label=<<B>Viewer allowed?</B>>,
+    shape=diamond,
+    style=filled,
+    width=2.8,
+    height=1.05,
+    fillcolor="#ffffff",
+    color="#1f2f46",
+    penwidth=2.4
+  ];
+
+  SOURCE_OK [
+    label=<<B>Source allowed for this context?</B>>,
+    shape=diamond,
+    style=filled,
+    width=4.2,
+    height=1.05,
+    fillcolor="#ffffff",
+    color="#1f2f46",
+    penwidth=2.4
+  ];
+
+  PRIVATE [
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Render full private signal</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">owner view; credentials never exposed</FONT></TD></TR></TABLE>>,
+    fillcolor="#d8f5de:#effcf2",
+    color="#15803d",
+    penwidth=3.0
+  ];
+
+  PUBLIC [
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Render public-safe signal</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">source link and attribution included</FONT></TD></TR></TABLE>>,
+    fillcolor="#d8f5de:#effcf2",
+    color="#15803d",
+    penwidth=3.0
+  ];
+
+  HIDE [
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Hide or show blocked state</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">private-only, unreviewed, unsupported, or no access</FONT></TD></TR></TABLE>>,
+    fillcolor="#fde2e1:#fff5f5",
+    color="#c53030",
+    penwidth=3.0
+  ];
+
+  REQUEST -> RESOLVE -> META -> VIEWER_OK;
+  VIEWER_OK -> SOURCE_OK [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">Yes</FONT></TD></TR></TABLE>>];
+  VIEWER_OK -> HIDE [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">No</FONT></TD></TR></TABLE>>];
+  SOURCE_OK -> PRIVATE [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">Private owner</FONT></TD></TR></TABLE>>];
+  SOURCE_OK -> PUBLIC [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">Public-safe</FONT></TD></TR></TABLE>>];
+  SOURCE_OK -> HIDE [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">No</FONT></TD></TR></TABLE>>];
+
+  { rank=same; PRIVATE; PUBLIC; HIDE; }
+}

@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": ["vitest.config.ts", "playwright.config.ts", "tests/e2e/**/*.ts"],
+  "compilerOptions": {
+    "noEmit": true,
+    // e2e specs run code in the browser via page.evaluate, so the DOM globals
+    // (document, window) are legitimately in scope there.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"]
+  }
+}

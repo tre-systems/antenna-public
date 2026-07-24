@@ -1,0 +1,88 @@
+name = "antenna"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+workers_dev = true
+upload_source_maps = true
+# Better Auth's core uses `node:async_hooks` for request-scoped context.
+# `nodejs_compat` exposes the Node built-ins it needs; request signals let SSE
+# client disconnects cancel the Durable Object subscription cleanly.
+compatibility_flags = ["nodejs_compat", "enable_request_signal"]
+preview_urls = false
+
+# Public, non-secret runtime vars. `NODE_ENV=production` is the safety belt
+# that stops the deployed Worker from ever honouring a stray `BYPASS_AUTH=1`.
+# Local dev gets `NODE_ENV=development` (and any `BYPASS_AUTH`) from .dev.vars.
+[vars]
+NODE_ENV = "production"
+BETTER_AUTH_URL = "http://localhost:8787"
+SENTRY_ENVIRONMENT = "production"
+SENTRY_PROJECT = "antenna"
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+
+[observability.traces]
+enabled = true
+head_sampling_rate = 0.005
+
+# Optional application usage events. The beacon route and Cloudflare-hosted
+# applications can write here; the app-usage connector reads the dataset
+# through the Analytics Engine SQL API.
+[[analytics_engine_datasets]]
+binding = "APP_USAGE"
+dataset = "app_usage"
+
+# R2 bucket for raw payload archive
+[[r2_buckets]]
+binding = "PAYLOADS"
+bucket_name = "antenna-payloads"
+
+# D1 database
+[[d1_databases]]
+binding = "DB"
+database_name = "antenna"
+# Replace this placeholder with the ID returned by `wrangler d1 create`.
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "drizzle"
+
+# SPA built by apps/web is served from the same Worker.
+[assets]
+directory = "../web/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*", "/healthz", "/c/*", "/.well-known/*"]
+
+# Cron triggers — every minute. Dispatcher checks each signal's refresh_seconds
+# and only fans out to adapters whose interval has elapsed.
+[triggers]
+crons = ["* * * * *"]
+
+# Durable Object: one instance per collection, in-memory SSE fan-out so the
+# SPA updates without polling. Eviction happens automatically when no
+# browser tab is connected.
+[[durable_objects.bindings]]
+name = "CHANNELS"
+class_name = "CollectionChannel"
+
+# Rate limiter: one instance per rate-limit key holds the authoritative request
+# count, so limits hold across isolates/colos instead of resetting per isolate.
+[[durable_objects.bindings]]
+name = "RATE_LIMITER"
+class_name = "RateLimiter"
+
+[[migrations]]
+tag = "v1-channels"
+new_classes = ["DashboardChannel"]
+
+[[migrations]]
+tag = "v2-collection-channel"
+renamed_classes = [{ from = "DashboardChannel", to = "CollectionChannel" }]
+
+[[migrations]]
+tag = "v3-rate-limiter"
+new_classes = ["RateLimiter"]

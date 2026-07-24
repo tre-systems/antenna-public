@@ -1,0 +1,113 @@
+digraph SignalLifecycle {
+  graph [
+    rankdir=LR,
+    bgcolor="#ffffff",
+    pad="0.55",
+    nodesep="0.7",
+    ranksep="1.0",
+    splines=spline,
+    outputorder=edgesfirst,
+    newrank=true,
+    forcelabels=true,
+    fontname="Avenir",
+    label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
+        <TR><TD><FONT POINT-SIZE="34"><B>Signal Lifecycle</B></FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="14" COLOR="#5b6b80">signal_status.status transitions</FONT></TD></TR>
+      </TABLE>
+    >,
+    labelloc=t,
+    labeljust=c
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    margin="0.30,0.20",
+    fixedsize=false,
+    fontname="Avenir",
+    fontsize=20,
+    penwidth=2.6,
+    fontcolor="#14213d",
+    color="#2264c7",
+    fillcolor="#eaf3ff:#ffffff",
+    gradientangle=270
+  ];
+
+  edge [
+    color="#263a59",
+    fontname="Avenir",
+    fontsize=13,
+    fontcolor="#3d4a5c",
+    penwidth=2.2,
+    arrowsize=0.85
+  ];
+
+  // ---- States ----
+  CREATED [
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>created</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="13" COLOR="#5b6b80">row exists; no fetch yet</FONT></TD></TR></TABLE>>,
+    fillcolor="#e0e7ef:#ffffff",
+    color="#5b6b80"
+  ];
+
+  LOADING [
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>loading</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="13" COLOR="#5b6b80">fetch in progress</FONT></TD></TR></TABLE>>,
+    fillcolor="#edf7ff:#ffffff",
+    color="#2f80ed"
+  ];
+
+  LIVE [
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>live</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="13" COLOR="#5b6b80">last_ok_at within refresh_seconds</FONT></TD></TR></TABLE>>,
+    fillcolor="#d8f5de:#effcf2",
+    color="#15803d",
+    penwidth=3.2
+  ];
+
+  STALE [
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>stale</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="13" COLOR="#5b6b80">last good value, but past freshness window</FONT></TD></TR></TABLE>>,
+    fillcolor="#fff4d1:#fffaf0",
+    color="#d39a00"
+  ];
+
+  ERROR [
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>error</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="13" COLOR="#5b6b80">setup/auth/source failure in last_error</FONT></TD></TR></TABLE>>,
+    fillcolor="#fde2e1:#fff5f5",
+    color="#c53030"
+  ];
+
+  BACKOFF [
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>retry gate</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="13" COLOR="#5b6b80">planned next_attempt_at policy</FONT></TD></TR></TABLE>>,
+    fillcolor="#ffffff",
+    color="#6b7280",
+    style="rounded,filled,dashed"
+  ];
+
+  DELETED [
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>deleted</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="13" COLOR="#5b6b80">row removed; cron skips it</FONT></TD></TR></TABLE>>,
+    fillcolor="#e5e5e5:#f5f5f5",
+    color="#7a7a7a"
+  ];
+
+  // ---- Transitions ----
+  CREATED -> LOADING [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">cron picks up</FONT></TD></TR></TABLE>>];
+
+  LOADING -> LIVE [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">adapter returned\nDataPoint[]</FONT></TD></TR></TABLE>>];
+  LOADING -> ERROR [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">adapter returned error /\nfetch failed</FONT></TD></TR></TABLE>>];
+
+  LIVE -> LOADING [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">cron tick\n(refresh due)</FONT></TD></TR></TABLE>>];
+
+  LIVE -> STALE [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">no successful fetch\nfor 2× refresh_seconds</FONT></TD></TR></TABLE>>];
+  STALE -> LOADING [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">cron retry</FONT></TD></TR></TABLE>>];
+
+  ERROR -> LOADING [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">current: next due cron tick</FONT></TD></TR></TABLE>>];
+  ERROR -> BACKOFF [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">planned: setup / rate-limit backoff</FONT></TD></TR></TABLE>>, color="#7a7a7a", fontcolor="#7a7a7a", style=dashed];
+  BACKOFF -> LOADING [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">retry window opens</FONT></TD></TR></TABLE>>, color="#7a7a7a", fontcolor="#7a7a7a", style=dashed];
+
+  // user deletes from any non-deleted state
+  LIVE -> DELETED [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">owner DELETE /api/signals/:id</FONT></TD></TR></TABLE>>, color="#7a7a7a", fontcolor="#7a7a7a"];
+  STALE -> DELETED [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">owner DELETE /api/signals/:id</FONT></TD></TR></TABLE>>, color="#7a7a7a", fontcolor="#7a7a7a"];
+  ERROR -> DELETED [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">owner DELETE /api/signals/:id</FONT></TD></TR></TABLE>>, color="#7a7a7a", fontcolor="#7a7a7a"];
+
+  // Layout hints
+  { rank=same; LIVE; STALE; ERROR; BACKOFF; }
+}

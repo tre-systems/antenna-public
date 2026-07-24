@@ -1,0 +1,160 @@
+digraph SystemOverview {
+  graph [
+    rankdir=TB,
+    bgcolor="#ffffff",
+    pad="0.55",
+    nodesep="0.55",
+    ranksep="0.85",
+    splines=polyline,
+    outputorder=edgesfirst,
+    compound=true,
+    newrank=true,
+    forcelabels=true,
+    fontname="Avenir",
+    label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
+        <TR><TD><FONT POINT-SIZE="34"><B>System Overview</B></FONT></TD></TR>
+      </TABLE>
+    >,
+    labelloc=t,
+    labeljust=c
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    margin="0.21,0.13",
+    width=3.05,
+    height=0.74,
+    fixedsize=false,
+    fontname="Avenir",
+    fontsize=18,
+    penwidth=2.4,
+    fontcolor="#14213d",
+    color="#2264c7",
+    fillcolor="#eaf3ff:#ffffff",
+    gradientangle=270
+  ];
+
+  edge [
+    color="#263a59",
+    fontname="Avenir",
+    fontsize=13,
+    fontcolor="#3d4a5c",
+    penwidth=2.2,
+    arrowsize=0.78
+  ];
+
+  // ---- Client ----
+  U1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Browser</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">Preact + signals SPA</FONT></TD></TR></TABLE>>];
+
+  // ---- Cloudflare Worker ----
+  subgraph cluster_worker {
+    graph [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#1e6b43"><B>CLOUDFLARE WORKER</B></FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#4e7a61">One Worker hosts HTTP, cron, planner, live streams, and static assets.</FONT></TD></TR>
+        </TABLE>
+      >,
+      labelloc=t,
+      labeljust=l,
+      color="#b8e5c8",
+      fillcolor="#f4fbf6",
+      style="rounded,filled",
+      penwidth=1.8,
+      margin=22
+    ];
+
+    W1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Static SPA</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">Workers Static Assets</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+    W2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Hono API</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">/api/signals /api/plan /api/auth</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+    W3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Better Auth</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">Google OAuth + sessions</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+    W4 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Planner</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">deterministic matcher + executor</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+    W7 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Source policy + execution mode</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">registry-owned rights + public-display gates</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+    W5 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Cron dispatcher</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">every minute; fans out to due signals</FONT></TD></TR></TABLE>>, fillcolor="#fff4d1:#fffaf0", color="#d39a00"];
+    W6 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Connector adapters</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">pure fetch + parse, one per source</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+    W8 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>CollectionChannel DO</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">one SSE fan-out per collection</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+
+    W1 -> W2 [style=invis];
+    W2 -> W4 [style=invis];
+    W3 -> W4 [style=invis, constraint=false];
+    W4 -> W7 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#dfe3e9" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#6b7280">derive source posture</FONT></TD></TR></TABLE>>, color="#6b7280", fontcolor="#6b7280", style=dashed];
+    W7 -> W5 [style=invis];
+    W5 -> W6 [style=invis];
+    W6 -> W8 [style=invis];
+  }
+
+  // ---- Storage ----
+  subgraph cluster_storage {
+    graph [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#0f766e"><B>STORAGE</B></FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#357a74">D1 owns rows; R2 stores reviewed raw payloads only.</FONT></TD></TR>
+        </TABLE>
+      >,
+      labelloc=t,
+      labeljust=l,
+      color="#99d5cf",
+      fillcolor="#f0fdfa",
+      style="rounded,filled",
+      penwidth=1.8,
+      margin=22
+    ];
+
+    S1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>D1 (SQLite)</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">collections, signals, points, plans, users</FONT></TD></TR></TABLE>>, fillcolor="#e6fffb:#ffffff", color="#0f766e"];
+    S2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>R2 object storage</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">optional reviewed raw payload archive</FONT></TD></TR></TABLE>>, fillcolor="#e6fffb:#ffffff", color="#0f766e"];
+  }
+
+  // ---- External sources ----
+  subgraph cluster_external {
+    graph [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#1f5fbf"><B>EXTERNAL SOURCES</B></FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#496f9f">Public APIs and OAuth-connected APIs.</FONT></TD></TR>
+        </TABLE>
+      >,
+      labelloc=t,
+      labeljust=l,
+      color="#b9d8ff",
+      fillcolor="#f5faff",
+      style="rounded,filled",
+      penwidth=1.8,
+      margin=22
+    ];
+
+    E1 [
+      label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Data APIs</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">BoE, Frankfurter, FRED, Yahoo,<BR/>Coinbase, STOOQ, Open-Meteo,<BR/>GitHub</FONT></TD></TR></TABLE>>,
+      width=3.4,
+      fillcolor="#edf7ff:#ffffff",
+      color="#2f80ed"
+    ];
+    E3 [
+      label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Google Identity</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">OAuth sign-in; provider tokens discarded</FONT></TD></TR></TABLE>>,
+      fillcolor="#edf7ff:#ffffff",
+      color="#2f80ed"
+    ];
+  }
+
+  // ---- Edges ----
+  U1 -> W1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">loads SPA</FONT></TD></TR></TABLE>>];
+  U1 -> W2 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">fetch /api + EventSource</FONT></TD></TR></TABLE>>];
+
+  W2 -> W3 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">session</FONT></TD></TR></TABLE>>];
+  W2 -> W4 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">plan / confirm</FONT></TD></TR></TABLE>>];
+  W2 -> W8 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">subscribe /api/stream</FONT></TD></TR></TABLE>>];
+  W2 -> S1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">reads / writes</FONT></TD></TR></TABLE>>];
+  W4 -> S1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">create signals</FONT></TD></TR></TABLE>>];
+  W5 -> W7 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#dfe3e9" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#6b7280">check policy</FONT></TD></TR></TABLE>>, style=dashed, color="#6b7280", fontcolor="#6b7280", constraint=false];
+
+  W3 -> E3 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">OAuth handshake</FONT></TD></TR></TABLE>>];
+
+  W5 -> S1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">select due signals</FONT></TD></TR></TABLE>>];
+  W5 -> W6 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">invoke adapter</FONT></TD></TR></TABLE>>];
+  W6 -> E1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">fetch</FONT></TD></TR></TABLE>>];
+  W6 -> S1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">signal_points</FONT></TD></TR></TABLE>>];
+  W6 -> S2 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">raw payload</FONT></TD></TR></TABLE>>];
+  W5 -> W8 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">notify signal status</FONT></TD></TR></TABLE>>];
+  W8 -> U1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">SSE event</FONT></TD></TR></TABLE>>];
+}
