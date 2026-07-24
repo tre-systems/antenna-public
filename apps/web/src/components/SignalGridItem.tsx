@@ -56,7 +56,7 @@ export function SignalGridItem({ signal }: Props) {
         // the page — but only while the finger starts on the handle itself.
         // The handle stays visible on coarse-pointer devices because there
         // is no hover to reveal it.
-        class="absolute left-1 top-1 z-[1] inline-flex h-6 w-6 cursor-grab touch-none items-center justify-center rounded-md text-slate-300 opacity-0 transition-opacity hover:text-slate-500 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-sky-400/40 active:cursor-grabbing group-hover:opacity-100 dark:text-slate-600 dark:hover:text-slate-400 [@media(pointer:coarse)]:opacity-60"
+        class="absolute left-1 top-1 z-[1] inline-flex h-6 w-6 cursor-grab touch-none items-center justify-center rounded-md text-slate-300 opacity-0 transition-opacity hover:text-slate-500 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 active:cursor-grabbing group-hover:opacity-100 dark:text-slate-600 dark:hover:text-slate-400 [@media(pointer:coarse)]:opacity-60"
         data-testid={`signal-drag-handle-${signal.id}`}
       >
         <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="h-3.5 w-3.5">

@@ -47,7 +47,7 @@ function ExpandToggle({
   return (
     <button
       type="button"
-      class="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-900/[0.04] hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400/60 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
+      class="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-900/[0.04] hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/60 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
       aria-label={expanded ? 'Collapse signal details' : 'Expand signal details'}
       aria-expanded={expanded}
       title={expanded ? 'Collapse' : 'Expand'}

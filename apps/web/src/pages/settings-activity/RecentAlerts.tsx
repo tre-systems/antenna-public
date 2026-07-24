@@ -24,7 +24,7 @@ export function RecentAlerts({ alerts, collection }: Props) {
 
 function EmptyAlerts() {
   return (
-    <div class="rounded-2xl bg-white/70 p-5 text-sm text-slate-500 ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.04] dark:text-slate-400 dark:ring-white/10">
+    <div class="antenna-panel rounded-2xl p-5 text-sm text-slate-500 dark:text-slate-400">
       No alerts yet. Alert rules will appear here once a watched value crosses a threshold.
     </div>
   );
@@ -34,10 +34,7 @@ function AlertList({ alerts }: { readonly alerts: ReadonlyArray<SignalAlertRecor
   return (
     <ul class="space-y-2">
       {alerts.map((alert) => (
-        <li
-          key={alert.id}
-          class="rounded-2xl bg-white/70 p-4 ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.04] dark:ring-white/10"
-        >
+        <li key={alert.id} class="antenna-panel rounded-2xl p-4">
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
               <p class="truncate text-sm font-medium text-slate-900 dark:text-white">
@@ -56,7 +53,7 @@ function AlertList({ alerts }: { readonly alerts: ReadonlyArray<SignalAlertRecor
               href={safeExternalUrl(alert.source_url) ?? undefined}
               target="_blank"
               rel="noreferrer"
-              class="mt-2 inline-flex text-xs font-medium text-sky-700 hover:underline focus:outline-none focus:ring-2 focus:ring-sky-400/40 dark:text-sky-300"
+              class="mt-2 inline-flex text-xs font-medium text-emerald-700 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:text-emerald-300"
             >
               Source
             </a>

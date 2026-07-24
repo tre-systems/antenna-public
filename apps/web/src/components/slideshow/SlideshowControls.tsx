@@ -95,7 +95,7 @@ function ControlButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-white/5 text-slate-200 transition-colors hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-sky-400/40"
+      class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-white/5 text-slate-200 transition-colors hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
       data-testid={testid}
     >
       {children}

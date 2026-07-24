@@ -16,12 +16,12 @@ export function SignalGrid() {
 
 function LoadError({ error }: { readonly error: string }) {
   return (
-    <div class="rounded-2xl bg-white/70 backdrop-blur-xl p-6 ring-1 ring-rose-300/40 text-sm dark:bg-white/[0.04] dark:ring-rose-400/20">
+    <div class="antenna-panel rounded-2xl p-6 text-sm ring-1 ring-rose-300/40 dark:ring-rose-400/20">
       <p class="font-medium text-rose-700 dark:text-rose-300">Couldn't load signals.</p>
       <p class="mt-1 text-slate-500 dark:text-slate-400">{error}</p>
       <button
         type="button"
-        class="mt-3 rounded-lg bg-gradient-to-br from-slate-900 to-slate-700 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:brightness-110 dark:from-violet-500 dark:to-indigo-600"
+        class="antenna-primary mt-3 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
         onClick={() => {
           void loadSignals();
         }}
@@ -36,11 +36,7 @@ function LoadingGrid() {
   return (
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
       {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          class="rounded-2xl bg-white/70 p-5 ring-1 ring-slate-900/5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:bg-white/[0.04] dark:ring-white/10 dark:shadow-[0_1px_2px_rgba(0,0,0,0.4),0_8px_24px_-12px_rgba(0,0,0,0.6)]"
-          aria-hidden="true"
-        >
+        <div key={i} class="antenna-panel rounded-2xl p-5" aria-hidden="true">
           <div class="flex items-start justify-between gap-3">
             <div class="flex-1 space-y-2">
               <div class="h-4 w-2/3 animate-pulse rounded bg-slate-200/70 dark:bg-white/10" />
@@ -57,7 +53,7 @@ function LoadingGrid() {
 
 function EmptyGrid() {
   return (
-    <div class="rounded-2xl bg-white/70 backdrop-blur-xl p-6 ring-1 ring-slate-900/5 text-sm text-slate-500 dark:bg-white/[0.04] dark:ring-white/10 dark:text-slate-400">
+    <div class="antenna-panel rounded-2xl p-6 text-sm text-slate-500 dark:text-slate-400">
       No signals yet — use Add signal in the toolbar to create your first one.
     </div>
   );

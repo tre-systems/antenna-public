@@ -97,8 +97,10 @@ npm run audit:security
 ```
 
 `npm run verify` checks formatting, documentation links, import boundaries,
-lint, types, generated skill content, MCP build smoke tests, diagrams, prompt
-parity, and unit tests.
+public-release isolation, lint, types, generated skill content, MCP build smoke
+tests, diagrams, prompt parity, and unit tests. Maintainers publishing a
+sanitised release from a private deployment should follow the
+[public release contract](docs/PUBLIC_RELEASE.md).
 
 ## Security
 

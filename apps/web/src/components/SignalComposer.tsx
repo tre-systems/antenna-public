@@ -18,14 +18,13 @@ type Props = {
   readonly autoFocus?: boolean;
 };
 
-const CARD =
-  'rounded-2xl bg-white/75 p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/5 backdrop-blur-xl sm:p-4 dark:bg-white/[0.04] dark:ring-white/10 dark:shadow-[0_1px_2px_rgba(0,0,0,0.4),0_8px_24px_-12px_rgba(0,0,0,0.6)]';
+const CARD = 'antenna-panel rounded-2xl p-3 sm:p-4';
 
 const INPUT =
-  'h-11 w-full rounded-xl border-0 bg-white/80 px-3.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-900/10 transition placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-teal-500/60 disabled:bg-slate-100/60 disabled:text-slate-400 dark:bg-white/5 dark:text-slate-100 dark:ring-white/10 dark:placeholder:text-slate-500 dark:focus:ring-teal-400/50 dark:disabled:bg-white/5 dark:disabled:text-slate-500';
+  'h-11 w-full rounded-xl border-0 bg-white/80 px-3.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-900/10 transition placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-emerald-500/60 disabled:bg-slate-100/60 disabled:text-slate-400 dark:bg-white/5 dark:text-slate-100 dark:ring-white/10 dark:placeholder:text-slate-500 dark:focus:ring-emerald-400/50 dark:disabled:bg-white/5 dark:disabled:text-slate-500';
 
 const PRIMARY_BUTTON =
-  'inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-br from-teal-500 to-sky-600 px-5 text-sm font-semibold text-white shadow-[0_4px_18px_-4px_rgba(14,165,233,0.45)] transition hover:brightness-110 hover:shadow-[0_6px_22px_-4px_rgba(20,184,166,0.45)] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none';
+  'antenna-primary inline-flex h-11 items-center justify-center gap-1.5 rounded-xl px-5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50';
 
 const SparkleIcon = () => (
   <svg viewBox="0 0 16 16" fill="currentColor" class="h-3.5 w-3.5 opacity-90" aria-hidden="true">
@@ -92,14 +91,14 @@ export function SignalComposer({
   return (
     <section class={CARD}>
       <div class="mb-3 flex items-center justify-between gap-3">
-        <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Add signal</p>
+        <p class="antenna-eyebrow">Add signal</p>
         {!hasPlan && !submitting ? (
           <button
             type="button"
             onClick={() => {
               onOpenChange(false);
             }}
-            class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-900/10 transition hover:bg-white hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/40 dark:bg-white/[0.06] dark:text-slate-300 dark:ring-white/10 dark:hover:bg-white/[0.1] dark:hover:text-white"
+            class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-900/10 transition hover:bg-white hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:bg-white/[0.06] dark:text-slate-300 dark:ring-white/10 dark:hover:bg-white/[0.1] dark:hover:text-white"
             data-testid="signal-composer-collapse"
           >
             Hide
@@ -152,7 +151,7 @@ export function SignalComposer({
               onClick={() => {
                 handleExampleClick(example.prompt);
               }}
-              class="rounded-full bg-slate-900/[0.04] px-2.5 py-1 font-medium text-slate-700 transition-colors hover:bg-slate-900/[0.08] hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/60 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white"
+              class="rounded-full bg-slate-900/[0.04] px-2.5 py-1 font-medium text-slate-700 transition-colors hover:bg-slate-900/[0.08] hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/60 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white"
               data-testid={`signal-composer-example-${example.prompt.replace(/[^a-z0-9]+/gi, '-')}`}
             >
               {example.label}

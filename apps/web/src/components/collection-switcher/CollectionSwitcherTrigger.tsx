@@ -13,7 +13,7 @@ export function CollectionSwitcherTrigger({ activeTitle, open, onToggle }: Props
       aria-label={`Switch collection, current collection ${activeTitle}`}
       title={`Switch collection, current collection ${activeTitle}`}
       onClick={onToggle}
-      class="inline-flex items-center gap-1 rounded-lg bg-white/50 px-2.5 py-1.5 text-xs font-medium text-slate-600 ring-1 ring-slate-900/10 transition hover:bg-white/80 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-400/40 dark:bg-white/5 dark:text-slate-200 dark:ring-white/10 dark:hover:bg-white/10 dark:hover:text-white"
+      class="antenna-control inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
       data-testid="collection-switcher-trigger"
     >
       <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="h-3.5 w-3.5">

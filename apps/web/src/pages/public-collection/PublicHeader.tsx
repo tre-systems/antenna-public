@@ -10,7 +10,8 @@ type Props = {
 export function PublicHeader({ collection, title }: Props) {
   return (
     <header class="mb-8 flex items-center justify-between gap-3">
-      <div class="min-w-0">
+      <div class="min-w-0 border-l-2 border-emerald-500 pl-3">
+        <p class="antenna-eyebrow mb-1">Shared signal collection</p>
         <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
           {title}
         </h1>
@@ -22,7 +23,7 @@ export function PublicHeader({ collection, title }: Props) {
       <div class="flex shrink-0 items-center gap-2 sm:gap-3">
         <a
           href="/"
-          class="inline-flex h-8 items-center rounded-lg bg-white/50 px-3 text-xs font-medium text-slate-600 ring-1 ring-slate-900/10 transition hover:bg-white/80 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-400/40 dark:bg-white/5 dark:text-slate-200 dark:ring-white/10 dark:hover:bg-white/10 dark:hover:text-white"
+          class="antenna-control inline-flex h-8 items-center rounded-lg px-3 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
           data-testid="public-cta-sign-in"
         >
           Sign in

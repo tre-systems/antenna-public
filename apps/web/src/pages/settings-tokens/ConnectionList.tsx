@@ -20,10 +20,7 @@ export function ConnectionList({ state, disconnecting, onDisconnect }: Props) {
   }
   if (state.kind === 'error') {
     return (
-      <div
-        class="rounded-2xl bg-white/70 p-6 text-sm ring-1 ring-rose-300/40 dark:bg-white/[0.04]"
-        role="alert"
-      >
+      <div class="antenna-panel rounded-2xl p-6 text-sm ring-1 ring-rose-300/40" role="alert">
         <p class="font-medium text-rose-700 dark:text-rose-300">Couldn't load connections.</p>
         <p class="mt-1 text-slate-500 dark:text-slate-400">{state.message}</p>
       </div>
@@ -31,7 +28,7 @@ export function ConnectionList({ state, disconnecting, onDisconnect }: Props) {
   }
   if (state.connections.length === 0) {
     return (
-      <div class="rounded-2xl bg-white/70 p-5 text-sm text-slate-500 ring-1 ring-slate-900/5 dark:bg-white/[0.04] dark:text-slate-400 dark:ring-white/10">
+      <div class="antenna-panel rounded-2xl p-5 text-sm text-slate-500 dark:text-slate-400">
         No agents are connected with OAuth.
       </div>
     );
@@ -41,7 +38,7 @@ export function ConnectionList({ state, disconnecting, onDisconnect }: Props) {
       {state.connections.map((connection) => (
         <li
           key={connection.client_id}
-          class="flex items-center justify-between gap-3 rounded-2xl bg-white/70 p-4 ring-1 ring-slate-900/5 dark:bg-white/[0.04] dark:ring-white/10"
+          class="antenna-panel flex items-center justify-between gap-3 rounded-2xl p-4"
         >
           <div class="min-w-0">
             <p class="truncate text-sm font-medium text-slate-900 dark:text-white">

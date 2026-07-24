@@ -52,7 +52,7 @@ export function SignalMenu({ signal }: Props) {
         onClick={() => {
           setOpen((prev) => !prev);
         }}
-        class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400/40 dark:text-slate-500 dark:hover:bg-white/5 dark:hover:text-slate-200"
+        class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:text-slate-500 dark:hover:bg-white/5 dark:hover:text-slate-200"
         data-testid={`signal-menu-${signal.id}`}
       >
         <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="h-4 w-4">

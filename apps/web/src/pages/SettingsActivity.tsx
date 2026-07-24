@@ -25,7 +25,7 @@ export function SettingsActivity({ collection }: { readonly collection: Collecti
 
       {activity.state.kind === 'error' ? (
         <div
-          class="rounded-2xl bg-white/70 p-6 text-sm ring-1 ring-rose-300/40 backdrop-blur-xl dark:bg-white/[0.04] dark:ring-rose-400/20"
+          class="antenna-panel rounded-2xl p-6 text-sm ring-1 ring-rose-300/40 dark:ring-rose-400/20"
           data-testid="activity-error"
         >
           <p class="font-medium text-rose-700 dark:text-rose-300">Couldn't load activity.</p>

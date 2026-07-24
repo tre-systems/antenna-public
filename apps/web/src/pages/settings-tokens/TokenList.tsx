@@ -25,7 +25,7 @@ export function TokenList({ state, revoking, onRevoke }: Props) {
       {state.tokens.map((token) => (
         <li
           key={token.id}
-          class="flex items-center justify-between gap-3 rounded-2xl bg-white/70 p-4 ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.04] dark:ring-white/10"
+          class="antenna-panel flex items-center justify-between gap-3 rounded-2xl p-4"
         >
           <div class="min-w-0">
             <p class="truncate text-sm font-medium text-slate-900 dark:text-white">
@@ -53,7 +53,7 @@ export function TokenList({ state, revoking, onRevoke }: Props) {
 function TokenListError({ message }: { readonly message: string }) {
   return (
     <div
-      class="rounded-2xl bg-white/70 p-6 text-sm ring-1 ring-rose-300/40 backdrop-blur-xl dark:bg-white/[0.04] dark:ring-rose-400/20"
+      class="antenna-panel rounded-2xl p-6 text-sm ring-1 ring-rose-300/40 dark:ring-rose-400/20"
       data-testid="settings-tokens-error"
     >
       <p class="font-medium text-rose-700 dark:text-rose-300">Couldn't load tokens.</p>
@@ -65,7 +65,7 @@ function TokenListError({ message }: { readonly message: string }) {
 function EmptyTokenList() {
   return (
     <div
-      class="rounded-2xl bg-white/70 p-5 text-sm text-slate-500 ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.04] dark:text-slate-400 dark:ring-white/10"
+      class="antenna-panel rounded-2xl p-5 text-sm text-slate-500 dark:text-slate-400"
       data-testid="settings-tokens-empty"
     >
       No legacy manual tokens.

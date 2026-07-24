@@ -45,10 +45,7 @@ export function ConnectorRequests() {
   if (requests.length === 0) return null;
 
   return (
-    <details
-      class="rounded-2xl bg-white/70 p-4 text-sm ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.04] dark:ring-white/10"
-      data-testid="connector-requests"
-    >
+    <details class="antenna-panel rounded-2xl p-4 text-sm" data-testid="connector-requests">
       <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-slate-900 marker:hidden dark:text-white">
         <span class="flex min-w-0 items-center gap-1.5">
           <svg

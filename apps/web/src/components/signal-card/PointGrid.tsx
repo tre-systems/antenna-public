@@ -31,7 +31,7 @@ function PointGridRow({
       href={url}
       target="_blank"
       rel="noreferrer"
-      class="-mx-1 flex items-baseline justify-between gap-2 rounded-md px-1 py-0.5 transition-colors hover:bg-slate-900/[0.03] focus:outline-none focus:ring-2 focus:ring-sky-400/60 dark:hover:bg-white/5"
+      class="-mx-1 flex items-baseline justify-between gap-2 rounded-md px-1 py-0.5 transition-colors hover:bg-slate-900/[0.03] focus:outline-none focus:ring-2 focus:ring-emerald-500/60 dark:hover:bg-white/5"
     >
       {row}
     </a>

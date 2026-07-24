@@ -92,7 +92,7 @@ export function PlanSignalRow({ signal, index, onChange }: Props) {
                   onInput={(e) => {
                     setMissingField(key, (e.target as HTMLInputElement).value);
                   }}
-                  class="mt-1 w-full rounded-md border-0 bg-white/70 px-2 py-1 text-sm text-slate-900 ring-1 ring-inset ring-amber-300/60 focus:ring-2 focus:ring-inset focus:ring-violet-500/60 dark:bg-white/5 dark:text-slate-100 dark:ring-amber-400/30 dark:focus:ring-violet-400/50"
+                  class="mt-1 w-full rounded-md border-0 bg-white/70 px-2 py-1 text-sm text-slate-900 ring-1 ring-inset ring-amber-300/60 focus:ring-2 focus:ring-inset focus:ring-emerald-500/60 dark:bg-white/5 dark:text-slate-100 dark:ring-amber-400/30 dark:focus:ring-emerald-400/50"
                   data-testid={`plan-missing-${key}`}
                 />
               </label>
@@ -128,7 +128,7 @@ export function PlanSignalRow({ signal, index, onChange }: Props) {
                       onInput={(e) => {
                         setConfigField(k, (e.target as HTMLInputElement).value);
                       }}
-                      class="w-full rounded border-0 bg-white/70 px-1 py-0.5 text-xs ring-1 ring-inset ring-slate-900/10 focus:ring-2 focus:ring-inset focus:ring-violet-500/60 dark:bg-white/5 dark:ring-white/10 dark:focus:ring-violet-400/50"
+                      class="w-full rounded border-0 bg-white/70 px-1 py-0.5 text-xs ring-1 ring-inset ring-slate-900/10 focus:ring-2 focus:ring-inset focus:ring-emerald-500/60 dark:bg-white/5 dark:ring-white/10 dark:focus:ring-emerald-400/50"
                     />
                   ) : (
                     stringifyConfigValue(v)

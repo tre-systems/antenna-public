@@ -100,7 +100,7 @@ export function CreateCollectionDialog({ onClose, onCreated }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-collection-title"
-        class="relative m-0 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl ring-1 ring-slate-900/10 sm:m-4 sm:rounded-2xl dark:bg-slate-900 dark:ring-white/10"
+        class="antenna-menu relative m-0 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl p-5 sm:m-4 sm:rounded-2xl"
       >
         <DialogHeader onClose={onClose} />
         <div class="mt-5 space-y-4">

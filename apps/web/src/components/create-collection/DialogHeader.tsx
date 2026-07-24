@@ -15,7 +15,7 @@ export function DialogHeader({ onClose }: Props) {
         type="button"
         aria-label="Close"
         onClick={onClose}
-        class="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400/40 dark:hover:bg-white/5 dark:hover:text-slate-200"
+        class="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:hover:bg-white/5 dark:hover:text-slate-200"
         data-testid="create-collection-close"
       >
         <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="h-4 w-4">
