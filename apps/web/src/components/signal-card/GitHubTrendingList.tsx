@@ -14,7 +14,7 @@ export function GitHubTrendingList({ rows }: { readonly rows: ReadonlyArray<Gith
                 href={row.url}
                 target="_blank"
                 rel="noreferrer"
-                class="block truncate text-sm font-medium text-slate-900 underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sky-400/60 dark:text-slate-100"
+                class="block truncate text-sm font-medium text-slate-900 underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-500/60 dark:text-slate-100"
               >
                 {row.repo}
               </a>

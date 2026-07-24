@@ -68,7 +68,7 @@ export function CollectionDeleteDialog({ collection, onClose, onDeleted }: Props
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-collection-title"
-        class="relative m-0 w-full max-w-md rounded-t-2xl bg-white p-5 shadow-xl ring-1 ring-slate-900/10 sm:m-4 sm:rounded-2xl dark:bg-slate-900 dark:ring-white/10"
+        class="antenna-menu relative m-0 w-full max-w-md rounded-t-2xl p-5 sm:m-4 sm:rounded-2xl"
       >
         <div class="flex items-start justify-between gap-3">
           <h2
@@ -82,7 +82,7 @@ export function CollectionDeleteDialog({ collection, onClose, onDeleted }: Props
             aria-label="Close"
             onClick={onClose}
             disabled={deleting}
-            class="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-white/5 dark:hover:text-slate-200"
+            class="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-white/5 dark:hover:text-slate-200"
             data-testid="delete-collection-close"
           >
             <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="h-4 w-4">
@@ -110,7 +110,7 @@ export function CollectionDeleteDialog({ collection, onClose, onDeleted }: Props
               onInput={(event) => {
                 setTypedTitle((event.target as HTMLInputElement).value);
               }}
-              class="mt-1 block w-full rounded-md border border-slate-300 bg-white/90 px-2 py-1.5 text-sm text-slate-900 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.06] dark:text-white"
+              class="mt-1 block w-full rounded-md border border-slate-300 bg-white/90 px-2 py-1.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.06] dark:text-white"
               data-testid="delete-collection-confirm-title"
             />
           </label>
@@ -127,7 +127,7 @@ export function CollectionDeleteDialog({ collection, onClose, onDeleted }: Props
             type="button"
             onClick={onClose}
             disabled={deleting}
-            class="rounded-md px-3 py-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-900/[0.04] focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:opacity-60 dark:text-slate-300 dark:hover:bg-white/5"
+            class="rounded-md px-3 py-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-900/[0.04] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-60 dark:text-slate-300 dark:hover:bg-white/5"
           >
             Cancel
           </button>
@@ -137,7 +137,7 @@ export function CollectionDeleteDialog({ collection, onClose, onDeleted }: Props
               void submit();
             }}
             disabled={!confirmed || deleting}
-            class="rounded-md bg-rose-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:opacity-60 dark:bg-rose-500"
+            class="rounded-md bg-rose-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-60 dark:bg-rose-500"
             data-testid="delete-collection-submit"
           >
             {deleting ? 'Deleting…' : 'Delete collection'}

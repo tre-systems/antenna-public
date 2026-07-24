@@ -31,7 +31,7 @@ export function CollectionDetailsFields({
           onInput={(event) => {
             onTitleChange((event.target as HTMLInputElement).value);
           }}
-          class="mt-1 block w-full rounded-md border border-slate-300 bg-white/90 px-2 py-1.5 text-sm text-slate-900 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.06] dark:text-white"
+          class="mt-1 block w-full rounded-md border border-slate-300 bg-white/90 px-2 py-1.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.06] dark:text-white"
           data-testid="create-collection-title"
         />
       </label>
@@ -47,7 +47,7 @@ export function CollectionDetailsFields({
           onInput={(event) => {
             onDescriptionChange((event.target as HTMLTextAreaElement).value);
           }}
-          class="mt-1 block w-full resize-none rounded-md border border-slate-300 bg-white/90 px-2 py-1.5 text-sm text-slate-700 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-200"
+          class="mt-1 block w-full resize-none rounded-md border border-slate-300 bg-white/90 px-2 py-1.5 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-200"
           data-testid="create-collection-description"
         />
       </label>

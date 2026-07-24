@@ -72,8 +72,8 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         display: 'standalone',
-        background_color: '#f6f7fb',
-        theme_color: '#4f46e5',
+        background_color: '#f3f7f4',
+        theme_color: '#0b1624',
         orientation: 'any',
         categories: ['productivity', 'finance', 'news'],
         icons: [

@@ -67,10 +67,8 @@ export function ProfileMenu({ user, signingOut, onSignOut }: Props) {
         onClick={() => {
           setOpen((prev) => !prev);
         }}
-        class={`inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full text-sm font-semibold text-white shadow-[0_2px_8px_-2px_rgba(99,102,241,0.5)] ring-1 ring-white/20 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-sky-400/40 ${
-          showAvatar
-            ? 'bg-slate-800/40 dark:bg-white/10'
-            : 'bg-gradient-to-br from-violet-500 to-indigo-600'
+        class={`inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full text-sm font-semibold text-white shadow-[0_2px_8px_-2px_rgba(13,123,60,0.45)] ring-1 ring-white/20 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 ${
+          showAvatar ? 'bg-slate-800/40 dark:bg-white/10' : 'bg-emerald-700 dark:bg-emerald-500'
         }`}
         data-testid="profile-menu-trigger"
       >
@@ -91,7 +89,7 @@ export function ProfileMenu({ user, signingOut, onSignOut }: Props) {
       {open ? (
         <div
           role="menu"
-          class="absolute right-0 top-11 z-30 w-64 overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-slate-900/10 dark:bg-slate-900 dark:ring-white/10"
+          class="antenna-menu absolute right-0 top-11 z-30 w-64 overflow-hidden rounded-lg"
           data-testid="profile-menu"
         >
           <div class="border-b border-slate-200 px-3 py-3 dark:border-white/10">
@@ -110,7 +108,7 @@ export function ProfileMenu({ user, signingOut, onSignOut }: Props) {
             <a
               href="/settings/activity"
               role="menuitem"
-              class="block px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-900/[0.04] focus:outline-none focus:ring-2 focus:ring-sky-400/40 dark:text-slate-200 dark:hover:bg-white/5"
+              class="block px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-900/[0.04] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:text-slate-200 dark:hover:bg-white/5"
               data-testid="profile-menu-activity"
             >
               Activity &amp; diagnostics
@@ -118,7 +116,7 @@ export function ProfileMenu({ user, signingOut, onSignOut }: Props) {
             <a
               href="/settings/tokens"
               role="menuitem"
-              class="block px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-900/[0.04] focus:outline-none focus:ring-2 focus:ring-sky-400/40 dark:text-slate-200 dark:hover:bg-white/5"
+              class="block px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-900/[0.04] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:text-slate-200 dark:hover:bg-white/5"
               data-testid="profile-menu-tokens"
             >
               Agent access
@@ -130,7 +128,7 @@ export function ProfileMenu({ user, signingOut, onSignOut }: Props) {
               onClick={() => {
                 void handleUpdateApp();
               }}
-              class="block w-full px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-900/[0.04] focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:cursor-wait disabled:opacity-60 dark:text-slate-200 dark:hover:bg-white/5"
+              class="block w-full px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-900/[0.04] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:cursor-wait disabled:opacity-60 dark:text-slate-200 dark:hover:bg-white/5"
               data-testid="profile-menu-update-app"
             >
               {updatingApp ? 'Checking for update…' : 'Update app'}
@@ -142,7 +140,7 @@ export function ProfileMenu({ user, signingOut, onSignOut }: Props) {
               role="menuitem"
               disabled={signingOut}
               onClick={onSignOut}
-              class="block w-full px-3 py-2 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-900/[0.04] focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-white/5"
+              class="block w-full px-3 py-2 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-900/[0.04] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-white/5"
               data-testid="profile-menu-signout"
             >
               {signingOut ? 'Signing out…' : 'Sign out'}

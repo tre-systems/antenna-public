@@ -11,7 +11,7 @@ export function OAuthSetupPanel() {
   const command = `claude mcp add --transport http antenna ${endpoint}`;
 
   return (
-    <section class="mb-6 rounded-2xl bg-white/70 p-5 ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.04] dark:ring-white/10">
+    <section class="antenna-panel mb-6 rounded-2xl p-5">
       <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Connect a new agent</h2>
       <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
         Add the remote MCP server, then complete the browser sign-in. Antenna does not issue a token

@@ -8,8 +8,9 @@ type Props = {
 
 export function SignInCard({ error, isSubmitting, onSubmit }: Props) {
   return (
-    <div class="w-full rounded-2xl bg-white/80 p-8 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_64px_-24px_rgba(13,148,136,0.22)] ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.05] dark:ring-white/10 dark:shadow-[0_1px_2px_rgba(0,0,0,0.4),0_24px_64px_-24px_rgba(14,165,233,0.34)]">
+    <div class="antenna-panel order-first w-full rounded-2xl p-8 lg:order-last">
       <BrandMark />
+      <p class="antenna-eyebrow mb-2">Private signal layer</p>
       <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Sign in</h2>
       <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Open your private collection with Google.
@@ -68,7 +69,7 @@ function GoogleButton({
       type="button"
       disabled={isSubmitting}
       onClick={onSubmit}
-      class="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-br from-teal-500 to-sky-600 px-3 py-2.5 text-sm font-medium text-white shadow-[0_4px_18px_-4px_rgba(14,165,233,0.45)] transition hover:brightness-110 hover:shadow-[0_6px_22px_-4px_rgba(20,184,166,0.45)] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+      class="antenna-primary mt-6 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
     >
       <GoogleIcon />
       {isSubmitting ? 'Connecting...' : 'Continue with Google'}

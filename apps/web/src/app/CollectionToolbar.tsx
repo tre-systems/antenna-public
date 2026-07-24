@@ -33,7 +33,7 @@ export function CollectionToolbar({
   onSignOut,
 }: CollectionToolbarProps) {
   return (
-    <header class="mb-4 flex min-w-0 items-center justify-between gap-2 sm:gap-4">
+    <header class="mb-5 flex min-w-0 items-center justify-between gap-2 border-b border-slate-900/[0.07] pb-3 sm:gap-4 dark:border-white/[0.08]">
       <CollectionHeader title={collection?.title ?? PRODUCT_NAME} onSaveTitle={onSaveTitle} />
       <div class="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
         <CollectionSwitcher
@@ -61,7 +61,7 @@ const AddSignalButton = ({ onAddSignal }: { readonly onAddSignal: () => void }) 
   <button
     type="button"
     onClick={onAddSignal}
-    class="inline-flex items-center justify-center gap-0 rounded-lg bg-gradient-to-br from-teal-500 to-sky-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-[0_4px_18px_-8px_rgba(14,165,233,0.8)] transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-teal-500/40 min-[780px]:gap-1.5"
+    class="antenna-primary inline-flex items-center justify-center gap-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition min-[780px]:gap-1.5"
     data-testid="signal-composer-open"
     aria-label="Add signal"
     title="Add a signal"
@@ -77,7 +77,7 @@ const PresentButton = ({ onPresent }: { readonly onPresent: () => void }) => (
   <button
     type="button"
     onClick={onPresent}
-    class="hidden items-center justify-center gap-0 rounded-lg bg-white/50 px-2.5 py-1.5 text-xs font-medium text-slate-600 ring-1 ring-slate-900/10 transition hover:bg-white/80 hover:text-slate-900 sm:inline-flex min-[780px]:gap-1 dark:bg-white/5 dark:text-slate-200 dark:ring-white/10 dark:hover:bg-white/10 dark:hover:text-white"
+    class="antenna-control hidden items-center justify-center gap-0 rounded-lg px-2.5 py-1.5 text-xs font-medium transition sm:inline-flex min-[780px]:gap-1"
     data-testid="header-present"
     aria-label="Present collection"
     title="Present this collection as a fullscreen slideshow"

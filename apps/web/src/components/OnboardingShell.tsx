@@ -19,14 +19,9 @@ export function OnboardingShell({
   onAddSignal,
 }: Props) {
   return (
-    <section
-      class="rounded-2xl bg-white/75 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_14px_40px_-24px_rgba(15,23,42,0.28)] ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.04] dark:ring-white/10"
-      data-testid="onboarding-shell"
-    >
+    <section class="antenna-panel rounded-2xl p-5" data-testid="onboarding-shell">
       <div class="max-w-2xl">
-        <p class="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          Welcome, {firstName(user)}
-        </p>
+        <p class="antenna-eyebrow">Welcome, {firstName(user)}</p>
         <h2 class="mt-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
           Choose how this collection should start
         </h2>
@@ -91,14 +86,14 @@ function OnboardingChoice({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      class="group flex min-h-40 flex-col justify-between rounded-xl border border-slate-200 bg-white/70 p-4 text-left transition hover:border-slate-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:cursor-wait disabled:opacity-60 dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-white/[0.07]"
+      class="antenna-subpanel group flex min-h-40 flex-col justify-between rounded-xl p-4 text-left transition hover:border-emerald-500/30 hover:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:cursor-wait disabled:opacity-60 dark:hover:bg-white/[0.07]"
       data-testid={testId}
     >
       <span>
         <span class="block text-sm font-semibold text-slate-900 dark:text-white">{title}</span>
         <span class="mt-1 block text-sm text-slate-500 dark:text-slate-400">{description}</span>
       </span>
-      <span class="mt-5 inline-flex self-start rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition group-hover:brightness-110 dark:bg-white dark:text-slate-900">
+      <span class="antenna-primary mt-5 inline-flex self-start rounded-lg px-3 py-1.5 text-xs font-semibold transition">
         {disabled ? 'Saving...' : cta}
       </span>
     </button>

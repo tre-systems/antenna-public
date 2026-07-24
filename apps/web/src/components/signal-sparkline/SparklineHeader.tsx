@@ -40,7 +40,7 @@ export function SparklineHeader({
                 event.stopPropagation();
                 onRangeChange(option.value);
               }}
-              class={`rounded-full px-1.5 py-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400/40 ${
+              class={`rounded-full px-1.5 py-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/40 ${
                 range === option.value
                   ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'

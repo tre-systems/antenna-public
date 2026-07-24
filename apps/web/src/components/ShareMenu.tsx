@@ -104,7 +104,7 @@ export function ShareMenu({ visibility, slug, onChange }: Props) {
         onClick={() => {
           setOpen((prev) => !prev);
         }}
-        class="inline-flex items-center justify-center gap-0 rounded-lg bg-white/50 px-2.5 py-1.5 text-xs font-medium text-slate-600 ring-1 ring-slate-900/10 transition hover:bg-white/80 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-400/40 min-[780px]:gap-1 dark:bg-white/5 dark:text-slate-200 dark:ring-white/10 dark:hover:bg-white/10 dark:hover:text-white"
+        class="antenna-control inline-flex items-center justify-center gap-0 rounded-lg px-2.5 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500/40 min-[780px]:gap-1"
         data-testid="share-open"
         aria-label="Share collection"
         title="Share this collection"
@@ -123,12 +123,10 @@ export function ShareMenu({ visibility, slug, onChange }: Props) {
         <div
           role="dialog"
           aria-label="Share collection"
-          class="absolute right-0 top-11 z-30 w-[min(22rem,calc(100vw-2rem))] rounded-xl bg-white p-3 text-left shadow-lg ring-1 ring-slate-900/10 dark:bg-slate-900 dark:ring-white/10"
+          class="antenna-menu absolute right-0 top-11 z-30 w-[min(22rem,calc(100vw-2rem))] rounded-xl p-3 text-left"
           data-testid="share-menu"
         >
-          <p class="mb-2 text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Visibility
-          </p>
+          <p class="antenna-eyebrow mb-2">Visibility</p>
           <div role="group" aria-label="Collection visibility" class="space-y-1">
             {OPTIONS.map((opt) => (
               <VisibilityOption
@@ -198,9 +196,9 @@ function VisibilityOption({
       aria-pressed={active}
       disabled={disabled}
       onClick={onSelect}
-      class={`flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:opacity-60 ${
+      class={`flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-60 ${
         active
-          ? 'bg-slate-100 dark:bg-white/[0.08]'
+          ? 'bg-emerald-50 dark:bg-emerald-400/10'
           : 'hover:bg-slate-900/[0.04] dark:hover:bg-white/5'
       }`}
       data-testid={`visibility-${opt.value}`}
@@ -214,7 +212,7 @@ function VisibilityOption({
         <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{opt.hint}</span>
       </span>
       {active ? (
-        <span class="mt-0.5 shrink-0 text-sky-600 dark:text-sky-400">
+        <span class="mt-0.5 shrink-0 text-emerald-700 dark:text-emerald-300">
           <CheckIcon />
         </span>
       ) : null}
@@ -243,7 +241,7 @@ function LinkRow({
       <button
         type="button"
         onClick={onCopy}
-        class={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition focus:outline-none focus:ring-2 focus:ring-sky-400/40 ${
+        class={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-500/40 ${
           copied
             ? 'bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/20 dark:text-emerald-300'
             : 'bg-slate-100 text-slate-600 ring-1 ring-slate-900/10 hover:bg-white hover:text-slate-900 dark:bg-white/[0.06] dark:text-slate-300 dark:ring-white/10 dark:hover:bg-white/[0.1] dark:hover:text-white'

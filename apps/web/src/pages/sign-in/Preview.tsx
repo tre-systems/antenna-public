@@ -35,9 +35,9 @@ const previewRows = [
 
 export function SignInPreview() {
   return (
-    <section aria-label="Antenna preview" class="min-w-0">
+    <section aria-label="Antenna preview" class="order-last min-w-0 lg:order-first">
       <PreviewHeading />
-      <div class="rounded-2xl bg-white/70 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_64px_-24px_rgba(13,148,136,0.18)] ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.04] dark:ring-white/10 dark:shadow-[0_1px_2px_rgba(0,0,0,0.4),0_24px_64px_-24px_rgba(14,165,233,0.24)]">
+      <div class="antenna-panel rounded-2xl p-4">
         <PreviewCollectionHeader />
         <PreviewCards />
         <AskPreview />
@@ -49,17 +49,16 @@ export function SignInPreview() {
 function PreviewHeading() {
   return (
     <div class="mb-6">
-      <p class="flex items-center gap-2 text-sm font-semibold text-teal-700 dark:text-teal-200">
-        <img src="/favicon.svg" alt="" class="h-6 w-6 rounded-lg shadow-sm" />
-        <span class="bg-gradient-to-r from-teal-700 to-sky-700 bg-clip-text text-transparent dark:from-teal-200 dark:to-sky-200">
-          {PRODUCT_NAME}
-        </span>
+      <p class="antenna-eyebrow flex items-center gap-2">
+        <img src="/favicon.svg" alt="" class="h-7 w-7 rounded-lg shadow-sm" />
+        <span>{PRODUCT_NAME}</span>
       </p>
       <h1 class="mt-2 max-w-2xl text-3xl font-semibold text-slate-950 sm:text-4xl dark:text-white">
         Track the signals that matter.
       </h1>
-      <p class="mt-3 max-w-xl text-base text-slate-500 dark:text-slate-300">
-        Your private signal layer — live in the browser and wired into your agents over MCP.
+      <p class="mt-3 max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300">
+        A source-aware signal layer — inspectable in the browser and available to your agents over
+        MCP.
       </p>
     </div>
   );
@@ -69,20 +68,14 @@ function PreviewCollectionHeader() {
   return (
     <div class="flex flex-col gap-3 border-b border-slate-900/10 pb-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
       <div>
-        <p class="text-xs font-medium uppercase text-slate-400 dark:text-slate-500">
-          Daily Collection
-        </p>
+        <p class="antenna-eyebrow">Daily collection</p>
         <p class="mt-1 text-lg font-semibold text-slate-950 dark:text-white">
           Monday morning cockpit
         </p>
       </div>
       <div class="flex flex-wrap gap-2 text-xs">
-        <span class="rounded-full bg-emerald-50 px-2.5 py-1 font-medium text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-400/20">
-          SSE live
-        </span>
-        <span class="rounded-full bg-sky-50 px-2.5 py-1 font-medium text-sky-700 ring-1 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-200 dark:ring-sky-400/20">
-          Source aware
-        </span>
+        <span class="antenna-chip rounded-full px-2.5 py-1">SSE live</span>
+        <span class="antenna-chip rounded-full px-2.5 py-1">Source aware</span>
       </div>
     </div>
   );
@@ -92,13 +85,10 @@ function PreviewCards() {
   return (
     <div class="mt-4 grid gap-3 sm:grid-cols-2">
       {previewCards.map((signal) => (
-        <article
-          key={signal.title}
-          class="min-h-36 rounded-xl bg-slate-50/80 p-4 ring-1 ring-slate-900/5 dark:bg-slate-950/45 dark:ring-white/10"
-        >
+        <article key={signal.title} class="antenna-subpanel min-h-36 rounded-xl p-4">
           <div class="flex items-start justify-between gap-3">
             <h2 class="text-sm font-semibold text-slate-900 dark:text-white">{signal.title}</h2>
-            <span class="rounded-full bg-white px-2 py-0.5 text-[0.7rem] font-medium text-slate-500 ring-1 ring-slate-900/10 dark:bg-white/[0.06] dark:text-slate-300 dark:ring-white/10">
+            <span class="antenna-meta rounded-full border border-slate-900/10 bg-white/70 px-2 py-0.5 text-[0.65rem] font-medium text-slate-500 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-300">
               {signal.eyebrow}
             </span>
           </div>
@@ -112,10 +102,10 @@ function PreviewCards() {
 
 function AskPreview() {
   return (
-    <div class="mt-4 rounded-xl bg-slate-950 p-4 text-white shadow-inner dark:bg-black/30">
+    <div class="antenna-console mt-4 rounded-xl p-4">
       <div class="mb-3 flex items-center justify-between gap-3">
         <p class="text-sm font-semibold">{SIGNAL_COMPOSER_TITLE}</p>
-        <span class="text-xs text-slate-400">Validated before apply</span>
+        <span class="antenna-meta text-[0.7rem] text-slate-400">Validated before apply</span>
       </div>
       <p class="rounded-lg bg-white/10 px-3 py-2 text-sm text-slate-200">
         "Add a signal for high severity npm advisories this week"
@@ -124,7 +114,7 @@ function AskPreview() {
         {previewRows.map((row) => (
           <div
             key={row.label}
-            class="flex items-center justify-between gap-2 rounded-lg bg-white/[0.06] px-3 py-2 text-xs"
+            class="antenna-meta flex items-center justify-between gap-2 rounded-lg border border-white/[0.05] bg-white/[0.06] px-3 py-2 text-[0.7rem]"
           >
             <span class="truncate text-slate-200">{row.label}</span>
             <span
