@@ -7,6 +7,20 @@ import { ensureUserCollection, SEED_TEMPLATE_COLLECTION_ID } from './ensure-user
 
 type Drizzle = BetterSQLite3Database<typeof schema>;
 
+// Prompts are compared by parsed host, not substring: "tbench.ai.example.com"
+// contains the string but is a different source.
+const promptHostnames = (prompts: readonly string[]): string[] =>
+  prompts.flatMap((prompt) => {
+    try {
+      return [new URL(prompt).hostname];
+    } catch {
+      return [];
+    }
+  });
+
+const isHost = (hostname: string, domain: string): boolean =>
+  hostname === domain || hostname.endsWith(`.${domain}`);
+
 const SCHEMA_DDL = `
   CREATE TABLE collections (
     id text PRIMARY KEY NOT NULL,
@@ -213,8 +227,9 @@ describe('ensureUserCollection', () => {
 
     const requests = db.select().from(schema.connectorRequests).all();
     expect(requests.map((r) => r.prompt)).toEqual(expect.arrayContaining(['https://finviz.com/']));
-    expect(requests.some((r) => r.prompt.includes('artificialanalysis.ai'))).toBe(false);
-    expect(requests.some((r) => r.prompt.includes('tbench.ai'))).toBe(false);
-    expect(requests.some((r) => r.prompt.includes('tradingeconomics.com'))).toBe(false);
+    const hosts = promptHostnames(requests.map((r) => r.prompt));
+    expect(hosts.some((host) => isHost(host, 'artificialanalysis.ai'))).toBe(false);
+    expect(hosts.some((host) => isHost(host, 'tbench.ai'))).toBe(false);
+    expect(hosts.some((host) => isHost(host, 'tradingeconomics.com'))).toBe(false);
   });
 });

@@ -51,6 +51,30 @@ describe('parseGithubTrending', () => {
       },
     ]);
   });
+
+  it('ignores rows whose heading link is not a plain owner/repo path', () => {
+    const malformed = `
+      <article class="Box-row">
+        <h2><a href="/owner/repo/extra">owner / repo / extra</a></h2>
+      </article>
+      <article class="Box-row">
+        <h2><a href="https://elsewhere.test/owner/repo">owner / repo</a></h2>
+      </article>
+    `;
+
+    expect(parseGithubTrending(malformed)).toEqual([]);
+  });
+
+  it('decodes description entities exactly once', () => {
+    const [first] = parseGithubTrending(`
+      <article class="Box-row">
+        <h2><a href="/owner/repo">owner / repo</a></h2>
+        <p class="color-fg-muted">Tools &amp;amp; toys for &lt;everyone&gt;</p>
+      </article>
+    `);
+
+    expect(first?.description).toBe('Tools &amp; toys for <everyone>');
+  });
 });
 
 describe('githubTrending', () => {

@@ -59,7 +59,7 @@ export const marketOverviewStooq: Adapter = async (): Promise<AdapterResult> => 
 
   const assessment = assessMarket(quotes);
   const observedAt = Math.max(...quotes.map((q) => q.ts));
-  const regimeSourceUrl = quotes.some((q) => q.sourceUrl.includes('finance.yahoo.com'))
+  const regimeSourceUrl = quotes.some((q) => urlHasHostname(q.sourceUrl, 'finance.yahoo.com'))
     ? 'https://finance.yahoo.com/'
     : 'https://stooq.com/';
   const points: DataPoint[] = [
@@ -77,6 +77,16 @@ export const marketOverviewStooq: Adapter = async (): Promise<AdapterResult> => 
     ...quotes.map(proxyChangePoint),
   ];
   return { ok: true, points, rawPayload: { assessment, csv: raw, failures } };
+};
+
+// Substring matching on a URL would also accept `finance.yahoo.com.evil.test`;
+// the fallback quote page is always exactly this host.
+const urlHasHostname = (value: string, hostname: string): boolean => {
+  try {
+    return new URL(value).hostname === hostname;
+  } catch {
+    return false;
+  }
 };
 
 type YahooProxyQuoteResult =

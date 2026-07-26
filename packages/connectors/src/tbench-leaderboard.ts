@@ -2,6 +2,7 @@ import { HTML_PAGE_REQUEST_INIT } from './browser-request';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 import { discardResponse } from './discard-response';
 import { errorMessage } from './error-message';
+import { htmlToText } from './html-text';
 
 export type TbenchLeaderboardConfig = {
   readonly version?: string;
@@ -77,15 +78,6 @@ type LeaderboardEntry = {
   readonly verified: boolean;
 };
 
-const stripTags = (html: string): string =>
-  html
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&#39;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/\s+/g, ' ')
-    .trim();
-
 const currentEntry = (row: string, cells: readonly string[]): LeaderboardEntry | undefined => {
   if (cells.length < 11 || !row.includes('details in Harbor Hub')) return undefined;
   return parsedEntry(cells[1] ?? '', cells[2] ?? '', cells[6] ?? '', cells[4] ?? '');
@@ -102,10 +94,10 @@ const parsedEntry = (
   agentOrgCell: string,
   accuracyCell: string,
 ): LeaderboardEntry | undefined => {
-  const agent = stripTags(agentCell);
-  const model = stripTags(modelCell);
-  const agentOrg = stripTags(agentOrgCell);
-  const accuracyMatch = /^(\d+(?:\.\d+)?)%/.exec(stripTags(accuracyCell));
+  const agent = htmlToText(agentCell);
+  const model = htmlToText(modelCell);
+  const agentOrg = htmlToText(agentOrgCell);
+  const accuracyMatch = /^(\d+(?:\.\d+)?)%/.exec(htmlToText(accuracyCell));
   const accuracy = Number(accuracyMatch?.[1]);
   if (!agent || !model || !Number.isFinite(accuracy)) return undefined;
   return { agent, model, agentOrg, accuracy, verified: true };

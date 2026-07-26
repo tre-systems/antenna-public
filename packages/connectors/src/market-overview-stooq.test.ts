@@ -114,7 +114,7 @@ describe('marketOverviewStooq', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockImplementation((url: string) => {
-        if (url.includes('query1.finance.yahoo.com')) {
+        if (new URL(url).hostname === 'query1.finance.yahoo.com') {
           return Promise.resolve(
             new Response(
               JSON.stringify({

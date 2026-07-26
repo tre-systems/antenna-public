@@ -1,3 +1,5 @@
+import { extractHtmlElements, firstOpeningTag, htmlAttribute } from './html-text';
+
 // Post authors are deliberately dropped here: candidate ranking needs the post,
 // not the person, and Reddit usernames are personal data under UK GDPR. Any
 // outreach flow must re-read the author from Reddit at the point of use.
@@ -41,12 +43,11 @@ const PROBLEM_MARKERS: readonly RegExp[] = [
   /\bwork ?around\b/i,
 ];
 
-const ENTRY_PATTERN = /<entry>([\s\S]*?)<\/entry>/g;
-
 export const parseRedditFeed = (feed: string, subreddit: string): RedditCandidate[] => {
   const entries: RedditCandidate[] = [];
-  for (const match of feed.matchAll(ENTRY_PATTERN)) {
-    const entry = match[1];
+  // Linear scanning rather than a lazy `<entry>…</entry>` regex: the feed is
+  // third-party text and a backtracking match over it is a DoS vector.
+  for (const { innerHtml: entry } of extractHtmlElements(feed, 'entry')) {
     if (!entry) continue;
 
     const id = tagText(entry, 'id')?.replace(/^t3_/, '');
@@ -84,14 +85,15 @@ export const isProblemCandidate = (post: RedditCandidate, minBodyChars: number):
 const countMarkerHits = (text: string): number =>
   PROBLEM_MARKERS.reduce((total, marker) => (marker.test(text) ? total + 1 : total), 0);
 
-const tagText = (entry: string, tag: string): string | undefined => {
-  const match = new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`).exec(entry);
-  return match?.[1]?.trim() || undefined;
-};
+const tagText = (entry: string, tag: string): string | undefined =>
+  extractHtmlElements(entry, tag)[0]?.innerHtml.trim() || undefined;
 
+// `<link>` and `<category>` are self-closing in Atom, so the opening tag is read
+// on its own rather than as an element with content.
 const attribute = (entry: string, tag: string, attr: string): string | undefined => {
-  const match = new RegExp(`<${tag}\\b[^>]*\\b${attr}="([^"]*)"`).exec(entry);
-  return match?.[1]?.trim() || undefined;
+  const openingTag = firstOpeningTag(entry, tag);
+  if (openingTag === undefined) return undefined;
+  return htmlAttribute(openingTag, attr)?.trim() || undefined;
 };
 
 // Reddit appends a "submitted by /u/name" footer after this marker: cutting

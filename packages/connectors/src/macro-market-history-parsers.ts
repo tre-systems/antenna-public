@@ -1,3 +1,4 @@
+import { decodeHtmlEntitiesOnce, stripHtmlTags } from './html-text';
 import type { DataPoint } from './types';
 
 export type MacroSeriesContext = {
@@ -152,9 +153,9 @@ const parseIsoDate: DateParser = (value) => {
 const monthIndex = (name: string): number =>
   MONTHS.findIndex((month) => month.toLowerCase() === name.toLowerCase());
 
+// EIA splices markup inside a single token ("Jun-<b>6</b>"), so tags are removed
+// without a separator: a space there would break the week-label and number parses.
 const cleanHtml = (value: string | undefined): string =>
-  (value ?? '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/gi, ' ')
+  decodeHtmlEntitiesOnce(stripHtmlTags(value ?? '', ''))
     .replace(/\s+/g, ' ')
     .trim();

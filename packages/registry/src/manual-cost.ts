@@ -15,10 +15,40 @@ const PROVIDERS: ReadonlyArray<readonly [RegExp, string]> = [
   [/\bgithub\b/i, 'GitHub'],
 ];
 
+// Each number is scanned once and its neighbours inspected, rather than pattern
+// matching a currency around an unbounded digit run in a user-supplied prompt.
 const amountFromPrompt = (prompt: string): string | undefined => {
-  const symbolAmount = /[£$€]\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/.exec(prompt)?.[1];
-  const codeAmount = /([0-9][0-9,]*(?:\.[0-9]{1,2})?)\s*(?:GBP|USD|EUR)\b/i.exec(prompt)?.[1];
-  return (symbolAmount ?? codeAmount)?.replaceAll(',', '');
+  for (const match of prompt.matchAll(/[0-9][0-9,.]*/g)) {
+    const raw = match[0];
+    const start = match.index;
+    const before = prompt.slice(0, start).trimEnd().at(-1);
+    const after = prompt.slice(start + raw.length);
+    if (!isCurrencySymbol(before) && !startsWithCurrencyCode(after)) continue;
+    const amount = normaliseAmount(raw);
+    if (amount !== undefined) return amount;
+  }
+  return undefined;
+};
+
+const isCurrencySymbol = (value: string | undefined): boolean =>
+  value === '£' || value === '$' || value === '€';
+
+const startsWithCurrencyCode = (value: string): boolean => {
+  const trimmed = value.trimStart();
+  const code = trimmed.slice(0, 3).toUpperCase();
+  if (code !== 'GBP' && code !== 'USD' && code !== 'EUR') return false;
+  const boundary = trimmed[3];
+  return boundary === undefined || !/[A-Za-z]/.test(boundary);
+};
+
+const normaliseAmount = (raw: string): string | undefined => {
+  const withoutCommas = raw.replaceAll(',', '');
+  const parts = withoutCommas.split('.');
+  if (parts.length > 2) return undefined;
+  const [integer, decimal] = parts;
+  if (!integer || !/^\d+$/.test(integer)) return undefined;
+  if (decimal !== undefined && !/^\d{1,2}$/.test(decimal)) return undefined;
+  return decimal === undefined ? integer : `${integer}.${decimal}`;
 };
 
 const currencyFromPrompt = (prompt: string): string | undefined => {

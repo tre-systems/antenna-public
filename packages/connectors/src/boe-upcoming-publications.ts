@@ -1,5 +1,6 @@
 import { positiveInt, stringValue } from './config-values';
 import { errorMessage } from './error-message';
+import { extractHtmlElements, htmlAttribute, htmlToText } from './html-text';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 
 type BoeUpcomingPublicationsConfig = {
@@ -88,16 +89,14 @@ export const parseBoeUpcomingPublications = (html: string, now: number): BoePubl
   const section = sectionAfterHeading(html, 'Upcoming key publications');
   if (!section) return [];
 
-  const anchors = [...section.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)].flatMap(
-    (match) => {
-      const href = match[1];
-      const label = normaliseText(match[2] ?? '');
-      if (!href || !label) return [];
-      const parsed = parsePublicationLabel(label, now);
-      if (!parsed) return [];
-      return [{ ...parsed, url: resolveUrl(href) }];
-    },
-  );
+  const anchors = extractHtmlElements(section, 'a').flatMap((anchor) => {
+    const href = htmlAttribute(anchor.openingTag, 'href');
+    const label = htmlToText(anchor.innerHtml);
+    if (!href || !label) return [];
+    const parsed = parsePublicationLabel(label, now);
+    if (!parsed) return [];
+    return [{ ...parsed, url: resolveUrl(href) }];
+  });
 
   // The BoE page lists some publications twice (headline strip and section
   // body), so dedupe on title + scheduled date.
@@ -172,17 +171,3 @@ const resolveUrl = (href: string): string => {
     return DEFAULT_SOURCE;
   }
 };
-
-const normaliseText = (html: string): string =>
-  decodeEntities(html.replace(/<[^>]*>/g, ' '))
-    .replace(/\s+/g, ' ')
-    .trim();
-
-const decodeEntities = (value: string): string =>
-  value
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&#x2F;/g, '/');
