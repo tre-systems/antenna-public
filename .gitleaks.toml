@@ -1,0 +1,14 @@
+[extend]
+useDefault = true
+
+# AES-GCM needs a 64-character hex key, so the unit-test fixtures have to look
+# exactly like one. These two are an ascending and a descending nibble run —
+# shapes no generated key would ever take. Allowlisting the literal values
+# rather than the files keeps every other high-entropy string in the repo, test
+# or not, still failing the scan.
+[allowlist]
+description = "Deterministic placeholder encryption keys used by unit tests"
+regexes = [
+  '''0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef''',
+  '''fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210''',
+]
