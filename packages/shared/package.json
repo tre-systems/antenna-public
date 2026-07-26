@@ -1,6 +1,7 @@
 {
   "name": "@antenna/shared",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "main": "src/index.ts",
   "scripts": {

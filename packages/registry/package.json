@@ -1,6 +1,7 @@
 {
   "name": "@antenna/registry",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
@@ -9,8 +10,5 @@
   "dependencies": {
     "@antenna/connectors": "*",
     "zod": "^4.4.3"
-  },
-  "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250109.0"
   }
 }
