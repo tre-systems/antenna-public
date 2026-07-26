@@ -9,7 +9,7 @@ backend.
 
 The product is successful when a self-hosting operator can:
 
-1. sign in through an allowlisted Google account
+1. sign in with Google, on an instance they can close to named addresses
 2. create private collections from reviewed templates
 3. inspect source, freshness, status, and source-policy posture
 4. connect an MCP-aware client to the same owner-scoped data
@@ -21,7 +21,11 @@ The product is successful when a self-hosting operator can:
 ### Authentication
 
 - Google OAuth is the interactive sign-in method.
-- Only allowlisted email addresses may create or retain sessions.
+- `ALLOWED_EMAILS` decides who may create or retain a session: unset means any
+  Google account, set means only those addresses. `BLOCKED_EMAILS` always
+  refuses and wins over the allowlist. Both are rechecked per request.
+- An account is capped at 10 collections and 50 signals per collection, so one
+  account cannot monopolise the shared refresh queue.
 - Google provider access, refresh, and ID tokens are discarded before the
   account row reaches D1.
 - Production ignores the test-only auth bypass.
