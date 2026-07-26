@@ -32,23 +32,7 @@ import {
   type UpdateSignalInput,
 } from './tool-signals.js';
 
-export type {
-  ConfirmPlanInput,
-  GetSignalHistoryInput,
-  GetSignalInput,
-  GetCollectionInput,
-  ListSignalsInput,
-  McpSignalDetail,
-  McpSignalHistory,
-  McpSignalSummary,
-  McpCollectionDetail,
-  ProposeSignalInput,
-  RefreshSignalInput,
-  RejectPlanInput,
-  RemoveSignalInput,
-  ReorderSignalsInput,
-  UpdateSignalInput,
-} from './tool-signals.js';
+export type * from './tool-signals.js';
 
 export async function listSignalsTool(
   client: AntennaReadClient,

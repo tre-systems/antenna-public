@@ -47,15 +47,11 @@ export const createPlan = async (env: DbEnv, args: CreatePlanArgs): Promise<Plan
   };
 };
 
-// Async post-step over `matchPrompt`: for weather/airquality signals that still
-// need lat/lon, try the Open-Meteo geocoder once per signal. We keep this in
-// the planner rather than the templates because `paramExtractors` are sync per
-// the adapter contract, and we only want to pay for the network call once per
-// prompt. On a miss the signal is left untouched so the UI's manual lat/lon
-// fallback still works.
 const NEEDS_GEOCODE = new Set(['weather', 'airquality']);
 
-export const resolveLocations = async (plan: CollectionPlan): Promise<CollectionPlan> => {
+// Lives here rather than in a template because `paramExtractors` are sync. On a
+// geocoder miss the signal is untouched, so the manual lat/lon fallback works.
+const resolveLocations = async (plan: CollectionPlan): Promise<CollectionPlan> => {
   const signals = await Promise.all(plan.signals.map(maybeGeocodeSignal));
   return { ...plan, signals };
 };

@@ -1,13 +1,12 @@
 import { and, asc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { sourcePolicyForTemplate } from '@antenna/registry';
-import type { CollectionRecord, SharedApiSignal, SharedCollectionResponse } from '@antenna/shared';
+import type { SharedCollectionResponse } from '@antenna/shared';
 import { db, type Env as DbEnv } from '../db/client';
 import { signalStatus, collections, signals } from '../db/schema';
 import { canReadSharedLinkSignalWithSourcePolicy } from '../policy/source-access';
-import { redactStatusForPublic } from './public-collection-helpers';
+import { toPublicCollectionRecord, toPublicSignal } from './public-collection-helpers';
 import { buildSignal, latestPointsForSignals } from './signals';
-import { toCollectionRecord } from './collection-record';
 import { err, ok } from './http';
 
 type Bindings = DbEnv;
@@ -45,11 +44,11 @@ export const sharedCollectionsRoute = new Hono<{ Bindings: Bindings }>().get(
       visibleRows.map((row) => row.signal.id),
     );
     const responseSignals = visibleRows.map((row) =>
-      toSharedSignal(buildSignal(row.signal, row.status, latestPoints.get(row.signal.id) ?? [])),
+      toPublicSignal(buildSignal(row.signal, row.status, latestPoints.get(row.signal.id) ?? [])),
     );
 
     return ok(c, {
-      collection: toSharedCollectionRecord(
+      collection: toPublicCollectionRecord(
         collection,
         new Set(visibleRows.map((row) => row.signal.id)),
       ),
@@ -57,29 +56,3 @@ export const sharedCollectionsRoute = new Hono<{ Bindings: Bindings }>().get(
     } satisfies SharedCollectionResponse);
   },
 );
-
-const toSharedCollectionRecord = (
-  collection: Parameters<typeof toCollectionRecord>[0],
-  visibleSignalIds: ReadonlySet<string>,
-): CollectionRecord => {
-  const record = toCollectionRecord(collection);
-  if (!record.layout) return record;
-  return {
-    ...record,
-    layout: {
-      ...record.layout,
-      slots: record.layout.slots.filter((slot) => visibleSignalIds.has(slot.signal_id)),
-    },
-  };
-};
-
-const toSharedSignal = (signal: ReturnType<typeof buildSignal>): SharedApiSignal => ({
-  id: signal.id,
-  template_id: signal.template_id,
-  title: signal.title,
-  visibility: signal.visibility,
-  display: signal.display,
-  source_policy: signal.source_policy ?? undefined,
-  status: redactStatusForPublic(signal.status),
-  points: signal.points,
-});

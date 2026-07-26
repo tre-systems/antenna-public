@@ -8,16 +8,15 @@ type Props = {
 
 export function SignInCard({ error, isSubmitting, onSubmit }: Props) {
   return (
-    <div class="w-full rounded-2xl bg-white/80 p-8 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_64px_-24px_rgba(13,148,136,0.22)] ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.05] dark:ring-white/10 dark:shadow-[0_1px_2px_rgba(0,0,0,0.4),0_24px_64px_-24px_rgba(14,165,233,0.34)]">
-      <BrandMark />
+    <div class="antenna-panel w-full rounded-2xl p-8">
       <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Sign in</h2>
       <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Open your private collection with Google.
+        Open your collection with Google.
       </p>
       {error ? <SignInAlert error={error} /> : null}
       <GoogleButton isSubmitting={isSubmitting} onSubmit={onSubmit} />
       <p class="mt-6 text-xs leading-5 text-slate-400 dark:text-slate-500">
-        Self-hosted early release. By continuing, you agree to our{' '}
+        By continuing, you agree to our{' '}
         <a
           href="/terms/"
           class="underline decoration-slate-300 underline-offset-2 hover:text-slate-600 dark:decoration-white/20 dark:hover:text-slate-300"
@@ -37,11 +36,11 @@ export function SignInCard({ error, isSubmitting, onSubmit }: Props) {
   );
 }
 
-function BrandMark() {
-  return (
-    <img src="/favicon.svg" alt="" class="mb-6 h-12 w-12 rounded-xl shadow-md" aria-hidden="true" />
-  );
-}
+const signInErrorMessage = (kind: SignInError['kind']): string => {
+  if (kind === 'blocked') return 'This account has been blocked from signing in.';
+  if (kind === 'not_invited') return "This Antenna isn't open to that account.";
+  return "Couldn't sign you in. Try again in a moment.";
+};
 
 function SignInAlert({ error }: { readonly error: SignInError }) {
   return (
@@ -49,9 +48,7 @@ function SignInAlert({ error }: { readonly error: SignInError }) {
       role="alert"
       class="mt-6 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-400/20"
     >
-      {error.kind === 'whitelist'
-        ? "That email isn't on the access list. Contact this Antenna instance's operator."
-        : "Couldn't sign you in. Try again, or contact this Antenna instance's operator."}
+      {signInErrorMessage(error.kind)}
     </div>
   );
 }
@@ -68,7 +65,7 @@ function GoogleButton({
       type="button"
       disabled={isSubmitting}
       onClick={onSubmit}
-      class="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-br from-teal-500 to-sky-600 px-3 py-2.5 text-sm font-medium text-white shadow-[0_4px_18px_-4px_rgba(14,165,233,0.45)] transition hover:brightness-110 hover:shadow-[0_6px_22px_-4px_rgba(20,184,166,0.45)] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+      class="antenna-primary mt-6 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
     >
       <GoogleIcon />
       {isSubmitting ? 'Connecting...' : 'Continue with Google'}

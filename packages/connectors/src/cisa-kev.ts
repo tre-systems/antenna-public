@@ -1,3 +1,4 @@
+import { positiveInt, stringValue } from './config-values';
 import { fetchJson } from './fetch-json';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 
@@ -126,9 +127,3 @@ const toEntryPoint = (entry: NormalisedKev, rank: number, ts: number): DataPoint
   ts,
   sourceUrl: `${SOURCE_PAGE}?search_api_fulltext=${encodeURIComponent(entry.cveId)}`,
 });
-
-const stringValue = (value: unknown): string | undefined =>
-  typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
-
-const positiveInt = (value: unknown): number | undefined =>
-  typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : undefined;

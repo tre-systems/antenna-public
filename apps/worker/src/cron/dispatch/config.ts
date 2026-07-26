@@ -1,6 +1,8 @@
 import { parseJsonRecord } from '../../db/codecs';
+import { isAdminUser } from '../../policy/admin';
 import { validateTemplateConfig } from '../../registry/config';
-import type { SignalRow, DispatchEnv, DispatchTemplate } from './types';
+import { readDeploymentStats } from '../../routes/deployment-stats';
+import type { Client, CollectionRow, SignalRow, DispatchEnv, DispatchTemplate } from './types';
 
 type ConfigResult = { ok: true; config: Record<string, unknown> } | { ok: false; message: string };
 
@@ -10,17 +12,42 @@ const GITHUB_TOKEN_TEMPLATE_IDS = new Set([
   'github-trending',
 ]);
 
-export const prepareAdapterConfig = (
-  _client: unknown,
+const DEPLOYMENT_STATS_TEMPLATE_ID = 'antenna-users';
+
+export const prepareAdapterConfig = async (
+  client: Client,
   env: DispatchEnv,
   signal: SignalRow,
+  collection: CollectionRow,
   template: DispatchTemplate,
-): ConfigResult => {
+): Promise<ConfigResult> => {
   const parsedConfig = parseJsonRecord(signal.config);
   const withGithubToken = injectGithubToken(env, template.id, parsedConfig);
   const withSecret = injectServerSecret(env, template, withGithubToken);
   if (!withSecret.ok) return withSecret;
-  return { ok: true, config: validateTemplateConfig(template, withSecret.config) };
+  const withStats = await injectDeploymentStats(client, env, template.id, collection, withSecret);
+  if (!withStats.ok) return withStats;
+  return { ok: true, config: validateTemplateConfig(template, withStats.config) };
+};
+
+// Deployment-wide counts are only materialised for an admin's own collection.
+// Anyone else's `antenna-users` signal gets no numbers and reports setup, so a
+// copied or forked signal can never surface them.
+const injectDeploymentStats = async (
+  client: Client,
+  env: DispatchEnv,
+  templateId: string,
+  collection: CollectionRow,
+  previous: { readonly config: Record<string, unknown> },
+): Promise<ConfigResult> => {
+  if (templateId !== DEPLOYMENT_STATS_TEMPLATE_ID) return { ok: true, config: previous.config };
+  if (!(await isAdminUser(client, env, collection.ownerId))) {
+    return {
+      ok: false,
+      message: 'setup_required: deployment user counts are available to deployment admins only',
+    };
+  }
+  return { ok: true, config: { ...previous.config, ...(await readDeploymentStats(client)) } };
 };
 
 const injectGithubToken = (

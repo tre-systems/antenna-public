@@ -1,10 +1,9 @@
 import { cloudflareAnalytics } from '@antenna/connectors';
 import { z } from 'zod';
+import { numberField, stringField } from './config-fields';
 import { type ConnectorTemplate } from './types';
 
-// Fleet-wide Cloudflare Workers traffic (requests, errors) with zero
-// per-app instrumentation. Private-only: it reads the deployment owner's
-// account analytics through an authenticated API token.
+// Fleet-wide Workers traffic with zero per-app instrumentation, via the owner's account token.
 
 const ACCOUNT_ID_RX = /^[0-9a-f]{32}$/;
 
@@ -34,8 +33,8 @@ export const cloudflareAnalyticsTemplate: ConnectorTemplate = {
   },
   adapter: (config) =>
     cloudflareAnalytics({
-      accountId: typeof config.account_id === 'string' ? config.account_id : '',
-      apiToken: typeof config.apiToken === 'string' ? config.apiToken : '',
-      days: typeof config.days === 'number' ? config.days : undefined,
+      accountId: stringField(config, 'account_id'),
+      apiToken: stringField(config, 'apiToken'),
+      days: numberField(config, 'days'),
     }),
 };

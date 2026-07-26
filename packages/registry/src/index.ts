@@ -25,6 +25,8 @@ import { ukEconomicCalendarTemplate } from './uk-economic-calendar';
 import { appUsageTemplate } from './app-usage';
 import { cloudflareAnalyticsTemplate } from './cloudflare-analytics';
 import { projectPortfolioTemplate } from './project-portfolio';
+import { redditProblemsTemplate } from './reddit-problems';
+import { antennaUsersTemplate } from './antenna-users';
 
 export type {
   AlertRule,
@@ -48,33 +50,6 @@ export {
   type RegistryPointInput,
 } from './display';
 export { safeExternalUrl } from './safe-url';
-export { fxPairTemplate } from './fx-pair';
-export { cryptoWatchlistTemplate } from './crypto-watchlist';
-export { cryptoHistoryTemplate } from './crypto-history';
-export { weatherTemplate } from './weather';
-export { airQualityTemplate } from './airquality';
-export { equityWatchlistTemplate } from './equity-watchlist';
-export { marketHistoryTemplate } from './market-history';
-export { marketOverviewTemplate } from './market-overview';
-export { sectorMoversTemplate } from './sector-movers';
-export { macroMarketHistoryTemplate } from './macro-market-history';
-export { tradingEconomicsMarketTemplate } from './trading-economics-market';
-export { githubTrendingTemplate } from './github-trending';
-export { githubRepoActivityTemplate } from './github-repo-activity';
-export { karpathyJobsSnapshotTemplate } from './karpathy-jobs-snapshot';
-export { manualMetricTemplate } from './manual-metric';
-export { manualCostTemplate } from './manual-cost';
-export { restMetricTemplate } from './rest-metric';
-export { cisaKevRecentTemplate } from './cisa-kev-recent';
-export { cloudflareIncidentsTemplate } from './cloudflare-incidents';
-export { githubSecurityAdvisoriesTemplate } from './github-security-advisories';
-export { aaHighlightsTemplate } from './aa-highlights';
-export { aaFrontierTemplate } from './aa-frontier';
-export { tbenchLeaderboardTemplate } from './tbench-leaderboard';
-export { ukEconomicCalendarTemplate } from './uk-economic-calendar';
-export { appUsageTemplate } from './app-usage';
-export { cloudflareAnalyticsTemplate } from './cloudflare-analytics';
-export { projectPortfolioTemplate } from './project-portfolio';
 export { collectionTemplates } from './collection-templates';
 
 export const templates = [
@@ -94,6 +69,7 @@ export const templates = [
   karpathyJobsSnapshotTemplate,
   manualCostTemplate,
   manualMetricTemplate,
+  antennaUsersTemplate,
   restMetricTemplate,
   ukEconomicCalendarTemplate,
   cisaKevRecentTemplate,
@@ -105,4 +81,5 @@ export const templates = [
   appUsageTemplate,
   cloudflareAnalyticsTemplate,
   projectPortfolioTemplate,
+  redditProblemsTemplate,
 ] as const;

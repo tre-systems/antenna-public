@@ -34,11 +34,11 @@ describe('matchPrompt', () => {
   });
 
   it('matches github repo activity with owner/repo from path', () => {
-    const plan = matchPrompt('my GitHub PRs for example-org/antenna');
+    const plan = matchPrompt('my GitHub PRs for tre-systems/antenna');
     expect(plan.signals).toHaveLength(1);
     const signal = plan.signals[0];
     expect(signal?.template_id).toBe('github-repo-activity');
-    expect(signal?.config).toEqual({ owner: 'example-org', repo: 'antenna' });
+    expect(signal?.config).toEqual({ owner: 'tre-systems', repo: 'antenna' });
     expect(signal?.missing).toEqual([]);
   });
 
@@ -71,7 +71,7 @@ describe('matchPrompt', () => {
     expect(signal?.template_id).toBe('fx-pair');
     expect(signal?.config).toEqual({ base: 'CHF', quote: 'USD' });
     expect(signal?.missing).toEqual([]);
-    expect(signal?.rights_status).toBe('with-attribution');
+    expect(signal?.rights_status).toBe('public');
   });
 
   it('splits "ETH and SOL spot" into two crypto-watchlist fragments', () => {
@@ -87,16 +87,16 @@ describe('matchPrompt', () => {
   });
 
   it('matches a market history chart request', () => {
-    const plan = matchPrompt('yearly graph for AZN.L');
+    const plan = matchPrompt('yearly graph for BA.L');
     expect(plan.signals).toHaveLength(1);
     const signal = plan.signals[0];
     expect(signal?.template_id).toBe('market-history');
-    expect(signal?.config).toEqual({ symbol: 'AZN.L' });
+    expect(signal?.config).toEqual({ symbol: 'BA.L' });
     expect(signal?.rights_status).toBe('with-attribution');
   });
 
   it('carries market history context across ticker lists', () => {
-    const plan = matchPrompt('yearly graphs for AZN.L, VTI, MSFT, SHEL.L and QQQ');
+    const plan = matchPrompt('yearly graphs for BA.L, VTI, 0P000125KV.L, ANTO.L and PII');
     expect(plan.signals).toHaveLength(5);
     expect(plan.signals.map((signal) => signal.template_id)).toEqual([
       'market-history',
@@ -106,11 +106,11 @@ describe('matchPrompt', () => {
       'market-history',
     ]);
     expect(plan.signals.map((signal) => signal.config.symbol)).toEqual([
-      'AZN.L',
+      'BA.L',
       'VTI',
-      'MSFT',
-      'SHEL.L',
-      'QQQ',
+      '0P000125KV.L',
+      'ANTO.L',
+      'PII',
     ]);
     expect(plan.unmatched).toEqual([]);
   });
@@ -121,7 +121,7 @@ describe('matchPrompt', () => {
     const signal = plan.signals[0];
     expect(signal?.template_id).toBe('crypto-history');
     expect(signal?.config).toEqual({ pairs: 'BTC-USD' });
-    expect(signal?.rights_status).toBe('needs-review');
+    expect(signal?.rights_status).toBe('public');
   });
 
   it('carries crypto history context across coin lists', () => {
@@ -141,14 +141,14 @@ describe('matchPrompt', () => {
   });
 
   it('carries history intent to ticker lists even when the first ticker is bare', () => {
-    const plan = matchPrompt('AZN.L, VTI and SHEL.L yearly graphs');
+    const plan = matchPrompt('BA.L, VTI and ANTO.L yearly graphs');
     expect(plan.signals).toHaveLength(3);
     expect(plan.signals.map((signal) => signal.template_id)).toEqual([
       'market-history',
       'market-history',
       'market-history',
     ]);
-    expect(plan.signals.map((signal) => signal.config.symbol)).toEqual(['AZN.L', 'VTI', 'SHEL.L']);
+    expect(plan.signals.map((signal) => signal.config.symbol)).toEqual(['BA.L', 'VTI', 'ANTO.L']);
     expect(plan.unmatched).toEqual([]);
   });
 
@@ -213,7 +213,7 @@ describe('matchPrompt', () => {
     const signal = plan.signals[0];
     expect(signal?.template_id).toBe('github-security-advisories');
     expect(signal?.config).toEqual({});
-    expect(signal?.rights_status).toBe('with-attribution');
+    expect(signal?.rights_status).toBe('public');
     expect(signal?.source_label).toBe('GitHub Security Advisories');
     expect(plan.unmatched).toEqual([]);
   });
@@ -224,7 +224,7 @@ describe('matchPrompt', () => {
     const signal = plan.signals[0];
     expect(signal?.template_id).toBe('uk-economic-calendar');
     expect(signal?.config).toEqual({});
-    expect(signal?.rights_status).toBe('needs-review');
+    expect(signal?.rights_status).toBe('public');
     expect(signal?.source_label).toBe('Bank of England');
     expect(plan.unmatched).toEqual([]);
   });

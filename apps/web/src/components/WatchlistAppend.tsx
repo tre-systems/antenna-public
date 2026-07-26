@@ -5,11 +5,7 @@ import { loadSignals } from '../signals/signals';
 
 type Props = { readonly signal: ApiSignal };
 
-// Inline "+ Add symbol" affordance for crypto-watchlist and equity-watchlist
-// signals. Reads the current comma-joined list from config, validates the
-// user's entry against a coarse template-aware shape, and PATCHes the merged
-// list back. Tighter syntax (e.g. exchange suffixes) stays with the user —
-// the server's Zod schema is the source of truth.
+// Client validation is deliberately coarse — the server's Zod schema decides.
 export function WatchlistAppend({ signal }: Props) {
   const cfg = appendConfig(signal);
   const [editing, setEditing] = useState(false);
@@ -89,7 +85,7 @@ export function WatchlistAppend({ signal }: Props) {
               setDraft((event.target as HTMLInputElement).value);
             }}
             onKeyDown={handleKey}
-            class="min-w-0 flex-1 rounded-md border border-slate-300 bg-white/90 px-2 py-1 text-xs text-slate-900 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.06] dark:text-white"
+            class="min-w-0 flex-1 rounded-md border border-slate-300 bg-white/90 px-2 py-1 text-xs text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.06] dark:text-white"
             data-testid={`watchlist-append-input-${signal.id}`}
           />
           <button
@@ -98,7 +94,7 @@ export function WatchlistAppend({ signal }: Props) {
               void commit();
             }}
             disabled={saving}
-            class="rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white transition-colors hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:opacity-60 dark:bg-white dark:text-slate-900"
+            class="antenna-primary rounded-md px-2 py-1 text-xs font-semibold transition disabled:opacity-60"
           >
             {saving ? 'Adding…' : 'Add'}
           </button>
@@ -106,7 +102,7 @@ export function WatchlistAppend({ signal }: Props) {
             type="button"
             onClick={cancel}
             disabled={saving}
-            class="rounded-md px-2 py-1 text-xs text-slate-500 transition-colors hover:bg-slate-900/[0.05] focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:opacity-60 dark:text-slate-400 dark:hover:bg-white/5"
+            class="rounded-md px-2 py-1 text-xs text-slate-500 transition-colors hover:bg-slate-900/[0.05] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-60 dark:text-slate-400 dark:hover:bg-white/5"
           >
             Cancel
           </button>
@@ -117,7 +113,7 @@ export function WatchlistAppend({ signal }: Props) {
           onClick={() => {
             setEditing(true);
           }}
-          class="text-xs font-medium text-slate-500 transition-colors hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400/40 dark:text-slate-400 dark:hover:text-slate-200"
+          class="text-xs font-medium text-slate-500 transition-colors hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:text-slate-400 dark:hover:text-slate-200"
           data-testid={`watchlist-append-trigger-${signal.id}`}
         >
           + Add {cfg.unitLabel}
@@ -170,8 +166,8 @@ export function appendConfig(signal: ApiSignal): AppendConfig | null {
     return {
       field: 'tickers',
       unitLabel: 'ticker',
-      placeholder: 'AAPL.US or AZN.UK',
-      invalidHint: 'Use a Stooq ticker like AAPL.US or AZN.UK.',
+      placeholder: 'AAPL.US or BA.UK',
+      invalidHint: 'Use a Stooq ticker like AAPL.US or BA.UK.',
       split: () => splitList(signal.config.tickers),
       normalise: (raw) => raw.trim().toUpperCase(),
       isValid: (entry) => /^[A-Z0-9.]{2,16}$/.test(entry) && /\.[A-Z]{1,3}$/.test(entry),

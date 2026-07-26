@@ -3,12 +3,9 @@ import type { DigestEnv } from './cron/digest/types';
 import type { DispatchEnv } from './cron/dispatch/types';
 import type { BeaconEnv } from './routes/beacon';
 
-// The full set of bindings the deployed Worker holds, composed once. Adding a
-// secret or binding should touch this type only — domain modules keep their own
-// narrower env types (DbEnv, AuthEnv, DispatchEnv, DigestEnv) and WorkerEnv
-// unions them with the runtime-only bindings (Static Assets + Durable Objects).
-// CHANNELS is required here even though NotifyEnv treats it as optional: the
-// deployed Worker always binds it.
+// Every binding the deployed Worker holds, composed once: adding a secret should
+// touch this type only. CHANNELS is required here even though NotifyEnv treats it
+// as optional, because the deployed Worker always binds it.
 export type WorkerEnv = MiddlewareEnv &
   DispatchEnv &
   DigestEnv &

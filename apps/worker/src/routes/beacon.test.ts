@@ -88,7 +88,7 @@ describe('POST /api/beacon', () => {
     const app = buildApp({ APP_USAGE: dataset, BEACON_INGEST_TOKEN: TOKEN });
 
     const res = await app.post(
-      { project: 'sample-app', event: 'character_created' },
+      { project: 'swade-toolbox', event: 'character_created' },
       `Bearer ${TOKEN}`,
     );
 
@@ -96,7 +96,7 @@ describe('POST /api/beacon', () => {
     expect(await res.json()).toEqual({ ok: true });
     expect(written).toEqual([
       {
-        indexes: ['sample-app'],
+        indexes: ['swade-toolbox'],
         blobs: ['character_created', ''],
         doubles: [1],
       },

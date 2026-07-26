@@ -69,7 +69,6 @@ function readTemplate(templateName, templatePath) {
     params: readParamKeys(signal),
     rightsStatus: readStringProperty(signal, 'rightsStatus', templateName),
     refreshSeconds: readNumberProperty(signal, 'defaultRefreshSeconds'),
-    private: /\bprivate:\s*true\b/.test(signal),
     plannerDisabled: /\bplannerEnabled:\s*false\b/.test(signal),
     serverSecret: readServerSecret(signal),
   };
@@ -80,6 +79,10 @@ function updateSkill(skill, templates) {
     beginMarker,
     '',
     ...templates.map((template) => `- ${formatTemplate(template)}`),
+    // Blank line before the closing marker: Prettier separates a list from a
+    // following HTML comment, and without it `format:check` and this generator
+    // disagree forever.
+    '',
     endMarker,
   ].join('\n');
   const pattern = new RegExp(`${escapeRegex(beginMarker)}[\\s\\S]*?${escapeRegex(endMarker)}`);
@@ -98,9 +101,6 @@ function formatTemplate(template) {
   ];
   if (template.serverSecret !== null) {
     parts.push(`secret: \`${template.serverSecret}\``);
-  }
-  if (template.private) {
-    parts.push('private');
   }
   if (template.plannerDisabled) {
     parts.push('planner disabled');

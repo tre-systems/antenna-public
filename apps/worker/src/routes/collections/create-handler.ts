@@ -2,12 +2,14 @@ import { collectionTemplates, type CollectionTemplate } from '@antenna/registry'
 import { collectionCreateSchema, type CollectionRecord } from '@antenna/shared';
 import type { z } from 'zod';
 import { db } from '../../db/client';
+import { signalStatus, collections, signals } from '../../db/schema';
 import { toCollectionRecord } from '../collection-record';
-import { err } from '../http';
-import { insertCollectionGraph } from './atomic-create';
-import { createCollectionFromCommunityTemplate } from './community-templates';
-import { COMMUNITY_TEMPLATE_ID_PREFIX } from './constants';
-import { collectionQuotaError } from './quota';
+import { err, errWith } from '../http';
+import { countCollectionsForUser, collectionQuotaFromCount } from '../quota';
+import {
+  createCollectionFromCommunityTemplate,
+  COMMUNITY_TEMPLATE_ID_PREFIX,
+} from './community-templates';
 import { newCollectionSlug } from './slug';
 import {
   emptyTemplateRows,
@@ -41,8 +43,20 @@ export const createCollection = async (c: CollectionsContext): Promise<Response>
   const templateRows = templateRowsForCollection(collectionTemplate.template, row);
   if (!templateRows.ok) return templateRowsFailure(c, templateRows);
 
-  await insertTemplateRows(c.env.DB, client, row, templateRows);
+  await client.insert(collections).values(row).run();
+  await insertTemplateRows(client, templateRows);
   return c.json(toCollectionRecord(row) satisfies CollectionRecord, 201);
+};
+
+// The refusal response when the account is already at its collection limit,
+// or undefined to carry on. Checked before any write.
+const collectionQuotaError = async (
+  c: CollectionsContext,
+  client: Client,
+  userId: string,
+): Promise<Response | undefined> => {
+  const quota = collectionQuotaFromCount(await countCollectionsForUser(client, userId));
+  return quota.can_create ? undefined : errWith(c, 'collection_quota_exceeded', { quota }, 409);
 };
 
 const resolveCollectionTemplate = (templateId: string | undefined): TemplateLookup => {
@@ -89,12 +103,8 @@ const templateRowsFailure = (c: CollectionsContext, result: TemplateRowsResult):
   return err(c, result.error, 400);
 };
 
-const insertTemplateRows = async (
-  binding: D1Database,
-  client: Client,
-  collection: CollectionRow,
-  rows: TemplateRowsResult,
-): Promise<void> => {
-  if (!rows.ok) throw new Error('Expected materialized collection rows');
-  await insertCollectionGraph(binding, client, collection, rows.signals, rows.statuses);
+const insertTemplateRows = async (client: Client, rows: TemplateRowsResult): Promise<void> => {
+  if (!rows.ok || rows.signals.length === 0) return;
+  await client.insert(signals).values(rows.signals).run();
+  await client.insert(signalStatus).values(rows.statuses).run();
 };

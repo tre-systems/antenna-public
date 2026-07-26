@@ -61,7 +61,7 @@ describe('SignalComposer', () => {
     expect(html).toContain('CHF/USD');
     expect(html).toContain('Paris weather');
     expect(html).toContain('vercel/next.js');
-    expect(html).not.toContain('example-org/antenna');
+    expect(html).not.toContain('tre-systems/antenna');
   });
 
   it('renders the PlanPreview when a plan is in the signal', () => {

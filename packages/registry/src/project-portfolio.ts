@@ -1,5 +1,6 @@
 import { projectPortfolio } from '@antenna/connectors';
 import { z } from 'zod';
+import { numberField, stringField } from './config-fields';
 import { type ConnectorTemplate } from './types';
 
 const ACCOUNT_ID_RX = /^[0-9a-f]{32}$/;
@@ -28,9 +29,9 @@ export const projectPortfolioTemplate: ConnectorTemplate = {
   },
   adapter: (config) =>
     projectPortfolio({
-      projects: typeof config.projects === 'string' ? config.projects : '',
-      accountId: typeof config.account_id === 'string' ? config.account_id : '',
-      apiToken: typeof config.apiToken === 'string' ? config.apiToken : '',
-      days: typeof config.days === 'number' ? config.days : undefined,
+      projects: stringField(config, 'projects'),
+      accountId: stringField(config, 'account_id'),
+      apiToken: stringField(config, 'apiToken'),
+      days: numberField(config, 'days'),
     }),
 };

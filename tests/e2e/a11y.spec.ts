@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { createSharedFixture, deleteCollection } from './shared-fixture';
+import { createSharedFixture, deleteCollection, openSignalComposer } from './shared-fixture';
 
 const seriousOrCritical = (violations: Awaited<ReturnType<AxeBuilder['analyze']>>['violations']) =>
   violations.filter(
@@ -31,29 +31,6 @@ const expectNoSeriousA11yViolations = async (page: Page, label: string): Promise
   ).toEqual([]);
 };
 
-const openComposer = async (page: Page): Promise<void> => {
-  const input = page.getByTestId('signal-composer-input');
-  const onboardingAddSignal = page.getByTestId('onboarding-add-signal');
-  await expect(
-    page
-      .locator(
-        '[data-testid="signal-composer-input"], [data-testid="signal-composer-open"], [data-testid="onboarding-add-signal"]',
-      )
-      .first(),
-  ).toBeVisible({ timeout: 10_000 });
-  if (await onboardingAddSignal.isVisible()) {
-    await onboardingAddSignal.click();
-  }
-  if (await input.isVisible()) return;
-  await page
-    .getByTestId('signal-composer-open')
-    .click({ timeout: 5_000 })
-    .catch(async (error: unknown) => {
-      if (!(await input.isVisible())) throw error;
-    });
-  await expect(input).toBeVisible({ timeout: 10_000 });
-};
-
 test('signed-in collection and token settings have no serious axe violations', async ({ page }) => {
   await page.goto('/');
   await expect(
@@ -70,7 +47,7 @@ test('signed-in collection and token settings have no serious axe violations', a
 
 test('add-signal plan preview has no serious axe violations', async ({ page }) => {
   await page.goto('/');
-  await openComposer(page);
+  await openSignalComposer(page);
 
   await page.getByTestId('signal-composer-input').fill('weather in Paris');
   await page.getByTestId('signal-composer-submit').click();

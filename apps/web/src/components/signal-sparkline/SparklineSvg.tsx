@@ -19,7 +19,7 @@ export function SparklineSvg({
   return (
     <svg
       ref={hover.setSvgElement}
-      class={`${compact ? 'h-10' : 'h-24'} w-full overflow-visible text-sky-600 dark:text-sky-300`}
+      class={`${compact ? 'h-10' : 'h-24'} w-full overflow-visible text-emerald-600 dark:text-emerald-300`}
       viewBox={`0 0 ${SPARKLINE_WIDTH} ${SPARKLINE_HEIGHT}`}
       role="img"
       aria-label={`${label} ${spanLabel} chart`}

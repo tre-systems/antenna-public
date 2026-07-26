@@ -1,10 +1,7 @@
 import { prefersReducedMotion } from './flip';
 
-// Floating copy of a signal card that tracks the pointer during a drag. The
-// real cell stays in the grid as a dimmed placeholder previewing the drop
-// slot, while the ghost carries the visual card under the pointer. The ghost
-// is pointer-events:none so document.elementFromPoint hit-tests the grid
-// cells underneath it.
+// Floating copy of a card that tracks the pointer during a drag. It is
+// pointer-events:none so elementFromPoint hit-tests the grid cells beneath it.
 export type DragGhost = {
   readonly moveTo: (dx: number, dy: number) => void;
   readonly settleInto: (target: DOMRect) => void;

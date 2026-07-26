@@ -1,8 +1,7 @@
-import { templates } from '@antenna/registry';
+import { sourceLabelForTemplate, templates } from '@antenna/registry';
 import type { CollectionPlan, ProposedSignal, UnmatchedHint } from '@antenna/shared';
 import { resolveDemoCity } from './geocode';
 import { enrichConnectorRequest } from './setup-requests';
-import { sourceLabelFor } from './sources';
 import { validateTemplateConfig } from '../registry/config';
 
 type Template = (typeof templates)[number];
@@ -27,7 +26,6 @@ const bestTemplate = (fragment: string): Template | undefined => {
   let best: Template | undefined;
   let bestScore = 0;
   for (const template of templates) {
-    if (template.private === true) continue;
     if (template.plannerEnabled === false) continue;
     let score = 0;
     for (const hint of template.matchHints) {
@@ -100,7 +98,7 @@ const buildSignal = (template: Template, fragment: string): ProposedSignal => {
     missing,
     refresh_seconds: template.defaultRefreshSeconds,
     rights_status: template.rightsStatus,
-    source_label: sourceLabelFor(template.id, template.displayName),
+    source_label: sourceLabelForTemplate(template.id, template.displayName),
   };
 };
 

@@ -17,10 +17,8 @@ export const karpathyJobsSnapshotTemplate: ConnectorTemplate = {
   ],
   paramExtractors: {},
   rightsStatus: 'with-attribution',
-  // Daily. The underlying BLS dataset is annual, but a daily tick keeps the
-  // card responsive to connector/registry/UI changes (a fresh emission of
-  // top_role points or a redesigned hero would otherwise wait up to a week
-  // before showing on the live signal).
+  // The BLS dataset is annual; a daily tick only keeps the card responsive to
+  // connector and UI changes.
   defaultRefreshSeconds: 86_400,
   adapter: () => karpathyJobs({}),
 };

@@ -1,7 +1,6 @@
 import {
   collectionSignalOrderUpdateSchema,
   collectionUpdateSchema,
-  type CollectionSignalOrderRecord,
   type CollectionDeleteResponse,
   type CollectionRecord,
 } from '@antenna/shared';
@@ -12,18 +11,17 @@ import { collections, type CollectionLayout } from '../../db/schema';
 import { toCollectionRecord } from '../collection-record';
 import { err, ok } from '../http';
 import { deleteCollectionTree } from './delete-tree';
-import { persistCollectionSignalOrder, sameIdSet } from './order';
+import { reorderCollectionSignalRows } from './order';
 import { routeCollectionId } from './params';
 import { collectionSlugForVisibility } from './slug';
 import {
   layoutReferencesCollectionSignals,
-  listCollectionSignals,
   listOwnedCollectionIds,
   loadOwnedCollection,
 } from './repository';
 import type { Client, CollectionRow, CollectionsContext } from './types';
 
-export type CollectionUpdateInput = z.infer<typeof collectionUpdateSchema>;
+type CollectionUpdateInput = z.infer<typeof collectionUpdateSchema>;
 
 export const reorderCollectionSignals = async (c: CollectionsContext): Promise<Response> => {
   const raw: unknown = await c.req.json().catch(() => undefined);
@@ -35,23 +33,13 @@ export const reorderCollectionSignals = async (c: CollectionsContext): Promise<R
   const collection = await loadOwnedCollection(client, c.get('user').id, collectionId);
   if (!collection) return err(c, 'not_found', 404);
 
-  const existingIds = (await listCollectionSignals(client, collectionId)).map(
-    (signal) => signal.id,
-  );
-  if (!sameIdSet(existingIds, parsed.data.ordered_signal_ids)) {
-    return err(c, 'invalid_order_signals', 400);
-  }
-
-  await persistCollectionSignalOrder(
+  const result = await reorderCollectionSignalRows(
     client,
     collectionId,
     parsed.data.ordered_signal_ids,
-    new Date(),
+    c.env.DB,
   );
-  return ok(c, {
-    updated: true,
-    ordered_signal_ids: parsed.data.ordered_signal_ids,
-  } satisfies CollectionSignalOrderRecord);
+  return result.ok ? ok(c, result.record) : err(c, result.error, 400);
 };
 
 export const updateCollection = async (c: CollectionsContext): Promise<Response> => {

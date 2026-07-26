@@ -27,80 +27,75 @@ type RateLimitBackend = (
   timestamp: number,
 ) => RateLimitHit | Promise<RateLimitHit>;
 
-export const PUBLIC_READ_RATE_LIMIT = {
+const MAX_BUCKETS = 5_000;
+
+const requesterIp = (c: Context): string => {
+  const forwarded = c.req.header('CF-Connecting-IP') ?? c.req.header('X-Forwarded-For');
+  return forwarded?.split(',')[0]?.trim() || c.req.header('X-Real-IP') || 'unknown';
+};
+
+const authenticatedUserKey = (c: Context): string => {
+  const user = (c as { get: (key: 'user') => unknown }).get('user');
+  if (user && typeof user === 'object' && 'id' in user && typeof user.id === 'string') {
+    return `user:${user.id}`;
+  }
+  return `ip:${requesterIp(c)}`;
+};
+
+// Each limit is one bucket definition; enforcement below is shared.
+const defineRateLimit =
+  (bucket: RequiredLimitOptions) =>
+  (options: Options = {}): MiddlewareHandler =>
+    createAnonymousRateLimit({ ...bucket, ...options });
+
+export const createPublicReadRateLimit = defineRateLimit({
   bucketPrefix: 'public-read',
   maxRequests: 120,
   windowMs: 60_000,
-} as const;
+});
 
-export const PUBLIC_REPORT_RATE_LIMIT = {
+export const createPublicReportRateLimit = defineRateLimit({
   bucketPrefix: 'public-report',
   maxRequests: 5,
   windowMs: 10 * 60_000,
-} as const;
+});
 
-export const AUTH_OAUTH_START_RATE_LIMIT = {
+export const createAuthOAuthStartRateLimit = defineRateLimit({
   bucketPrefix: 'auth-oauth-start',
   maxRequests: 20,
   windowMs: 10 * 60_000,
-} as const;
+});
 
-export const AUTH_OAUTH_CALLBACK_RATE_LIMIT = {
+export const createAuthOAuthCallbackRateLimit = defineRateLimit({
   bucketPrefix: 'auth-oauth-callback',
   maxRequests: 60,
   windowMs: 10 * 60_000,
-} as const;
+});
 
 // MCP dynamic client registration (POST /api/auth/mcp/register) is anonymous by
 // design, so it's keyed per requester IP. Lenient — a real client registers once
 // per device — while capping anonymous oauth_application spam.
-export const MCP_REGISTER_RATE_LIMIT = {
+export const createMcpRegisterRateLimit = defineRateLimit({
   bucketPrefix: 'mcp-register',
   maxRequests: 10,
   windowMs: 10 * 60_000,
-} as const;
-
-export const PLAN_CREATE_RATE_LIMIT = {
-  bucketPrefix: 'plan-create',
-  maxRequests: 30,
-  windowMs: 10 * 60_000,
-} as const;
+});
 
 // Beacon usage-event ingest (POST /api/beacon) is machine-token traffic keyed
 // per requester IP. Generous — real apps post one event per user action — while
 // capping what a leaked or brute-forced token attempt can write.
-export const BEACON_INGEST_RATE_LIMIT = {
+export const createBeaconIngestRateLimit = defineRateLimit({
   bucketPrefix: 'beacon-ingest',
   maxRequests: 240,
   windowMs: 60_000,
-} as const;
+});
 
-const MAX_BUCKETS = 5_000;
-
-export const createPublicReadRateLimit = (options: Options = {}): MiddlewareHandler =>
-  createAnonymousRateLimit({ ...PUBLIC_READ_RATE_LIMIT, ...options });
-
-export const createPublicReportRateLimit = (options: Options = {}): MiddlewareHandler =>
-  createAnonymousRateLimit({ ...PUBLIC_REPORT_RATE_LIMIT, ...options });
-
-export const createAuthOAuthStartRateLimit = (options: Options = {}): MiddlewareHandler =>
-  createAnonymousRateLimit({ ...AUTH_OAUTH_START_RATE_LIMIT, ...options });
-
-export const createAuthOAuthCallbackRateLimit = (options: Options = {}): MiddlewareHandler =>
-  createAnonymousRateLimit({ ...AUTH_OAUTH_CALLBACK_RATE_LIMIT, ...options });
-
-export const createMcpRegisterRateLimit = (options: Options = {}): MiddlewareHandler =>
-  createAnonymousRateLimit({ ...MCP_REGISTER_RATE_LIMIT, ...options });
-
-export const createBeaconIngestRateLimit = (options: Options = {}): MiddlewareHandler =>
-  createAnonymousRateLimit({ ...BEACON_INGEST_RATE_LIMIT, ...options });
-
-export const createPlanCreateRateLimit = (options: Options = {}): MiddlewareHandler =>
-  createAnonymousRateLimit({
-    ...PLAN_CREATE_RATE_LIMIT,
-    keyForRequest: authenticatedUserKey,
-    ...options,
-  });
+export const createPlanCreateRateLimit = defineRateLimit({
+  bucketPrefix: 'plan-create',
+  maxRequests: 30,
+  windowMs: 10 * 60_000,
+  keyForRequest: authenticatedUserKey,
+});
 
 const createAnonymousRateLimit = (options: RequiredLimitOptions): MiddlewareHandler => {
   const maxRequests = options.maxRequests;
@@ -141,8 +136,8 @@ const createAnonymousRateLimit = (options: RequiredLimitOptions): MiddlewareHand
   };
 };
 
-// In-memory per-isolate counter. Retains the existing Map semantics, including
-// bucket-cap pruning, so it stays a drop-in for local dev and unit tests.
+// In-memory per-isolate counter: the fallback for local dev and unit tests,
+// where no Durable Object namespace is bound.
 const createMemoryBackend = (store: Map<string, Bucket>, maxBuckets: number): RateLimitBackend => {
   return (key, windowMs, timestamp) => {
     const bucket = nextBucket(store.get(key), timestamp, windowMs);
@@ -193,19 +188,6 @@ const requesterKey = (
 ): string => {
   const requester = keyForRequest?.(c) ?? requesterIp(c);
   return `${bucketPrefix}:${requester}`;
-};
-
-const requesterIp = (c: Context): string => {
-  const forwarded = c.req.header('CF-Connecting-IP') ?? c.req.header('X-Forwarded-For');
-  return forwarded?.split(',')[0]?.trim() || c.req.header('X-Real-IP') || 'unknown';
-};
-
-const authenticatedUserKey = (c: Context): string => {
-  const user = (c as { get: (key: 'user') => unknown }).get('user');
-  if (user && typeof user === 'object' && 'id' in user && typeof user.id === 'string') {
-    return `user:${user.id}`;
-  }
-  return `ip:${requesterIp(c)}`;
 };
 
 const setLimitHeaders = (c: Context, limit: number, remaining: number, resetAt: number): void => {

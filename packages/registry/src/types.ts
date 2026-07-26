@@ -23,11 +23,9 @@ export interface ConnectorTemplate<C extends SignalConfig = SignalConfig> {
   matchHints: RegExp[];
   paramExtractors: Record<string, (prompt: string) => string | undefined>;
   plannerEnabled?: boolean;
-  private?: boolean;
   rightsStatus: SourceRightsStatus;
   defaultRefreshSeconds: number;
-  // signal_points are snapshot materialisations, not an indefinite archive.
-  // Omitted templates use the worker's conservative 180-day default.
+  // Omitted templates fall back to the Worker's conservative 180-day default.
   pointRetentionDays?: number;
   retainRawPayload?: boolean;
   serverSecret?: {

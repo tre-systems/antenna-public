@@ -3,7 +3,7 @@ import { loadCollectionAlerts } from './digest/alerts';
 import { loadDigestCandidates } from './digest/candidates';
 import { deliveryExists, deliveryId, recordDelivery } from './digest/deliveries';
 import { canSendEmail, sendDigestEmail } from './digest/email';
-import { logDigest } from './digest/log';
+import { logEvent } from './log';
 import {
   cadenceForPreference,
   digestPeriod,
@@ -57,7 +57,7 @@ export const runDailyDigests = async (
   }
 
   const summary = { considered: candidates.length, ...counts };
-  logDigest({ event: 'daily_digest_completed', ...summary });
+  logEvent({ event: 'daily_digest_completed', ...summary });
   return summary;
 };
 
@@ -118,7 +118,7 @@ const sendAndRecordDigest = async (
 };
 
 const logSetupRequired = (candidate: Candidate): void => {
-  logDigest({
+  logEvent({
     event: 'daily_digest_skipped',
     reason: 'setup_required',
     user_id: candidate.user.id,

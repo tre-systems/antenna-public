@@ -1,5 +1,7 @@
+import { HTML_PAGE_REQUEST_INIT } from './browser-request';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 import { discardResponse } from './discard-response';
+import { errorMessage } from './error-message';
 import { htmlToText } from './html-text';
 
 export type TbenchLeaderboardConfig = {
@@ -25,22 +27,9 @@ export const tbenchLeaderboard: Adapter<TbenchLeaderboardConfig> = async (
   const url = `${SOURCE_PAGE}${version}`;
   let response: Response;
   try {
-    response = await fetch(url, {
-      headers: {
-        accept: 'text/html,application/xhtml+xml',
-        'accept-language': 'en-US,en;q=0.9',
-        'user-agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
-      },
-    });
+    response = await fetch(url, HTML_PAGE_REQUEST_INIT);
   } catch (err) {
-    return {
-      ok: false,
-      error: {
-        code: 'fetch_failed',
-        message: err instanceof Error ? err.message : String(err),
-      },
-    };
+    return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }
 
   if (!response.ok) {
@@ -55,13 +44,7 @@ export const tbenchLeaderboard: Adapter<TbenchLeaderboardConfig> = async (
   try {
     html = await response.text();
   } catch (err) {
-    return {
-      ok: false,
-      error: {
-        code: 'parse_failed',
-        message: err instanceof Error ? err.message : String(err),
-      },
-    };
+    return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
   }
 
   const entries = parseLeaderboard(html, limit);
@@ -121,7 +104,6 @@ const parsedEntry = (
 };
 
 const parseLeaderboard = (html: string, limit: number): ReadonlyArray<LeaderboardEntry> => {
-  // Match all <tr> elements. The page uses consistent SSR HTML.
   const rowMatches = html.match(/<tr[^>]*>[\s\S]*?<\/tr>/g) ?? [];
   const entries: LeaderboardEntry[] = [];
 

@@ -22,10 +22,7 @@ export function PublicBody({ slug, state }: Props) {
 
 function NotFound({ slug }: { readonly slug: string }) {
   return (
-    <div
-      class="rounded-2xl bg-white/70 p-6 text-sm ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.04] dark:ring-white/10"
-      data-testid="public-not-found"
-    >
+    <div class="antenna-panel rounded-2xl p-6 text-sm" data-testid="public-not-found">
       <p class="font-medium text-slate-900 dark:text-white">No shared collection here.</p>
       <p class="mt-1 text-slate-500 dark:text-slate-400">
         The link <span class="font-mono">/c/{slug}</span> is not available. It may have been set
@@ -38,7 +35,7 @@ function NotFound({ slug }: { readonly slug: string }) {
 function PublicError({ message }: { readonly message: string }) {
   return (
     <div
-      class="rounded-2xl bg-white/70 p-6 text-sm ring-1 ring-rose-300/40 backdrop-blur-xl dark:bg-white/[0.04] dark:ring-rose-400/20"
+      class="antenna-panel rounded-2xl p-6 text-sm ring-1 ring-rose-300/40 dark:ring-rose-400/20"
       data-testid="public-error"
     >
       <p class="font-medium text-rose-700 dark:text-rose-300">Couldn't load this collection.</p>
@@ -50,7 +47,7 @@ function PublicError({ message }: { readonly message: string }) {
 function EmptyPublicCollection() {
   return (
     <div
-      class="rounded-2xl bg-white/70 p-6 text-sm text-slate-500 ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.04] dark:text-slate-400 dark:ring-white/10"
+      class="antenna-panel rounded-2xl p-6 text-sm text-slate-500 dark:text-slate-400"
       data-testid="public-empty"
     >
       This collection does not have any shareable signals right now.

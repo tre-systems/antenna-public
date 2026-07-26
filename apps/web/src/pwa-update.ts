@@ -1,5 +1,5 @@
-export const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
-export const UPDATE_CHECK_COOLDOWN_MS = 60 * 1000;
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
+const UPDATE_CHECK_COOLDOWN_MS = 60 * 1000;
 const MANUAL_RELOAD_DELAY_MS = 1000;
 
 let reloading = false;

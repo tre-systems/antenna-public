@@ -1,10 +1,7 @@
 import type { RenderSignal } from './types';
 import { numericDim, numericValue, recentDays, resolveWindowDays, stringDim } from './daily-window';
 
-// Shapes a cloudflare-analytics signal into a fleet view: a zero-filled daily
-// request series (the trend) plus the per-worker request/error breakdown. The
-// connector pre-aggregates into `kind:'day'` and `kind:'worker'` points so the
-// whole fleet fits under the card's point cap.
+// The connector pre-aggregates into `kind:'day'` and `kind:'worker'` points to fit the point cap.
 
 export type FleetWorker = {
   readonly script: string;

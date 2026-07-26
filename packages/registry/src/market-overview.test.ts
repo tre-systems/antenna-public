@@ -16,7 +16,7 @@ describe('marketOverviewTemplate.matchHints', () => {
     expect(anyHintMatches(prompt)).toBe(true);
   });
 
-  it.each(['weather in Paris', 'GitHub Trending', 'AZN.L yearly graph'])(
+  it.each(['weather in Paris', 'GitHub Trending', 'BA.L yearly graph'])(
     'does not match "%s"',
     (prompt) => {
       expect(anyHintMatches(prompt)).toBe(false);

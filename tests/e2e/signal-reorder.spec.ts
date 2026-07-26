@@ -1,9 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { deleteCollection } from './shared-fixture';
-
-type CollectionRecord = {
-  readonly id: string;
-};
+import { createSeededCollection, deleteCollection } from './shared-fixture';
 
 // Rendered titles of the six trader-morning signals, in seeded order.
 const SEEDED_TITLES = [
@@ -16,15 +12,10 @@ const SEEDED_TITLES = [
 ] as const;
 
 test('drag moves a card anywhere in the grid and the order persists', async ({ page }) => {
-  const collection = await postJson<CollectionRecord>(page, '/api/collections', {
-    title: `E2E reorder ${Date.now()}`,
-    visibility: 'private',
-    template_id: 'trader-morning',
-  });
-  await patchJson(page, '/api/me/onboarding', { completed: true });
+  const collectionId = await createSeededCollection(page, 'reorder');
 
   try {
-    await page.goto(`/?collection=${encodeURIComponent(collection.id)}`);
+    await page.goto(`/?collection=${encodeURIComponent(collectionId)}`);
 
     const gold = page.locator('[data-signal-id]').filter({ hasText: 'Gold' });
     const watchlist = page.locator('[data-signal-id]').filter({ hasText: 'Stocks' });
@@ -48,6 +39,15 @@ test('drag moves a card anywhere in the grid and the order persists', async ({ p
     const after = await gridOrder(page);
     expect(after).not.toEqual(before);
 
+    // The grid reorders optimistically while the PATCH is still in flight, so
+    // wait for the server to agree before reloading — otherwise the reload
+    // races the write and reads back the pre-drag order. Compared by signal id
+    // rather than title, since ids are what the write actually reorders.
+    const settledIds = await gridSignalIds(page);
+    await expect
+      .poll(async () => (await serverSignalIds(page, collectionId)).join('|'))
+      .toBe(settledIds.join('|'));
+
     // The order survives a reload, so the PATCH persisted server-side.
     await page.reload();
     await expect(page.locator('[data-signal-id]').filter({ hasText: 'Gold' })).toHaveCount(1, {
@@ -55,7 +55,7 @@ test('drag moves a card anywhere in the grid and the order persists', async ({ p
     });
     expect(await gridOrder(page)).toEqual(after);
   } finally {
-    await deleteCollection(page, collection.id);
+    await deleteCollection(page, collectionId);
   }
 });
 
@@ -67,6 +67,23 @@ async function gridOrder(page: Page): Promise<string[]> {
   return headers.map(
     (header) => SEEDED_TITLES.find((title) => header.includes(title)) ?? 'unknown',
   );
+}
+
+// Signal ids in DOM order — the identity the reorder write actually persists.
+async function gridSignalIds(page: Page): Promise<string[]> {
+  return await page
+    .locator('[data-signal-id]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-signal-id') ?? ''));
+}
+
+// The same list as the server has it. `/api/signals` returns position order.
+async function serverSignalIds(page: Page, collectionId: string): Promise<string[]> {
+  const res = await page.request.get(
+    `/api/signals?collection_id=${encodeURIComponent(collectionId)}`,
+  );
+  expect(res.ok()).toBeTruthy();
+  const body = (await res.json()) as ReadonlyArray<{ id: string }>;
+  return body.map((signal) => signal.id);
 }
 
 async function dragByHandle(page: Page, source: Locator, target: Locator): Promise<void> {
@@ -94,15 +111,4 @@ async function dragByHandle(page: Page, source: Locator, target: Locator): Promi
     );
   }
   await page.mouse.up();
-}
-
-async function postJson<T>(page: Page, url: string, body: unknown): Promise<T> {
-  const res = await page.request.post(url, { data: body });
-  expect(res.ok()).toBeTruthy();
-  return (await res.json()) as T;
-}
-
-async function patchJson(page: Page, url: string, body: unknown): Promise<void> {
-  const res = await page.request.patch(url, { data: body });
-  expect(res.ok()).toBeTruthy();
 }

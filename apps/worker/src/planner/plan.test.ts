@@ -1,10 +1,10 @@
-import Database from 'better-sqlite3';
-import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as DbClientModule from '../db/client';
 import type * as ConnectorsModule from '@antenna/connectors';
 import * as schema from '../db/schema';
+import { setupPlannerDb, type Drizzle, type Sqlite } from './plan-test-fixtures';
 import { createPlan, getPlan, parsePlan, rejectPlan } from './plan';
 
 const geocodeMock = vi.hoisted(() => vi.fn());
@@ -14,44 +14,6 @@ vi.mock('@antenna/connectors', async (importOriginal) => {
   return { ...actual, geocode: geocodeMock };
 });
 
-type Sqlite = ReturnType<typeof Database>;
-type Drizzle = BetterSQLite3Database<typeof schema>;
-
-const SCHEMA_DDL = `
-  CREATE TABLE collections (
-    id text PRIMARY KEY NOT NULL,
-    owner_id text NOT NULL,
-    title text NOT NULL,
-    description text,
-    visibility text DEFAULT 'private' NOT NULL,
-    refresh_mode text DEFAULT 'scheduled' NOT NULL,
-    slug text UNIQUE,
-    forked_from_collection_id text,
-    layout text,
-    created_at integer NOT NULL,
-    updated_at integer NOT NULL
-  );
-  CREATE TABLE collection_plans (
-    id text PRIMARY KEY NOT NULL,
-    collection_id text NOT NULL REFERENCES collections(id),
-    prompt text NOT NULL,
-    proposed text NOT NULL,
-    status text DEFAULT 'proposed' NOT NULL,
-    created_at integer NOT NULL,
-    resolved_at integer
-  );
-  CREATE TABLE connector_requests (
-    id text PRIMARY KEY NOT NULL,
-    collection_id text REFERENCES collections(id),
-    prompt text NOT NULL,
-    requested_by text NOT NULL,
-    notes text,
-    status text DEFAULT 'requested' NOT NULL,
-    created_at integer NOT NULL,
-    resolved_at integer
-  );
-`;
-
 vi.mock('../db/client', async () => {
   const actual = await vi.importActual<typeof DbClientModule>('../db/client');
   return {
@@ -60,22 +22,6 @@ vi.mock('../db/client', async () => {
   };
 });
 
-const setup = (): { db: Drizzle; env: { DB: D1Database } } => {
-  const sqlite = new Database(':memory:');
-  sqlite.exec(SCHEMA_DDL);
-  const db = drizzle(sqlite, { schema });
-  db.insert(schema.collections)
-    .values({
-      id: 'collection-1',
-      ownerId: 'user-1',
-      title: 'Test',
-      createdAt: new Date(0),
-      updatedAt: new Date(0),
-    })
-    .run();
-  return { db, env: { DB: { __sqlite: sqlite } as unknown as D1Database } };
-};
-
 describe('createPlan', () => {
   let db: Drizzle;
   let env: { DB: D1Database };
@@ -83,7 +29,7 @@ describe('createPlan', () => {
   beforeEach(() => {
     geocodeMock.mockReset();
     geocodeMock.mockResolvedValue(null);
-    const s = setup();
+    const s = setupPlannerDb();
     db = s.db;
     env = s.env;
   });
@@ -133,7 +79,7 @@ describe('createPlan', () => {
 
 describe('getPlan / rejectPlan', () => {
   it('round-trips through getPlan and updates status on reject', async () => {
-    const { env } = setup();
+    const { env } = setupPlannerDb();
     const record = await createPlan(env, {
       collection_id: 'collection-1',
       prompt: 'track CHF/USD',
@@ -150,7 +96,7 @@ describe('getPlan / rejectPlan', () => {
   });
 
   it('does not expose or reject plans from another collection', async () => {
-    const { env } = setup();
+    const { env } = setupPlannerDb();
     const record = await createPlan(env, {
       collection_id: 'collection-1',
       prompt: 'track CHF/USD',

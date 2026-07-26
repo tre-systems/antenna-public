@@ -1,3 +1,4 @@
+import { stringValue } from './config-values';
 import { fetchJson } from './fetch-json';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 
@@ -167,9 +168,6 @@ const formatUsd = (value: number): string =>
     currency: 'USD',
     maximumFractionDigits: 0,
   }).format(value);
-
-const stringValue = (value: unknown): string | undefined =>
-  typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
 
 const numberValue = (value: unknown): number | undefined =>
   typeof value === 'number' && Number.isFinite(value) ? value : undefined;

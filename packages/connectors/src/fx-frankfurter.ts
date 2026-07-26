@@ -3,12 +3,9 @@ import type { Adapter, AdapterResult, DataPoint } from './types';
 
 type FxConfig = { base: string; quote: string };
 
-// Frankfurter returns the ECB reference date (YYYY-MM-DD); we parse it as the
-// timestamp so each DataPoint reflects the source-of-truth date, not the call
-// time. The range endpoint backfills ~1Y of daily business-day closes so the
-// sparkline reads a meaningful trendline from the first dispatch. Subsequent
-// ticks re-fetch the same range; the dispatcher's onConflictDoNothing dedupes
-// on (signal, date) so only the newest day actually inserts.
+// Points are timestamped with the ECB reference date, not the call time. Every
+// tick re-fetches the whole range; the dispatcher's onConflictDoNothing on
+// (signal, date) means only the newest day inserts.
 
 type FrankfurterLatest = {
   amount: number;
@@ -79,9 +76,7 @@ const parseFrankfurterRange = (body: unknown, config: FxConfig): DataPoint[] => 
     if (points.length > 0) return points;
   }
 
-  // Legacy single-date shape: { date: 'YYYY-MM-DD', rates: { QUOTE: rate } }
-  // Kept so the older /latest endpoint shape still parses if Frankfurter
-  // returns it (or if a test stubs it).
+  // Legacy /latest shape: { date: 'YYYY-MM-DD', rates: { QUOTE: rate } }
   if (rangeRates && typeof rangeRates === 'object') {
     const flat = rangeRates as Record<string, unknown>;
     const rate = flat[config.quote];

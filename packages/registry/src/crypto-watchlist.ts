@@ -3,8 +3,7 @@ import { z } from 'zod';
 import { extractPairs } from './crypto-pairs';
 import { type ConnectorTemplate } from './types';
 
-// The contract requires paramExtractors to return a string, but cryptoCoinbase
-// wants `{ pairs: string[] }`. We accept the comma-joined form and split here.
+// paramExtractors may only return strings, so pairs round-trip via comma.
 export const cryptoWatchlistTemplate: ConnectorTemplate<{ pairs: string }> = {
   id: 'crypto-watchlist',
   displayName: 'Crypto watchlist',
@@ -22,7 +21,7 @@ export const cryptoWatchlistTemplate: ConnectorTemplate<{ pairs: string }> = {
   paramExtractors: {
     pairs: extractPairs,
   },
-  rightsStatus: 'needs-review',
+  rightsStatus: 'public',
   defaultRefreshSeconds: 600,
   adapter: (config) => cryptoCoinbase({ pairs: config.pairs.split(',') }),
 };

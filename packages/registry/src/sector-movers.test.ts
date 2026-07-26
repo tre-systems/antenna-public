@@ -18,7 +18,7 @@ describe('sectorMoversTemplate.matchHints', () => {
     expect(anyHintMatches(prompt)).toBe(true);
   });
 
-  it.each(['weather in Paris', 'GitHub Trending', 'AZN.L yearly graph', 'CISA KEV'])(
+  it.each(['weather in Paris', 'GitHub Trending', 'BA.L yearly graph', 'CISA KEV'])(
     'does not match "%s"',
     (prompt) => {
       expect(anyHintMatches(prompt)).toBe(false);

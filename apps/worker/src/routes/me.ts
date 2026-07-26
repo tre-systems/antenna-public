@@ -5,7 +5,7 @@ import type { AuthVars, SessionUser } from '../auth/middleware';
 import { db, type Env as DbEnv } from '../db/client';
 import { toTimestampMs } from '../db/codecs';
 import { user as userTable } from '../db/schema';
-import { countCollectionsForUser, collectionQuotaFromCount } from './collection-quota';
+import { countCollectionsForUser, collectionQuotaFromCount } from './quota';
 import { err } from './http';
 
 type Bindings = DbEnv;

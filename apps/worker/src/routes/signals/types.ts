@@ -26,7 +26,7 @@ export type StatusShape = {
   readonly last_manual_request_at: number | null;
 };
 
-export type PointDisplayShape = {
+type PointDisplayShape = {
   readonly label: string;
   readonly source_url: string | null;
 };

@@ -1,6 +1,7 @@
 import type { Adapter, AdapterResult, DataPoint } from './types';
 import { discardResponse } from './discard-response';
-import { githubRateLimitError } from './github-rate-limit';
+import { errorMessage } from './error-message';
+import { githubAuthHeader, githubRateLimitError } from './github-http';
 
 type GithubConfig = { owner: string; repo: string; githubToken?: string };
 
@@ -23,10 +24,7 @@ export const githubRepo: Adapter<GithubConfig> = async (config): Promise<Adapter
       },
     });
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'fetch_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }
 
   if (response.status === 403) {
@@ -45,10 +43,7 @@ export const githubRepo: Adapter<GithubConfig> = async (config): Promise<Adapter
   try {
     body = await response.json();
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'parse_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
   }
 
   const points = buildPoints(body, config);
@@ -57,9 +52,6 @@ export const githubRepo: Adapter<GithubConfig> = async (config): Promise<Adapter
   }
   return { ok: true, points, rawPayload: body };
 };
-
-const githubAuthHeader = (token: string | undefined): Record<string, string> =>
-  typeof token === 'string' && token.trim().length > 0 ? { Authorization: `Bearer ${token}` } : {};
 
 const buildPoints = (body: unknown, config: GithubConfig): DataPoint[] => {
   if (!body || typeof body !== 'object') return [];

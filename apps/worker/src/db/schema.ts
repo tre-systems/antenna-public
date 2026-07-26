@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import type { CollectionPlan } from '@antenna/shared';
 
 // JSON shapes are stored as TEXT and serialised/deserialised at the call site.
 // `.$type<...>()` annotates the column type without producing runtime checks.
@@ -19,35 +20,30 @@ export type SignalConfig = Readonly<Record<string, unknown>>;
 
 export type DataPointDimensions = Readonly<Record<string, string>>;
 
-export type ProposedPlanItem =
-  | {
-      readonly kind: 'signal';
-      readonly templateId: string;
-      readonly params: Readonly<Record<string, unknown>>;
-      readonly missing: ReadonlyArray<string>;
-      readonly requiresAuth: ReadonlyArray<string>;
-    }
-  | { readonly kind: 'connector_request'; readonly prompt: string; readonly reason: string };
+export type ProposedPlan = CollectionPlan;
 
-export type ProposedPlan = ReadonlyArray<ProposedPlanItem>;
-
-export const collections = sqliteTable('collections', {
-  id: text('id').primaryKey(),
-  ownerId: text('owner_id').notNull(),
-  title: text('title').notNull(),
-  description: text('description'),
-  visibility: text('visibility', { enum: ['private', 'shared', 'public'] })
-    .notNull()
-    .default('private'),
-  refreshMode: text('refresh_mode', { enum: ['scheduled', 'on_demand'] })
-    .notNull()
-    .default('scheduled'),
-  slug: text('slug').unique(),
-  forkedFromCollectionId: text('forked_from_collection_id'),
-  layout: text('layout').$type<CollectionLayout>(),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
-});
+export const collections = sqliteTable(
+  'collections',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id').notNull(),
+    title: text('title').notNull(),
+    description: text('description'),
+    visibility: text('visibility', { enum: ['private', 'shared', 'public'] })
+      .notNull()
+      .default('private'),
+    refreshMode: text('refresh_mode', { enum: ['scheduled', 'on_demand'] })
+      .notNull()
+      .default('scheduled'),
+    slug: text('slug').unique(),
+    forkedFromCollectionId: text('forked_from_collection_id'),
+    layout: text('layout').$type<CollectionLayout>(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  // The tenant key. Every authenticated route scopes its reads by owner_id.
+  (t) => [index('collections_owner_id_idx').on(t.ownerId)],
+);
 
 export const userCollectionVisits = sqliteTable(
   'user_collection_visits',
@@ -83,22 +79,28 @@ export const collectionTemplatePublications = sqliteTable(
   ],
 );
 
-export const signals = sqliteTable('signals', {
-  id: text('id').primaryKey(),
-  collectionId: text('collection_id')
-    .notNull()
-    .references(() => collections.id),
-  templateId: text('template_id').notNull(),
-  title: text('title').notNull(),
-  config: text('config').$type<SignalConfig>().notNull(),
-  refreshSeconds: integer('refresh_seconds').notNull(),
-  position: integer('position').notNull(),
-  visibility: text('visibility', { enum: ['private', 'shared', 'public'] })
-    .notNull()
-    .default('private'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
-});
+export const signals = sqliteTable(
+  'signals',
+  {
+    id: text('id').primaryKey(),
+    collectionId: text('collection_id')
+      .notNull()
+      .references(() => collections.id),
+    templateId: text('template_id').notNull(),
+    title: text('title').notNull(),
+    config: text('config').$type<SignalConfig>().notNull(),
+    refreshSeconds: integer('refresh_seconds').notNull(),
+    position: integer('position').notNull(),
+    visibility: text('visibility', { enum: ['private', 'shared', 'public'] })
+      .notNull()
+      .default('private'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  // Backs the dispatch join and every collection read; `position` extends it to
+  // cover the ordered list without a second index.
+  (t) => [index('signals_collection_position_idx').on(t.collectionId, t.position)],
+);
 
 export const dismissedStarterSignals = sqliteTable(
   'dismissed_starter_signals',
@@ -163,6 +165,20 @@ export const signalStatus = sqliteTable(
   (t) => [index('signal_status_last_ok_at_idx').on(t.lastOkAt)],
 );
 
+// One adapter result shared by every signal with the same template and config.
+// Public-cloud sources only (see 0053_upstream_snapshots.sql) and a pure cache:
+// any row can be deleted and the next dispatch refetches it.
+export const upstreamSnapshots = sqliteTable(
+  'upstream_snapshots',
+  {
+    cacheKey: text('cache_key').primaryKey(),
+    templateId: text('template_id').notNull(),
+    points: text('points').notNull(),
+    fetchedAt: integer('fetched_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [index('upstream_snapshots_fetched_at_idx').on(t.fetchedAt)],
+);
+
 export const signalAlerts = sqliteTable(
   'signal_alerts',
   {
@@ -189,23 +205,27 @@ export const signalAlerts = sqliteTable(
   ],
 );
 
-export const collectionPlans = sqliteTable('collection_plans', {
-  id: text('id').primaryKey(),
-  collectionId: text('collection_id')
-    .notNull()
-    .references(() => collections.id),
-  prompt: text('prompt').notNull(),
-  proposed: text('proposed').$type<ProposedPlan>().notNull(),
-  status: text('status', { enum: ['proposed', 'confirmed', 'rejected'] })
-    .notNull()
-    .default('proposed'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-  resolvedAt: integer('resolved_at', { mode: 'timestamp_ms' }),
-});
+export const collectionPlans = sqliteTable(
+  'collection_plans',
+  {
+    id: text('id').primaryKey(),
+    collectionId: text('collection_id')
+      .notNull()
+      .references(() => collections.id),
+    prompt: text('prompt').notNull(),
+    proposed: text('proposed').$type<ProposedPlan>().notNull(),
+    status: text('status', { enum: ['proposed', 'confirmed', 'rejected'] })
+      .notNull()
+      .default('proposed'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    resolvedAt: integer('resolved_at', { mode: 'timestamp_ms' }),
+  },
+  (t) => [index('collection_plans_collection_id_idx').on(t.collectionId)],
+);
 
-// A unique claim is inserted in the same D1 batch as confirmed signals. It is
-// the concurrency barrier that prevents two requests which both observed a
-// proposed plan from materialising it twice.
+// One row per confirmed plan. The primary key is the guard: a second
+// confirmation racing the same plan fails to claim it and aborts before any
+// signal is written.
 export const planConfirmationClaims = sqliteTable('plan_confirmation_claims', {
   planId: text('plan_id')
     .primaryKey()
@@ -213,18 +233,22 @@ export const planConfirmationClaims = sqliteTable('plan_confirmation_claims', {
   claimedAt: integer('claimed_at', { mode: 'timestamp_ms' }).notNull(),
 });
 
-export const connectorRequests = sqliteTable('connector_requests', {
-  id: text('id').primaryKey(),
-  collectionId: text('collection_id').references(() => collections.id),
-  prompt: text('prompt').notNull(),
-  requestedBy: text('requested_by').notNull(),
-  notes: text('notes'),
-  status: text('status', { enum: ['requested', 'building', 'rejected', 'available'] })
-    .notNull()
-    .default('requested'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-  resolvedAt: integer('resolved_at', { mode: 'timestamp_ms' }),
-});
+export const connectorRequests = sqliteTable(
+  'connector_requests',
+  {
+    id: text('id').primaryKey(),
+    collectionId: text('collection_id').references(() => collections.id),
+    prompt: text('prompt').notNull(),
+    requestedBy: text('requested_by').notNull(),
+    notes: text('notes'),
+    status: text('status', { enum: ['requested', 'building', 'rejected', 'available'] })
+      .notNull()
+      .default('requested'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    resolvedAt: integer('resolved_at', { mode: 'timestamp_ms' }),
+  },
+  (t) => [index('connector_requests_collection_id_idx').on(t.collectionId)],
+);
 
 export const publicCollectionReports = sqliteTable(
   'public_collection_reports',
@@ -244,15 +268,8 @@ export const publicCollectionReports = sqliteTable(
   ],
 );
 
-// ---------------------------------------------------------------------------
-// Better Auth tables
-//
-// Shape mirrors better-auth 1.6.x core schemas (user / session / account /
-// verification) — see node_modules/@better-auth/core/dist/db/schema/*.d.mts.
-// `usePlural` is left off the adapter config so the singular table names are
-// authoritative. Google is identity-only in Antenna: account hooks discard
-// access, refresh, and ID tokens before persistence.
-// ---------------------------------------------------------------------------
+// Better Auth tables: the shape mirrors better-auth 1.6.x core schemas, so column
+// names must not drift from what its adapter expects.
 
 export const user = sqliteTable('user', {
   id: text('id').primaryKey(),
@@ -312,18 +329,22 @@ export const notificationDeliveries = sqliteTable(
   ],
 );
 
-export const session = sqliteTable('session', {
-  id: text('id').primaryKey(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  token: text('token').notNull().unique(),
-  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
-  ipAddress: text('ip_address'),
-  userAgent: text('user_agent'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
-});
+export const session = sqliteTable(
+  'session',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    token: text('token').notNull().unique(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [index('session_user_id_idx').on(t.userId)],
+);
 
 export const mcpTokens = sqliteTable(
   'mcp_tokens',
@@ -341,40 +362,52 @@ export const mcpTokens = sqliteTable(
   (t) => [index('mcp_tokens_user_id_idx').on(t.userId)],
 );
 
-export const account = sqliteTable('account', {
-  id: text('id').primaryKey(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  accountId: text('account_id').notNull(),
-  providerId: text('provider_id').notNull(),
-  accessToken: text('access_token'),
-  refreshToken: text('refresh_token'),
-  idToken: text('id_token'),
-  accessTokenExpiresAt: integer('access_token_expires_at', { mode: 'timestamp_ms' }),
-  refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp_ms' }),
-  scope: text('scope'),
-  password: text('password'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
-});
+// `access_token` / `refresh_token` hold AES-GCM ciphertext, written by the
+// `databaseHooks.account.create/update.before` hook — never plaintext.
+export const account = sqliteTable(
+  'account',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').notNull(),
+    providerId: text('provider_id').notNull(),
+    accessToken: text('access_token'),
+    refreshToken: text('refresh_token'),
+    idToken: text('id_token'),
+    accessTokenExpiresAt: integer('access_token_expires_at', { mode: 'timestamp_ms' }),
+    refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp_ms' }),
+    scope: text('scope'),
+    password: text('password'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [
+    index('account_user_id_idx').on(t.userId),
+    // Better Auth resolves the linked Google account by provider + account id
+    // on every sign-in.
+    index('account_provider_account_idx').on(t.providerId, t.accountId),
+  ],
+);
 
-export const verification = sqliteTable('verification', {
-  id: text('id').primaryKey(),
-  identifier: text('identifier').notNull(),
-  value: text('value').notNull(),
-  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
-});
+export const verification = sqliteTable(
+  'verification',
+  {
+    id: text('id').primaryKey(),
+    identifier: text('identifier').notNull(),
+    value: text('value').notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  // OAuth callback state lives here; looked up by identifier on every callback.
+  (t) => [index('verification_identifier_idx').on(t.identifier)],
+);
 
-// ---------------------------------------------------------------------------
-// OAuth Authorization Server tables for the Better Auth `mcp` / `oidcProvider`
-// plugin. Property names (camelCase) MUST match the plugin's field names so its
-// Drizzle adapter binds correctly; SQL column names stay snake_case per repo
-// convention. `oauth_access_token` / `oauth_consent` reference the application's
-// unique `client_id` (not its `id`), matching the plugin schema.
-// ---------------------------------------------------------------------------
+// OAuth Authorization Server tables for the Better Auth `mcp` plugin. Property
+// names MUST match the plugin's field names so its Drizzle adapter binds, and the
+// token/consent rows reference the application's `client_id`, not its `id`.
 
 export const oauthApplication = sqliteTable(
   'oauth_application',
@@ -436,6 +469,51 @@ export const oauthConsent = sqliteTable(
   (t) => [
     index('oauth_consent_client_id_idx').on(t.clientId),
     index('oauth_consent_user_id_idx').on(t.userId),
+  ],
+);
+
+// Recurring problems found across many `reddit-problems` snapshots. Rows here
+// are derived data: the clustering job rebuilds them from the R2 payload
+// archive, so they can be deleted and regenerated without losing anything.
+export const problemClusters = sqliteTable(
+  'problem_clusters',
+  {
+    id: text('id').primaryKey(),
+    collectionId: text('collection_id')
+      .notNull()
+      .references(() => collections.id, { onDelete: 'cascade' }),
+    label: text('label').notNull(),
+    // Distinct post count, not member-row count. This is the demand signal and
+    // the only thing clusters are ranked by.
+    distinctPosts: integer('distinct_posts').notNull(),
+    subreddits: text('subreddits').notNull(),
+    firstSeenAt: integer('first_seen_at', { mode: 'timestamp_ms' }).notNull(),
+    lastSeenAt: integer('last_seen_at', { mode: 'timestamp_ms' }).notNull(),
+    computedAt: integer('computed_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [
+    index('problem_clusters_collection_idx').on(t.collectionId),
+    index('problem_clusters_rank_idx').on(t.collectionId, t.distinctPosts),
+  ],
+);
+
+// The posts behind a cluster, so every ranking can be explained by the evidence
+// it was built from. Authors are deliberately absent, matching the connector.
+export const problemClusterMembers = sqliteTable(
+  'problem_cluster_members',
+  {
+    clusterId: text('cluster_id')
+      .notNull()
+      .references(() => problemClusters.id, { onDelete: 'cascade' }),
+    postId: text('post_id').notNull(),
+    subreddit: text('subreddit').notNull(),
+    title: text('title').notNull(),
+    permalink: text('permalink').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.clusterId, t.postId] }),
+    index('problem_cluster_members_cluster_idx').on(t.clusterId),
   ],
 );
 

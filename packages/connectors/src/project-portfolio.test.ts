@@ -3,7 +3,7 @@ import { projectPortfolio } from './project-portfolio';
 
 const ACCOUNT_ID = 'a'.repeat(32);
 const config = {
-  projects: 'antenna,sample-service,quiet-app',
+  projects: 'antenna,rowspire,quiet-app',
   accountId: ACCOUNT_ID,
   apiToken: 'token',
   days: 7,
@@ -25,12 +25,7 @@ describe('projectPortfolio', () => {
             { project: 'antenna', day: '2026-07-16 00:00:00', event: 'view', count: 10 },
             { project: 'antenna', day: '2026-07-15 00:00:00', event: 'mcp_call', count: 4 },
             { project: 'antenna', day: '2026-07-06 00:00:00', event: 'view', count: 7 },
-            {
-              project: 'sample-service',
-              day: '2026-07-14 00:00:00',
-              event: 'game_started',
-              count: 3,
-            },
+            { project: 'rowspire', day: '2026-07-14 00:00:00', event: 'game_started', count: 3 },
           ],
         }),
       ),

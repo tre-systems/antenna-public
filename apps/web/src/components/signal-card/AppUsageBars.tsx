@@ -1,13 +1,11 @@
-// The minimal daily-series shape the bar chart needs. Both the app-usage and
-// Cloudflare-fleet card data satisfy it structurally.
-export type DailyBars = {
+// Structurally satisfied by both app-usage and Cloudflare-fleet card data.
+type DailyBars = {
   readonly windowDays: number;
   readonly days: ReadonlyArray<string>;
   readonly series: ReadonlyArray<number>;
   readonly peakCount: number;
 };
 
-// Daily bar chart shared by the expanded hero and the compact summary.
 // Fixed viewBox; the SVG scales to the card width via preserveAspectRatio.
 const CHART_WIDTH = 240;
 const CHART_HEIGHT = 40;

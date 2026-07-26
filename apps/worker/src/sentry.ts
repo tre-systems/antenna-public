@@ -1,58 +1,17 @@
 import type { CloudflareOptions } from '@sentry/cloudflare';
 import type { WorkerEnv } from './env';
+import { beforeSend } from './sentry-redaction';
 
 type RuntimeCloudflareOptions = CloudflareOptions & Record<string, unknown>;
-type BeforeSend = NonNullable<CloudflareOptions['beforeSend']>;
 type BeforeSendSpan = NonNullable<CloudflareOptions['beforeSendSpan']>;
 type BeforeSendTransaction = NonNullable<CloudflareOptions['beforeSendTransaction']>;
 type BeforeBreadcrumb = NonNullable<CloudflareOptions['beforeBreadcrumb']>;
 
 const PRODUCTION_TRACE_SAMPLE_RATE = 0.002;
 const NON_PRODUCTION_TRACE_SAMPLE_RATE = 0;
+// Every dispatch tick writes these tables, so their auto-instrumented root
+// transactions would dominate the trace quota without telling us anything.
 const LOW_VALUE_D1_TRANSACTION_TABLES = new Set(['signal_points', 'signal_status']);
-
-type SanitizableEvent = {
-  type?: undefined;
-  request?: {
-    url?: string;
-    query_string?: string | Record<string, unknown>;
-    headers?: Record<string, string>;
-    cookies?: Record<string, string>;
-    data?: unknown;
-  };
-  extra?: Record<string, unknown>;
-};
-
-const sanitizeRequestUrl = (value: string | undefined): string | undefined => {
-  if (!value) return value;
-  try {
-    const url = new URL(value);
-    url.search = '';
-    url.hash = '';
-    url.pathname = url.pathname
-      .replace(/^\/c\/[^/]+/, '/c/[Filtered]')
-      .replace(/^\/api\/(shared|public)\/collections\/[^/]+/, '/api/$1/collections/[Filtered]');
-    return url.toString();
-  } catch {
-    return value.split('?')[0];
-  }
-};
-
-const SENSITIVE_EXTRA_KEYS = [
-  'apiKey',
-  'authorization',
-  'collection',
-  'cookie',
-  'dataPoint',
-  'digest',
-  'prompt',
-  'requestBody',
-  'response',
-  'signal',
-  'sourcePayload',
-  'text',
-  'token',
-];
 
 const SQL_TABLE_PATTERNS = [
   {
@@ -72,22 +31,6 @@ const SQL_TABLE_PATTERNS = [
     pattern: /^\s*select\b[\s\S]*?\bfrom\s+["`[]?([a-z0-9_]+)["`\]]?/i,
   },
 ] as const;
-
-function redactHeaders(headers: Record<string, string> | undefined) {
-  if (!headers) {
-    return headers;
-  }
-
-  return Object.fromEntries(
-    Object.entries(headers).map(([key, value]) => {
-      const lowerKey = key.toLowerCase();
-      if (lowerKey.includes('authorization') || lowerKey.includes('cookie')) {
-        return [key, '[Filtered]'];
-      }
-      return [key, value];
-    }),
-  );
-}
 
 const parseTraceSampleRate = (value: string | undefined): number | undefined => {
   if (value === undefined || value.trim() === '') {
@@ -161,33 +104,6 @@ export const isLowValueD1TransactionName = (name: string | undefined): boolean =
     (sqlOperation.operation === 'insert' || sqlOperation.operation === 'update') &&
     LOW_VALUE_D1_TRANSACTION_TABLES.has(sqlOperation.table)
   );
-};
-
-export const beforeSend: BeforeSend = (event, _hint) => {
-  const sanitizableEvent = event as SanitizableEvent;
-
-  if (sanitizableEvent.request) {
-    sanitizableEvent.request.url = sanitizeRequestUrl(sanitizableEvent.request.url);
-    delete sanitizableEvent.request.query_string;
-    const headers = redactHeaders(sanitizableEvent.request.headers);
-    if (headers) {
-      sanitizableEvent.request.headers = headers;
-    } else {
-      delete sanitizableEvent.request.headers;
-    }
-    delete sanitizableEvent.request.cookies;
-    delete sanitizableEvent.request.data;
-  }
-
-  if (sanitizableEvent.extra) {
-    for (const key of SENSITIVE_EXTRA_KEYS) {
-      if (key in sanitizableEvent.extra) {
-        sanitizableEvent.extra[key] = '[Filtered]';
-      }
-    }
-  }
-
-  return event;
 };
 
 export const beforeSendSpan: BeforeSendSpan = (span) => {

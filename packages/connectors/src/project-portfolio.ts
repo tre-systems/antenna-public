@@ -1,3 +1,5 @@
+import { ACCOUNT_ID_RX, analyticsSqlUrl, SLUG_RX } from './analytics-engine';
+import { errorMessage } from './error-message';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 
 export type ProjectPortfolioConfig = {
@@ -15,8 +17,6 @@ type SqlRow = {
   readonly count: number | string;
 };
 
-const SLUG_RX = /^[a-z0-9][a-z0-9_-]{0,63}$/;
-const ACCOUNT_ID_RX = /^[0-9a-f]{32}$/;
 const DEFAULT_DATASET = 'app_usage';
 const DEFAULT_DAYS = 7;
 
@@ -69,15 +69,13 @@ const fetchPortfolio = async (
 > => {
   let response: Response;
   try {
-    response = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${accountId}/analytics_engine/sql`,
-      { method: 'POST', headers: { Authorization: `Bearer ${apiToken}` }, body: sql },
-    );
+    response = await fetch(analyticsSqlUrl(accountId), {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiToken}` },
+      body: sql,
+    });
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'fetch_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }
   if (response.status === 401 || response.status === 403) {
     return { ok: false, error: { code: 'unauthorized', message: `HTTP ${response.status}` } };
@@ -91,10 +89,7 @@ const fetchPortfolio = async (
   try {
     return { ok: true, payload: await response.json() };
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'parse_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
   }
 };
 

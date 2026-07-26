@@ -6,6 +6,17 @@ Security fixes are applied to the latest release and the `main` branch. Early
 releases may change quickly; operators should keep dependencies and deployed
 Workers current.
 
+## Dependency scanning
+
+CI blocks on `npm audit --omit=dev --audit-level=high`: a high-severity
+advisory in anything that ships to a running Worker or browser fails the build.
+
+Development-only advisories do not block CI. They reach a deployed instance
+through nothing a user can run, and holding the gate on them means a build
+tool's transitive dependency can make the repo unreleasable with no fix
+available upstream. They are still tracked — Dependabot opens PRs for
+development dependencies weekly, and CodeQL runs on every pull request.
+
 ## Reporting a vulnerability
 
 Use GitHub private vulnerability reporting for this repository. Include:

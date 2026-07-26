@@ -18,9 +18,7 @@ const BLOCKER_COPY: Record<SourceBlockerReason, string> = {
 
 export function PlanPreview({ onConfirmed }: Props) {
   const plan = currentPlan.value;
-  // @antenna/shared declares plan.signals as ReadonlyArray<ProposedSignal>;
-  // copy into a mutable working array we can edit in place when the user
-  // fills in missing fields.
+  // plan.signals is readonly on the wire; copy it so missing fields stay editable.
   const [signals, setSignals] = useState<ProposedSignal[]>(() => [...(plan?.plan.signals ?? [])]);
   const [busy, setBusy] = useState<'confirm' | 'reject' | null>(null);
 
@@ -118,7 +116,7 @@ export function PlanPreview({ onConfirmed }: Props) {
             void handleConfirm();
           }}
           disabled={!canConfirm}
-          class="rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-[0_4px_18px_-4px_rgba(99,102,241,0.5)] transition hover:brightness-110 hover:shadow-[0_6px_22px_-4px_rgba(99,102,241,0.6)] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+          class="antenna-primary rounded-lg px-3 py-1.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
           data-testid="plan-preview-confirm"
         >
           {busy === 'confirm' ? 'Confirming…' : 'Confirm'}

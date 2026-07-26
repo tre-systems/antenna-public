@@ -36,7 +36,7 @@ describe('equityWatchlistTemplate.paramExtractors.tickers', () => {
   });
 
   it('leaves explicit exchange suffixes alone', () => {
-    expect(tickers?.('track AZN.UK and VTI.US')).toBe('AZN.UK,VTI.US');
+    expect(tickers?.('track BA.UK and VTI.US')).toBe('BA.UK,VTI.US');
   });
 
   it('ignores common stopwords and currency codes', () => {

@@ -1,3 +1,4 @@
+import { errorMessage } from './error-message';
 import type { Adapter, AdapterError, AdapterResult, DataPoint } from './types';
 import { retryAfterSecondsFromHeaders } from './http-retry-after';
 
@@ -69,10 +70,8 @@ const fetchHistorical = async (
   days: number,
 ): Promise<{ ok: true; body: unknown } | { ok: false; error: AdapterError }> => {
   const { d1, d2 } = dateRange(days);
-  // The TE API only accepts the key as the `c` query param — there is no header
-  // auth. This `url` therefore contains the secret: never log it, put it in an
-  // error message, or persist it. Error paths below return coarse, key-free
-  // messages (`HTTP ${status}`, "rejected credentials") for exactly this reason.
+  // TE has no header auth, so `url` carries the key: never log, persist, or
+  // return it — hence the coarse, key-free messages on every error path below.
   const params = new URLSearchParams({ c: apiKey, d1, d2, f: 'json' });
   const url = `https://api.tradingeconomics.com/markets/historical/${encodeURIComponent(symbol)}?${params.toString()}`;
 
@@ -80,10 +79,7 @@ const fetchHistorical = async (
   try {
     response = await fetch(url, { headers: { accept: 'application/json' } });
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'fetch_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }
 
   if (response.status === 401 || response.status === 403 || response.status === 410) {
@@ -109,10 +105,7 @@ const fetchHistorical = async (
   try {
     return { ok: true, body: await response.json() };
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'parse_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
   }
 };
 

@@ -1,39 +1,14 @@
 // Live e2e for the add-signal flow. By default Playwright starts a local
 // Worker-backed SPA; set BASE_URL to run the same flow against an existing URL.
 
-import { test, expect, type Page } from '@playwright/test';
-
-async function openAskComposer(page: Page): Promise<void> {
-  const input = page.getByTestId('signal-composer-input');
-  const launcher = page.getByTestId('signal-composer-open');
-
-  if (await input.isVisible()) return;
-  await launcher.click({ timeout: 5_000 }).catch(async (error: unknown) => {
-    if (!(await input.isVisible())) throw error;
-  });
-  await expect(input).toBeVisible({ timeout: 10_000 });
-}
+import { test, expect } from '@playwright/test';
+import { openSignalComposer } from './shared-fixture';
 
 test('user can plan and confirm an FX signal', async ({ page }) => {
   await page.goto('/');
+  await openSignalComposer(page);
 
   const input = page.getByTestId('signal-composer-input');
-  const onboardingAddSignal = page.getByTestId('onboarding-add-signal');
-  await expect(
-    page
-      .locator(
-        '[data-testid="signal-composer-input"], [data-testid="signal-composer-open"], [data-testid="onboarding-add-signal"]',
-      )
-      .first(),
-  ).toBeVisible({
-    timeout: 10_000,
-  });
-  if (await onboardingAddSignal.isVisible()) {
-    await onboardingAddSignal.click();
-  }
-  await openAskComposer(page);
-
-  await expect(input).toBeVisible({ timeout: 10_000 });
   await input.fill('track CHF/USD');
   await page.getByTestId('signal-composer-submit').click();
 

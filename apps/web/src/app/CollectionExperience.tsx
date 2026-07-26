@@ -44,7 +44,7 @@ export function CollectionExperience({
   return (
     <main
       data-testid="collection-experience"
-      class="mx-auto min-h-dvh max-w-7xl px-3 pb-6 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-5 lg:px-6"
+      class="mx-auto min-h-dvh max-w-7xl px-3 pb-8 pt-[calc(env(safe-area-inset-top)+0.9rem)] sm:px-5 lg:px-6"
     >
       <CollectionToolbar
         user={user}

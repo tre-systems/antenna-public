@@ -86,7 +86,7 @@ export const updateSignal = async (c: SignalsContext): Promise<Response> => {
   const result = resolveSignalUpdate(signal, parsed.data);
   if (!result.ok) return updateFailureResponse(c, result.failure);
 
-  await persistSignalUpdate(c.env.DB, client, signal, result.update);
+  await persistSignalUpdate(client, signal, result.update);
   return ok(c, signalUpdateResponse(result.update));
 };
 

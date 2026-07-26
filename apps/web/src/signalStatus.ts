@@ -8,10 +8,7 @@ export function deriveStatus(
 ): DerivedStatus {
   const { status, last_ok_at, last_attempt_at, last_error } = signal.status;
 
-  // confirmPlan inserts a signal_status row with status='loading' and a fresh
-  // updatedAt before the dispatcher has had a chance to run. The updatedAt
-  // surfaces here as a non-null last_attempt_at, so without trusting the
-  // explicit status field we'd misclassify a brand-new signal as 'live'.
+  // confirmPlan stamps last_attempt_at before the dispatcher runs, so trust the explicit status.
   if (status === 'loading' && last_ok_at === null) return 'loading';
   if (status === 'stale') return 'stale';
 

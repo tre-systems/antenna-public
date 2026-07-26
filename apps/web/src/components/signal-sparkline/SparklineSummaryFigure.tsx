@@ -23,7 +23,7 @@ export function SparklineSummaryFigure({ label, points }: SparklineSummaryFigure
   return (
     <div class="ml-auto flex min-w-[8.5rem] max-w-[11rem] flex-1 items-center justify-end gap-2">
       <svg
-        class="h-10 min-w-0 flex-1 overflow-visible text-sky-600 dark:text-sky-300"
+        class="h-10 min-w-0 flex-1 overflow-visible text-emerald-600 dark:text-emerald-300"
         viewBox={`0 0 ${SPARKLINE_WIDTH} ${SPARKLINE_HEIGHT}`}
         role="img"
         aria-label={`${label} ${rangeLabel} mini chart`}

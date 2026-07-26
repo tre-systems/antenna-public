@@ -15,7 +15,7 @@ describe('db codecs', () => {
   });
 
   it('parses string-valued dimension records', () => {
-    expect(parseStringRecord('{"symbol":"AZN.L"}')).toEqual({ symbol: 'AZN.L' });
+    expect(parseStringRecord('{"symbol":"BA.L"}')).toEqual({ symbol: 'BA.L' });
     expect(parseStringRecord(null)).toBeNull();
   });
 

@@ -26,9 +26,9 @@ describe('githubSecurityAdvisoriesTemplate.matchHints', () => {
 });
 
 describe('githubSecurityAdvisoriesTemplate metadata', () => {
-  it('requires attribution and uses a six-hour refresh cadence', () => {
+  it('uses public source policy and six-hour refresh cadence', () => {
     expect(githubSecurityAdvisoriesTemplate.paramKeys).toEqual([]);
-    expect(githubSecurityAdvisoriesTemplate.rightsStatus).toBe('with-attribution');
+    expect(githubSecurityAdvisoriesTemplate.rightsStatus).toBe('public');
     expect(githubSecurityAdvisoriesTemplate.defaultRefreshSeconds).toBe(21_600);
   });
 });

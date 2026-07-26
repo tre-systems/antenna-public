@@ -1,4 +1,4 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import {
   publicCollectionReportSchema,
@@ -7,11 +7,12 @@ import {
   type PublicCollectionResponse,
 } from '@antenna/shared';
 import { db, type Env as DbEnv } from '../db/client';
-import { signalStatus, collections, signals, publicCollectionReports } from '../db/schema';
+import { signalStatus, signals, publicCollectionReports } from '../db/schema';
 import { buildSignal, latestPointsForSignals } from './signals';
 import { err, ok } from './http';
 import {
   isPublicReadableSignal,
+  loadPublicCollectionBySlug,
   requesterMetadataHash,
   toPublicSignal,
   toPublicCollectionRecord,
@@ -29,14 +30,8 @@ export const publicCollectionsRoute = new Hono<{ Bindings: Bindings }>()
     } satisfies PublicCollectionListResponse);
   })
   .get('/:slug', async (c) => {
-    const slug = c.req.param('slug');
     const client = db(c.env);
-    const [collection] = await client
-      .select()
-      .from(collections)
-      .where(and(eq(collections.slug, slug), eq(collections.visibility, 'public')))
-      .limit(1)
-      .all();
+    const collection = await loadPublicCollectionBySlug(client, c.req.param('slug'));
     if (!collection) return err(c, 'not_found', 404);
 
     const rows = await client
@@ -69,12 +64,7 @@ export const publicCollectionsRoute = new Hono<{ Bindings: Bindings }>()
     if (!parsed.success) return err(c, 'invalid_body', 400);
 
     const client = db(c.env);
-    const [collection] = await client
-      .select({ id: collections.id })
-      .from(collections)
-      .where(and(eq(collections.slug, c.req.param('slug')), eq(collections.visibility, 'public')))
-      .limit(1)
-      .all();
+    const collection = await loadPublicCollectionBySlug(client, c.req.param('slug'));
     if (!collection) return err(c, 'not_found', 404);
 
     const now = new Date();

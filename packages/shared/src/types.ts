@@ -2,7 +2,18 @@
 // routes, persistence), the web app (composer UI, plan rendering), and the MCP
 // client.
 
-export type RightsStatus = 'public' | 'with-attribution' | 'requires-auth' | 'needs-review';
+import type { z } from 'zod';
+import type {
+  notificationChannelSchema,
+  notificationFrequencySchema,
+  rightsStatusSchema,
+  sourceAcquisitionStateSchema,
+  sourceAcquisitionStrategySchema,
+  sourceBlockerReasonSchema,
+  visibilitySchema,
+} from './zod-schemas';
+
+export type RightsStatus = z.infer<typeof rightsStatusSchema>;
 export type SignalStatusValue = 'live' | 'stale' | 'error' | 'loading';
 
 export type RightsStatusCopy = {
@@ -83,34 +94,11 @@ export interface ConnectorRequestRecord {
   readonly updated_at: number;
 }
 
-export type SourceBlockerReason =
-  | 'irrelevant_request'
-  | 'unsupported_source'
-  | 'unsupported_symbol'
-  | 'source_rights_blocked'
-  | 'auth_required_source'
-  | 'private_display_only_source'
-  | 'unsafe_generated_extraction';
+export type SourceBlockerReason = z.infer<typeof sourceBlockerReasonSchema>;
 
-export type SourceAcquisitionState =
-  | 'known_connector'
-  | 'needs_credentials'
-  | 'needs_source_review'
-  | 'source_unavailable'
-  | 'irrelevant_match'
-  | 'generated_candidate';
+export type SourceAcquisitionState = z.infer<typeof sourceAcquisitionStateSchema>;
 
-export type SourceAcquisitionStrategy =
-  | 'first_class_connector'
-  | 'reviewed_catalog_reuse'
-  | 'rss_atom'
-  | 'public_api_json'
-  | 'static_html_table'
-  | 'embedded_page_json'
-  | 'downloaded_report'
-  | 'user_side_runner'
-  | 'browser_session_setup'
-  | 'manual_blocker';
+export type SourceAcquisitionStrategy = z.infer<typeof sourceAcquisitionStrategySchema>;
 
 export interface CollectionLayoutSlot {
   readonly signal_id: string;
@@ -125,7 +113,7 @@ export interface CollectionLayout {
   readonly slots: ReadonlyArray<CollectionLayoutSlot>;
 }
 
-export type Visibility = 'private' | 'shared' | 'public';
+export type Visibility = z.infer<typeof visibilitySchema>;
 
 export interface CollectionRecord {
   readonly id: string;
@@ -214,9 +202,9 @@ export interface SignalAlertListResponse {
   readonly alerts: ReadonlyArray<SignalAlertRecord>;
 }
 
-export type NotificationChannel = 'daily_digest';
+export type NotificationChannel = z.infer<typeof notificationChannelSchema>;
 
-export type NotificationFrequency = 'daily' | 'weekly';
+export type NotificationFrequency = z.infer<typeof notificationFrequencySchema>;
 
 export interface NotificationPreferenceRecord {
   readonly collection_id: string | null;

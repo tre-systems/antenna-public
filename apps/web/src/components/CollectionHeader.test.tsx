@@ -8,9 +8,9 @@ const noop = async (): Promise<void> => {};
 
 describe('CollectionHeader', () => {
   it('renders the title inside the click-to-edit button', () => {
-    const html = renderToString(<CollectionHeader title="Morning Signals" onSaveTitle={noop} />);
+    const html = renderToString(<CollectionHeader title="Rob's Morning" onSaveTitle={noop} />);
     expect(html).toContain('data-testid="collection-title"');
-    expect(html).toContain('Morning Signals');
+    expect(html).toContain("Rob's Morning");
     expect(html).toContain('Click to edit');
   });
 
@@ -18,5 +18,11 @@ describe('CollectionHeader', () => {
     const html = renderToString(<CollectionHeader title="Antenna" onSaveTitle={noop} />);
     expect(html).not.toContain('data-testid="collection-description"');
     expect(html).not.toContain('Live signals, all in one place.');
+  });
+
+  it('renders the endorsed brand for the legacy default collection title', () => {
+    const html = renderToString(<CollectionHeader title="Antenna" onSaveTitle={noop} />);
+    expect(html).toContain('src="/favicon.svg"');
+    expect(html).toContain('Antenna');
   });
 });

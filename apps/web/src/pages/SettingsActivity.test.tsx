@@ -22,7 +22,7 @@ const alert: SignalAlertRecord = {
   collection_id: 'collection-1',
   signal_id: 'signal-1',
   template_id: 'market-history',
-  title: 'AZN.L',
+  title: 'BA.L',
   rule_id: 'large_move',
   rule_label: 'Large move',
   metric_key: 'close',
@@ -31,7 +31,7 @@ const alert: SignalAlertRecord = {
   value: 102.5,
   previous_value: 100,
   unit: 'GBP',
-  source_url: 'https://finance.yahoo.com/quote/AZN.L/',
+  source_url: 'https://finance.yahoo.com/quote/BA.L/',
 };
 
 describe('SettingsActivity', () => {

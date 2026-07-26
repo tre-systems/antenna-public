@@ -75,8 +75,6 @@ export function createMcpRoute(options: McpRouteOptions = {}) {
   return route;
 }
 
-export const mcpRoute = createMcpRoute();
-
 function nonEmptyHeader(value: string | null): string | undefined {
   if (value === null) return undefined;
   const trimmed = value.trim();

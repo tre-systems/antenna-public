@@ -2,7 +2,7 @@ import type { SeriesPoint } from './types';
 
 export type SparklineRange = '1w' | '1m' | '1y';
 
-export type SparklineRangeOption = {
+type SparklineRangeOption = {
   readonly value: SparklineRange;
   readonly label: string;
   readonly days: number;

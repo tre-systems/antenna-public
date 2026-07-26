@@ -1,6 +1,5 @@
 import { eq } from 'drizzle-orm';
 import { templates } from '@antenna/registry';
-import { runD1Batch, type BatchStatement } from '../../db/batch';
 import { parseJsonRecord } from '../../db/codecs';
 import { signalStatus, signals, signalPoints, type SignalConfig } from '../../db/schema';
 import { validateTemplateConfig } from '../../registry/config';
@@ -16,7 +15,7 @@ export type SignalUpdateInput = {
   readonly visibility?: SignalRow['visibility'];
 };
 
-export type ResolvedSignalUpdate = {
+type ResolvedSignalUpdate = {
   readonly nextConfig: Record<string, unknown>;
   readonly nextRefreshSeconds: number;
   readonly nextVisibility: SignalRow['visibility'];
@@ -27,7 +26,7 @@ export type SignalUpdateFailure =
   | { readonly kind: 'error'; readonly error: string; readonly status: 400 | 409 }
   | { readonly kind: 'source_policy_blocked'; readonly blocker: PublicVisibilityBlocker };
 
-export type SignalUpdateResult =
+type SignalUpdateResult =
   | { readonly ok: true; readonly update: ResolvedSignalUpdate }
   | { readonly ok: false; readonly failure: SignalUpdateFailure };
 
@@ -56,13 +55,10 @@ export const resolveSignalUpdate = (
 };
 
 export const persistSignalUpdate = async (
-  binding: D1Database,
   client: Client,
   signal: SignalRow,
   update: ResolvedSignalUpdate,
 ): Promise<void> => {
-  if (await runD1Batch(binding, updateStatements(signal, update))) return;
-
   await updateSignalRow(client, signal, update);
   if (update.configChanged) await clearSignalData(client, signal.id);
 };
@@ -95,41 +91,6 @@ const updateSignalRow = async (
 const clearSignalData = async (client: Client, signalId: string): Promise<void> => {
   await client.delete(signalPoints).where(eq(signalPoints.signalId, signalId)).run();
   await client.delete(signalStatus).where(eq(signalStatus.signalId, signalId)).run();
-};
-
-const updateStatements = (
-  signal: SignalRow,
-  update: ResolvedSignalUpdate,
-): ReadonlyArray<BatchStatement> => {
-  const statements: BatchStatement[] = [
-    {
-      sql: [
-        'UPDATE signals',
-        'SET config = ?, refresh_seconds = ?, visibility = ?, updated_at = ?',
-        'WHERE id = ?',
-      ].join(' '),
-      params: [
-        JSON.stringify(update.nextConfig),
-        update.nextRefreshSeconds,
-        update.nextVisibility,
-        Date.now(),
-        signal.id,
-      ],
-    },
-  ];
-  if (!update.configChanged) return statements;
-
-  statements.push(
-    {
-      sql: 'DELETE FROM signal_points WHERE signal_id = ?',
-      params: [signal.id],
-    },
-    {
-      sql: 'DELETE FROM signal_status WHERE signal_id = ?',
-      params: [signal.id],
-    },
-  );
-  return statements;
 };
 
 const resolveNextConfig = (

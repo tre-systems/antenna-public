@@ -7,7 +7,7 @@ export const MANUAL_REFRESH_RATE_LIMIT_MS = 60_000;
 const DAY_MS = 86_400_000;
 const DEFAULT_RANGE_MS = 366 * DAY_MS;
 
-export type TimedHistoryRange = '1m' | '3m' | '6m' | '1y';
+type TimedHistoryRange = '1m' | '3m' | '6m' | '1y';
 export type HistoryRange = TimedHistoryRange | 'all';
 
 const RANGE_MS: Readonly<Partial<Record<string, number>>> = {

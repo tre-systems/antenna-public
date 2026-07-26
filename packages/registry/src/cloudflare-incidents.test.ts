@@ -30,9 +30,9 @@ describe('cloudflareIncidentsTemplate.matchHints', () => {
 });
 
 describe('cloudflareIncidentsTemplate metadata', () => {
-  it('requires a source-rights review and uses a fifteen-minute refresh', () => {
+  it('uses public source policy and fifteen-minute refresh', () => {
     expect(cloudflareIncidentsTemplate.paramKeys).toEqual([]);
-    expect(cloudflareIncidentsTemplate.rightsStatus).toBe('needs-review');
+    expect(cloudflareIncidentsTemplate.rightsStatus).toBe('public');
     expect(cloudflareIncidentsTemplate.defaultRefreshSeconds).toBe(900);
   });
 });

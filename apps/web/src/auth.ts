@@ -1,22 +1,11 @@
-// Client-side session helper. We deliberately don't ship a copy of Better
-// Auth's React/Vue client — for a one-button SPA, a direct /api/me probe
-// keeps the bundle tiny and the dependency graph honest.
+// A direct /api/me probe rather than Better Auth's framework client, to keep the bundle tiny.
 
-import type { CollectionQuota } from '@antenna/shared';
+import type { CollectionQuota, MeResponse } from '@antenna/shared';
 
-export type User = {
-  readonly id: string;
-  readonly email: string;
-  readonly name: string;
-  readonly image_url: string | null;
-  readonly first_seen_at: number;
-  readonly onboarded_at: number | null;
-  readonly collection_quota: CollectionQuota;
-};
+export type User = MeResponse;
 
 export async function getCurrentUser(): Promise<User | null> {
-  // Use credentials: 'include' so the BA session cookie rides on cross-origin
-  // requests (e.g. when the SPA is served from a vite dev origin).
+  // credentials: 'include' so the session cookie rides on cross-origin dev requests.
   const res = await fetch('/api/me', {
     credentials: 'include',
     headers: { Accept: 'application/json' },
@@ -44,42 +33,27 @@ export async function completeOnboarding(): Promise<User> {
   return parseUser(await res.json());
 }
 
+type UnknownFields = { readonly [K in keyof User]?: unknown };
+
+const isUser = (body: UnknownFields): body is User =>
+  typeof body.id === 'string' &&
+  typeof body.email === 'string' &&
+  typeof body.name === 'string' &&
+  (body.image_url === null || typeof body.image_url === 'string') &&
+  typeof body.first_seen_at === 'number' &&
+  (body.onboarded_at === null || typeof body.onboarded_at === 'number') &&
+  isCollectionQuota(body.collection_quota);
+
 const parseUser = (raw: unknown): User => {
-  const body = raw as {
-    id?: unknown;
-    email?: unknown;
-    name?: unknown;
-    image_url?: unknown;
-    first_seen_at?: unknown;
-    onboarded_at?: unknown;
-    collection_quota?: unknown;
-  };
-  if (
-    typeof body.id !== 'string' ||
-    typeof body.email !== 'string' ||
-    typeof body.name !== 'string' ||
-    (body.image_url !== null && typeof body.image_url !== 'string') ||
-    typeof body.first_seen_at !== 'number' ||
-    (body.onboarded_at !== null && typeof body.onboarded_at !== 'number') ||
-    !isCollectionQuota(body.collection_quota)
-  ) {
-    throw new Error('GET /api/me returned unexpected shape');
-  }
-  return {
-    id: body.id,
-    email: body.email,
-    name: body.name,
-    image_url: body.image_url,
-    first_seen_at: body.first_seen_at,
-    onboarded_at: body.onboarded_at,
-    collection_quota: body.collection_quota,
-  };
+  const body = raw as UnknownFields;
+  if (!isUser(body)) throw new Error('GET /api/me returned unexpected shape');
+  // Project rather than pass through so unexpected server fields never reach the UI.
+  const { id, email, name, image_url, first_seen_at, onboarded_at, collection_quota } = body;
+  return { id, email, name, image_url, first_seen_at, onboarded_at, collection_quota };
 };
 
 export async function signOut(): Promise<void> {
-  // Better Auth rejects POSTs without a JSON Content-Type (415), so we send an
-  // empty JSON body — matching completeOnboarding above. Without this the
-  // session cookie is never cleared and the user stays signed in.
+  // Better Auth rejects POSTs without a JSON Content-Type (415) and never clears the cookie.
   const res = await fetch('/api/auth/sign-out', {
     method: 'POST',
     credentials: 'include',
@@ -101,8 +75,7 @@ export function firstName(user: Pick<User, 'email' | 'name'>): string {
   return space === -1 ? trimmed : trimmed.slice(0, space);
 }
 
-// Time-of-day greeting in the viewer's local timezone — small touch that
-// makes the header feel less like a stub and more like a place you visit.
+// Time-of-day greeting in the viewer's local timezone.
 export function greetingFor(date: Date = new Date()): string {
   const h = date.getHours();
   if (h < 5) return 'Up late';

@@ -51,6 +51,30 @@ describe('parseGithubTrending', () => {
       },
     ]);
   });
+
+  it('ignores rows whose heading link is not a plain owner/repo path', () => {
+    const malformed = `
+      <article class="Box-row">
+        <h2><a href="/owner/repo/extra">owner / repo / extra</a></h2>
+      </article>
+      <article class="Box-row">
+        <h2><a href="https://elsewhere.test/owner/repo">owner / repo</a></h2>
+      </article>
+    `;
+
+    expect(parseGithubTrending(malformed)).toEqual([]);
+  });
+
+  it('decodes description entities exactly once', () => {
+    const [first] = parseGithubTrending(`
+      <article class="Box-row">
+        <h2><a href="/owner/repo">owner / repo</a></h2>
+        <p class="color-fg-muted">Tools &amp;amp; toys for &lt;everyone&gt;</p>
+      </article>
+    `);
+
+    expect(first?.description).toBe('Tools &amp; toys for <everyone>');
+  });
 });
 
 describe('githubTrending', () => {
@@ -116,10 +140,10 @@ describe('githubTrending', () => {
     const fetchSpy = vi.fn().mockResolvedValue(new Response(html, { status: 200 }));
     vi.stubGlobal('fetch', fetchSpy);
 
-    await githubTrending({ limit: 1, githubToken: 'test-github-token' });
+    await githubTrending({ limit: 1, githubToken: 'ghp_test' });
 
     const init = fetchSpy.mock.calls[0]?.[1] as RequestInit | undefined;
     const headers = init?.headers as Record<string, string> | undefined;
-    expect(headers?.Authorization).toBe('Bearer test-github-token');
+    expect(headers?.Authorization).toBe('Bearer ghp_test');
   });
 });

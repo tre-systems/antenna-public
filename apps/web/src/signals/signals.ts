@@ -9,6 +9,7 @@ import {
 import { readSignalSnapshot, snapshotKey, writeSignalSnapshot } from './signal-snapshot';
 
 export { reorderForDrop } from './signal-order';
+export { dismissNotice, notice, showNotice } from './notice';
 
 // Null collection keeps the primary-collection compatibility path.
 export const activeCollectionId = signal<string | null>(null);
@@ -30,10 +31,7 @@ type PendingRemoval = {
 
 export const pendingRemoval = signal<PendingRemoval | null>(null);
 
-// Signals whose DELETE round-trip is in flight. They stay hidden after the
-// undo window closes so the card cannot flash back between the undo toast
-// disappearing and the refetch confirming the deletion — including when an
-// SSE-triggered refetch lands mid-delete.
+// In-flight DELETEs stay hidden past the undo window so the card cannot flash back mid-refetch.
 const deletingIds = signal<ReadonlySet<string>>(new Set());
 
 export const draggingSignalId = signal<string | null>(null);
@@ -51,29 +49,6 @@ export const displayedSignals = computed(() => {
 });
 
 export const UNDO_WINDOW_MS = 5000;
-
-// Transient success/status message (e.g. after creating a signal). It auto-
-// dismisses; a lightweight cousin of the undo toast.
-export const notice = signal<string | null>(null);
-export const NOTICE_WINDOW_MS = 5000;
-let noticeTimeoutId: ReturnType<typeof setTimeout> | null = null;
-
-export function showNotice(message: string): void {
-  if (noticeTimeoutId) clearTimeout(noticeTimeoutId);
-  notice.value = message;
-  noticeTimeoutId = setTimeout(() => {
-    notice.value = null;
-    noticeTimeoutId = null;
-  }, NOTICE_WINDOW_MS);
-}
-
-export function dismissNotice(): void {
-  if (noticeTimeoutId) {
-    clearTimeout(noticeTimeoutId);
-    noticeTimeoutId = null;
-  }
-  notice.value = null;
-}
 
 export function setSignalSnapshotOwner(ownerId: string | null): void {
   if (activeSnapshotOwnerId.value === ownerId) return;
@@ -213,9 +188,7 @@ async function runDelete(signalId: string): Promise<void> {
   }
 }
 
-// `rollbackTo` is the order to restore if the server rejects the reorder.
-// It defaults to the current list, but callers that already previewed the
-// new order optimistically (pointer drag) must pass the pre-drag order.
+// Callers that already previewed the new order (pointer drag) must pass their pre-drag order.
 export async function applyReorder(
   nextOrder: readonly ApiSignal[],
   rollbackTo: readonly ApiSignal[] | null = signals.value,

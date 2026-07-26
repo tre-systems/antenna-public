@@ -7,8 +7,7 @@ import { join } from 'node:path';
 const repoRoot = process.cwd();
 const diagramDir = join(repoRoot, 'docs', 'diagrams');
 
-// Graphviz is required to render PNGs from .dot sources. CI installs it before
-// `npm run verify`; local machines without `dot` skip with a clear message.
+// CI installs Graphviz before `npm run verify`; local machines without it skip.
 const probe = spawnSync('dot', ['-V'], { stdio: 'ignore' });
 if (probe.error || probe.status !== 0) {
   console.log('Diagram check skipped: Graphviz `dot` not available on PATH.');
@@ -28,10 +27,7 @@ if (dotFiles.length === 0) {
 
 const failures = [];
 
-// Verify each .dot renders cleanly and the committed PNG exists. PNGs are
-// not byte-compared: Graphviz + libcairo emit different bytes across
-// versions, which would produce stale-PNG false positives on every push.
-// The .dot sources are the source of truth; PNGs are for in-browser viewing.
+// PNGs are not byte-compared: Graphviz/libcairo output differs across versions.
 try {
   for (const file of dotFiles) {
     const source = join(diagramDir, file);

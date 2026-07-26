@@ -1,25 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { minimizeAccountTokens, trustedOriginsForAuth } from './index';
+import { decrypt } from './crypto';
+import { protectAccountTokens } from './account-tokens';
+import { trustedOriginsForAuth } from './index';
+
+const KEY = '11'.repeat(32);
 
 describe('account token protection', () => {
-  it('drops Google bearer values that the application does not use', () => {
-    const protectedTokens = minimizeAccountTokens({
-      accountId: 'google-subject',
-      accessToken: 'access',
-      refreshToken: 'refresh',
-      idToken: 'profile-jwt',
-      accessTokenExpiresAt: new Date(),
-      refreshTokenExpiresAt: new Date(),
-    });
+  it('encrypts reusable Google tokens and drops the unneeded ID token', async () => {
+    const protectedTokens = await protectAccountTokens(
+      { accessToken: 'access', refreshToken: 'refresh', idToken: 'profile-jwt' },
+      KEY,
+    );
 
-    expect(protectedTokens).toMatchObject({
-      accountId: 'google-subject',
-      accessToken: null,
-      refreshToken: null,
-      idToken: null,
-      accessTokenExpiresAt: null,
-      refreshTokenExpiresAt: null,
-    });
+    await expect(decrypt(String(protectedTokens.accessToken), KEY)).resolves.toBe('access');
+    await expect(decrypt(String(protectedTokens.refreshToken), KEY)).resolves.toBe('refresh');
+    expect(protectedTokens.idToken).toBeNull();
   });
 
   it('does not trust localhost origins in production', () => {

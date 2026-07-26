@@ -4,9 +4,15 @@ export const readErrorFromQuery = (): SignInError | null => {
   if (typeof window === 'undefined') return null;
   const raw = new URLSearchParams(window.location.search).get('error');
   if (!raw) return null;
-  const kind: SignInError['kind'] = /whitelist|not.*allowed|access_denied/i.test(raw)
-    ? 'whitelist'
-    : 'generic';
+  // Matches the reasons the Worker throws from its Better Auth create hooks,
+  // which arrive as an `error=` param on the callback redirect. Google's own
+  // `access_denied` is deliberately not one of them: with a published consent
+  // screen it means the person cancelled, and retrying is the right advice.
+  const kind: SignInError['kind'] = /not_invited/i.test(raw)
+    ? 'not_invited'
+    : /blocked/i.test(raw)
+      ? 'blocked'
+      : 'generic';
   return { kind, raw };
 };
 

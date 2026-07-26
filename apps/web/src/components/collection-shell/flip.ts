@@ -5,12 +5,8 @@ type CellRects = Map<string, { left: number; top: number }>;
 export const prefersReducedMotion = (): boolean =>
   typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// First-Last-Invert-Play over the grid cells: after every render, each cell
-// that changed position slides from where it last was to where it now is.
-// Positions are container-relative so page scrolling between renders does not
-// read as movement. Newly added cells have no previous position and are left
-// to the `signal-enter` CSS animation; removed cells simply vanish while the
-// survivors glide into the gap.
+// First-Last-Invert-Play over the grid cells. Positions are container-relative
+// so page scrolling between renders does not read as movement.
 export function useGridFlip(containerRef: { readonly current: HTMLElement | null }): void {
   const previous = useRef<CellRects>(new Map());
   useLayoutEffect(() => {
@@ -46,11 +42,8 @@ function playMove(
   );
 }
 
-// Reordering moves the cell's DOM node, and re-inserting a node restarts the
-// card's one-shot `signal-enter` CSS intro (a delayed 6px hop) — which reads
-// as a flash layered on top of the slide. Jump any replay straight to its
-// end state before animating the move. Runs in useLayoutEffect, so the
-// restarted frame is never painted.
+// Re-inserting a node restarts the one-shot `signal-enter` intro, which flashes
+// on top of the slide; finishing it first (in useLayoutEffect) never paints.
 function stopEnterReplay(cell: HTMLElement): void {
   if (typeof cell.getAnimations !== 'function') return;
   for (const animation of cell.getAnimations({ subtree: true })) {
@@ -59,3 +52,17 @@ function stopEnterReplay(cell: HTMLElement): void {
     }
   }
 }
+
+// Cell-level animations are only the FLIP slides played above.
+export const isSliding = (el: HTMLElement): boolean =>
+  typeof el.getAnimations === 'function' && el.getAnimations().length > 0;
+
+export const finishSlides = (el: HTMLElement): void => {
+  if (typeof el.getAnimations !== 'function') return;
+  for (const animation of el.getAnimations()) animation.finish();
+};
+
+export const finishAllSlides = (anyCell: HTMLElement): void => {
+  const cells = anyCell.parentElement?.querySelectorAll<HTMLElement>('[data-signal-id]');
+  if (cells) for (const gridCell of cells) finishSlides(gridCell);
+};

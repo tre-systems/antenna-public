@@ -28,9 +28,7 @@ export const templatesRoute = new Hono<{ Bindings: Bindings; Variables: AuthVars
   .get('/', (c) => {
     return ok(
       c,
-      templates
-        .filter((template) => template.private !== true)
-        .map((template) => toTemplateRecord(template)),
+      templates.map((template) => toTemplateRecord(template)),
     );
   });
 

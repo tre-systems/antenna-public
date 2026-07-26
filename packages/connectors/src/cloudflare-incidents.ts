@@ -1,13 +1,12 @@
+import { positiveInt, stringValue } from './config-values';
 import { fetchJson } from './fetch-json';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 import {
   activeIncidents,
   ACTIVE_STATUSES,
   normaliseCloudflareIncidents,
-  positiveInt,
   recentIncidents,
   SOURCE_PAGE,
-  stringValue,
   type NormalisedIncident,
 } from './cloudflare-incidents-model';
 

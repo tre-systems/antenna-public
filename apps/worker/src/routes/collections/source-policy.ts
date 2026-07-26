@@ -58,28 +58,9 @@ const forkabilityDecision = (
     policy: sourcePolicyForTemplate(signal.templateId),
     audience: 'public',
   });
-  return sourceDecision.ok ? targetEligibility(signal, targetVisibility) : sourceDecision;
-};
-
-const targetEligibility = (
-  signal: SignalRow,
-  targetVisibility: Visibility,
-): SourcePolicyDecision => {
-  const policy = sourcePolicyForTemplate(signal.templateId);
-  if (targetVisibility === 'private') return { ok: true };
-  if (targetVisibility === 'shared') {
-    return canReadSharedLinkSignalWithSourcePolicy({
-      collectionVisibility: 'shared',
-      signalVisibility: 'shared',
-      policy,
-    });
-  }
-  return canReadSignalWithSourcePolicy({
-    collectionVisibility: 'public',
-    signalVisibility: 'public',
-    policy,
-    audience: 'public',
-  });
+  return sourceDecision.ok
+    ? externalVisibilityDecision(signal.templateId, targetVisibility)
+    : sourceDecision;
 };
 
 const skippedSignal = (signal: SignalRow, reason: string): SkippedCollectionSignal => ({

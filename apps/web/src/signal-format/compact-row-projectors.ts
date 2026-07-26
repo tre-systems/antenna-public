@@ -58,10 +58,22 @@ const portfolioRow = (p: DataPoint, rank: number): CompactRow | null => {
 };
 
 const projectLabel = (project: string): string => {
-  return project
-    .split(/[-_]/)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+  const known: Readonly<Record<string, string>> = {
+    rgou: 'Royal Game of Ur',
+    uwp: 'UWP',
+    'tre-website': 'TRE Website',
+    'swade-toolbox': 'SWADE Toolbox',
+    'geno-2': 'Geno 2',
+    'gamma-station': 'Gamma Station',
+    talata: 'Talata',
+  };
+  return (
+    known[project] ??
+    project
+      .split(/[-_]/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+  );
 };
 
 const hrefOf = (point: DataPoint): string | null => safeExternalUrl(point.source_url);

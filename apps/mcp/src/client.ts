@@ -23,21 +23,7 @@ import type {
 } from './client-types.js';
 import { normalizeBaseUrl, normalizeCookie } from './url.js';
 
-export type {
-  ConfirmPlanSignalPatch,
-  ConfirmPlanInput,
-  ConfirmPlanResult,
-  CollectionList,
-  FetchLike,
-  ListSignalsFilter,
-  AntennaClientOptions,
-  RefreshSignalResult,
-  RejectPlanResult,
-  RemoveSignalResult,
-  ReorderSignalsResult,
-  UpdateSignalInput,
-  UpdateSignalResult,
-} from './client-types.js';
+export type * from './client-types.js';
 
 export class AntennaApiError extends Error {
   constructor(

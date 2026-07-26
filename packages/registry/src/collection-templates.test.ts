@@ -6,6 +6,7 @@ describe('collectionTemplates', () => {
     expect(collectionTemplates.map((template) => template.id)).toEqual([
       'founder-morning',
       'ai-frontier-watch',
+      'problem-radar',
       'trader-morning',
       'ops-morning',
       'investor-watchlist',

@@ -29,7 +29,7 @@ export const weatherTemplate: ConnectorTemplate<WeatherTemplateConfig> = {
     lat: () => undefined,
     lon: () => undefined,
   },
-  rightsStatus: 'with-attribution',
+  rightsStatus: 'public',
   defaultRefreshSeconds: 1800,
   pointRetentionDays: 14,
   adapter: async (config) => {

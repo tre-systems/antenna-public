@@ -15,9 +15,7 @@ type Props = {
   readonly renderDisplay?: (text: string) => ComponentChildren;
 };
 
-// Click the displayed text to edit it. Enter / blur commits, Escape cancels.
-// Designed for the collection header but kept generic so signal titles and
-// future single-line owner edits can share the affordance.
+// Click to edit; Enter or blur commits, Escape cancels.
 export function InlineEditableText({
   value,
   placeholder,

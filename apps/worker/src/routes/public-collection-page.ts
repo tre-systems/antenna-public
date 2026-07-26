@@ -1,17 +1,15 @@
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
-import { sourcePolicyForTemplate } from '@antenna/registry';
 import { PRODUCT_NAME } from '../brand';
 import { db, type Env as DbEnv } from '../db/client';
-import { collections, signals } from '../db/schema';
-import { canReadSignalWithSourcePolicy } from '../policy/source-access';
+import { signals } from '../db/schema';
+import { isPublicReadableSignal, loadPublicCollectionBySlug } from './public-collection-helpers';
 
 type Bindings = DbEnv & {
   readonly ASSETS: AssetFetcher;
   readonly BETTER_AUTH_URL?: string;
 };
 
-type SignalRow = typeof signals.$inferSelect;
 type AssetFetcher = {
   fetch(request: Request): Promise<Response>;
 };
@@ -21,12 +19,7 @@ export const publicCollectionPageRoute = new Hono<{ Bindings: Bindings }>().get(
   async (c) => {
     const slug = c.req.param('slug');
     const client = db(c.env);
-    const [collection] = await client
-      .select()
-      .from(collections)
-      .where(and(eq(collections.slug, slug), eq(collections.visibility, 'public')))
-      .limit(1)
-      .all();
+    const collection = await loadPublicCollectionBySlug(client, slug);
 
     const index = await fetchIndexHtml(c.env.ASSETS, c.req.raw);
     if (!collection) return index;
@@ -56,14 +49,6 @@ const fetchIndexHtml = (assets: AssetFetcher, request: Request): Promise<Respons
   return assets.fetch(new Request(url.toString(), { headers: request.headers }));
 };
 
-const isPublicReadableSignal = (signal: SignalRow): boolean =>
-  canReadSignalWithSourcePolicy({
-    collectionVisibility: 'public',
-    signalVisibility: signal.visibility,
-    policy: sourcePolicyForTemplate(signal.templateId),
-    audience: 'public',
-  }).ok;
-
 const publicSignalCountDescription = (count: number): string => {
   if (count === 0) return 'No shareable signals are currently visible.';
   if (count === 1) return 'Includes 1 shareable live signal.';
@@ -89,7 +74,7 @@ const htmlResponseWithMeta = async (
   });
 };
 
-export const injectPublicCollectionMeta = (html: string, meta: PublicCollectionMeta): string => {
+const injectPublicCollectionMeta = (html: string, meta: PublicCollectionMeta): string => {
   const tags = [
     `<title>${escapeHtml(meta.title)}</title>`,
     `<meta name="description" content="${escapeHtml(meta.description)}" />`,

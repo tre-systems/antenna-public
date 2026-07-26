@@ -40,7 +40,7 @@ describe('db client', () => {
       .values({
         id,
         ownerId: 'user_test',
-        title: 'Daily signals',
+        title: 'Dogfood daily',
         createdAt: now,
         updatedAt: now,
       })
@@ -50,6 +50,6 @@ describe('db client', () => {
 
     expect(row?.id).toBe(id);
     // Spec calls this "name" colloquially; the column is `title` per ARCHITECTURE.md.
-    expect(row?.title).toBe('Daily signals');
+    expect(row?.title).toBe('Dogfood daily');
   });
 });

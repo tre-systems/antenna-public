@@ -14,7 +14,7 @@ type BuildForkRowsOptions = {
   readonly now: Date;
 };
 
-export type ForkRows = {
+type ForkRows = {
   readonly collection: CollectionRow;
   readonly signals: Array<typeof signalTable.$inferInsert>;
 };

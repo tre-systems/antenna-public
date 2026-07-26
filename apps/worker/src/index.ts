@@ -1,13 +1,10 @@
 import * as Sentry from '@sentry/cloudflare';
 import { oAuthDiscoveryMetadata, oAuthProtectedResourceMetadata } from 'better-auth/plugins';
 import { Hono } from 'hono';
+import { routePath } from 'hono/route';
 import { createAuth } from './auth';
-import { cleanupExpiredOAuthState, shouldRunOAuthCleanup } from './auth/oauth-cleanup';
 import { refreshTokenBeingRotated, retireRotatedOAuthGrant } from './auth/oauth-rotation';
 import { requireUser, type AuthVars } from './auth/middleware';
-import { runDailyDigests } from './cron/digest';
-import { runDispatch } from './cron/dispatch';
-import { runPointRetention, shouldRunPointRetention } from './cron/point-retention';
 import type { WorkerEnv } from './env';
 import { alertsRoute } from './routes/alerts';
 import { signalsRoute } from './routes/signals';
@@ -23,6 +20,7 @@ import { notificationsRoute } from './routes/notifications';
 import { planRoute } from './routes/plan';
 import { publicCollectionPageRoute } from './routes/public-collection-page';
 import { publicCollectionsRoute } from './routes/public-collections';
+import { reportRequestException } from './request-exception-telemetry';
 import {
   createAuthOAuthCallbackRateLimit,
   createAuthOAuthStartRateLimit,
@@ -33,6 +31,7 @@ import {
   createPublicReportRateLimit,
 } from './routes/public-read-rate-limit';
 import { requestsRoute } from './routes/requests';
+import { runScheduledTickWithTelemetry } from './scheduled';
 import { sharedCollectionsRoute } from './routes/shared-collections';
 import { streamRoute } from './routes/stream';
 import { sentryOptions } from './sentry';
@@ -45,6 +44,14 @@ export { RateLimiter } from './do/rate-limiter';
 const app = new Hono<{ Bindings: WorkerEnv; Variables: AuthVars }>();
 
 app.use('*', securityHeaders());
+app.onError((error, c) => {
+  reportRequestException(error, {
+    method: c.req.method,
+    path: c.req.path,
+    routePath: routePath(c, -1),
+  });
+  return c.text('Internal Server Error', 500);
+});
 
 app.get('/healthz', (c) => c.json({ ok: true, ts: Date.now() }));
 
@@ -162,56 +169,6 @@ const shouldServeSpaAsset = (pathname: string): boolean =>
     pathname === '/api' ||
     pathname.startsWith('/api/') ||
     pathname.startsWith('/.well-known/')
-  );
-
-const errorMessage = (err: unknown): string => (err instanceof Error ? err.message : String(err));
-
-export const runScheduledTick = async (env: WorkerEnv, now = Date.now()): Promise<void> => {
-  try {
-    const summary = await runDispatch(env);
-    // Cron logs surface in `wrangler tail`; structured payload makes them filterable.
-    console.log(JSON.stringify({ event: 'dispatch', ...summary }));
-  } catch (err: unknown) {
-    console.error(JSON.stringify({ event: 'dispatch_failed', error: errorMessage(err) }));
-  }
-
-  try {
-    const digest = await runDailyDigests(env);
-    console.log(JSON.stringify({ event: 'daily_digest', ...digest }));
-  } catch (err: unknown) {
-    console.error(JSON.stringify({ event: 'daily_digest_failed', error: errorMessage(err) }));
-  }
-
-  if (shouldRunOAuthCleanup(now)) {
-    try {
-      await cleanupExpiredOAuthState(env, now);
-      console.log(JSON.stringify({ event: 'oauth_cleanup' }));
-    } catch (err: unknown) {
-      console.error(JSON.stringify({ event: 'oauth_cleanup_failed', error: errorMessage(err) }));
-    }
-  }
-
-  if (shouldRunPointRetention(now)) {
-    try {
-      const retention = await runPointRetention(env, now);
-      console.log(JSON.stringify({ event: 'point_retention', ...retention }));
-    } catch (err: unknown) {
-      console.error(JSON.stringify({ event: 'point_retention_failed', error: errorMessage(err) }));
-    }
-  }
-};
-
-const runScheduledTickWithTelemetry = (env: WorkerEnv): Promise<void> =>
-  Sentry.startSpan(
-    {
-      name: 'Scheduled cron tick',
-      op: 'faas.cron',
-      forceTransaction: true,
-      attributes: {
-        'sentry.source': 'task',
-      },
-    },
-    () => runScheduledTick(env),
   );
 
 app.get('*', (c) => {

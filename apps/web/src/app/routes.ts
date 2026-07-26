@@ -3,7 +3,7 @@ const PUBLIC_PATH_RE = /^\/c\/([^/?#]+)\/?$/;
 const SETTINGS_ACTIVITY_PATH_RE = /^\/settings\/activity\/?$/;
 const SETTINGS_TOKENS_PATH_RE = /^\/settings\/tokens\/?$/;
 
-export type AppRoute = {
+type AppRoute = {
   readonly publicSlug: string | null;
   readonly settingsActivityRoute: boolean;
   readonly settingsTokensRoute: boolean;

@@ -1,5 +1,7 @@
-import type { Adapter, AdapterResult, DataPoint } from './types';
+import { positiveInt, stringValue } from './config-values';
+import { errorMessage } from './error-message';
 import { extractHtmlElements, htmlAttribute, htmlToText } from './html-text';
+import type { Adapter, AdapterResult, DataPoint } from './types';
 
 type BoeUpcomingPublicationsConfig = {
   readonly sourceUrl?: string;
@@ -41,10 +43,7 @@ export const boeUpcomingPublications: Adapter<BoeUpcomingPublicationsConfig> = a
       headers: { Accept: 'text/html,application/xhtml+xml', 'User-Agent': 'antenna' },
     });
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'fetch_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }
 
   if (!response.ok) {
@@ -55,10 +54,7 @@ export const boeUpcomingPublications: Adapter<BoeUpcomingPublicationsConfig> = a
   try {
     html = await response.text();
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'parse_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
   }
 
   const now = Date.now();
@@ -102,9 +98,8 @@ export const parseBoeUpcomingPublications = (html: string, now: number): BoePubl
     return [{ ...parsed, url: resolveUrl(href) }];
   });
 
-  // The BoE page sometimes lists the same publication twice (once in the
-  // headline strip, once inside the section body), which would duplicate
-  // the row on the card. Dedupe on title + scheduled date.
+  // The BoE page lists some publications twice (headline strip and section
+  // body), so dedupe on title + scheduled date.
   const seen = new Set<string>();
   return anchors
     .sort((a, b) => a.dateMs - b.dateMs || a.title.localeCompare(b.title))
@@ -176,9 +171,3 @@ const resolveUrl = (href: string): string => {
     return DEFAULT_SOURCE;
   }
 };
-
-const stringValue = (value: unknown): string | undefined =>
-  typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
-
-const positiveInt = (value: unknown): number | undefined =>
-  typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : undefined;

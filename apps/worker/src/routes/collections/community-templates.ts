@@ -1,12 +1,12 @@
 import { templates } from '@antenna/registry';
 import type { CollectionRecord, CollectionTemplateRecord } from '@antenna/shared';
+import { collections, signals } from '../../db/schema';
 import { toCollectionRecord } from '../collection-record';
-import { err } from '../http';
-import { insertCollectionGraph } from './atomic-create';
-import { COMMUNITY_TEMPLATE_ID_PREFIX } from './constants';
+import { err, errWith } from '../http';
 import { buildForkRows } from './fork-rows';
 import { listCollectionSignals, loadPublishedCollectionBySlug } from './repository';
 import { selectForkableSignals } from './source-policy';
+import { SIGNALS_PER_COLLECTION_LIMIT, signalQuotaFromCount } from '../quota';
 import type {
   SignalRow,
   Client,
@@ -15,6 +15,10 @@ import type {
   CollectionTemplatePublicationRow,
   CollectionsContext,
 } from './types';
+
+// Marks a template id as "fork this published collection" rather than a curated
+// registry template.
+export const COMMUNITY_TEMPLATE_ID_PREFIX = 'collection:';
 
 export const createCollectionFromCommunityTemplate = async (
   c: CollectionsContext,
@@ -34,6 +38,16 @@ export const createCollectionFromCommunityTemplate = async (
   if (selected.signals.length === 0) {
     return c.json({ error: 'no_template_signals', skipped_signals: selected.skipped }, 409);
   }
+  // Forking copies someone else's collection wholesale, so the source decides
+  // how many signals land here. Hold it to the same limit as any other.
+  if (selected.signals.length > SIGNALS_PER_COLLECTION_LIMIT) {
+    return errWith(
+      c,
+      'signal_quota_exceeded',
+      { quota: signalQuotaFromCount(selected.signals.length) },
+      409,
+    );
+  }
 
   const rows = buildForkRows({
     source,
@@ -44,7 +58,8 @@ export const createCollectionFromCommunityTemplate = async (
     visibility: targetVisibility,
     now: new Date(),
   });
-  await insertCollectionGraph(c.env.DB, client, rows.collection, rows.signals);
+  await client.insert(collections).values(rows.collection).run();
+  await client.insert(signals).values(rows.signals).run();
 
   return c.json(toCollectionRecord(rows.collection) satisfies CollectionRecord, 201);
 };

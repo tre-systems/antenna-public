@@ -15,6 +15,8 @@ const PROVIDERS: ReadonlyArray<readonly [RegExp, string]> = [
   [/\bgithub\b/i, 'GitHub'],
 ];
 
+// Each number is scanned once and its neighbours inspected, rather than pattern
+// matching a currency around an unbounded digit run in a user-supplied prompt.
 const amountFromPrompt = (prompt: string): string | undefined => {
   for (const match of prompt.matchAll(/[0-9][0-9,.]*/g)) {
     const raw = match[0];

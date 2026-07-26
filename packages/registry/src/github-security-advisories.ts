@@ -1,5 +1,6 @@
 import { githubSecurityAdvisories } from '@antenna/connectors';
 import { z } from 'zod';
+import { nonEmptyStringField } from './config-fields';
 import { type ConnectorTemplate } from './types';
 
 export const githubSecurityAdvisoriesTemplate: ConnectorTemplate = {
@@ -19,16 +20,13 @@ export const githubSecurityAdvisoriesTemplate: ConnectorTemplate = {
     /\bsupply[-\s]?chain\b.*\b(?:npm|security)\b/i,
   ],
   paramExtractors: {},
-  rightsStatus: 'with-attribution',
+  rightsStatus: 'public',
   defaultRefreshSeconds: 21_600,
   pointRetentionDays: 90,
   adapter: (config) =>
     githubSecurityAdvisories({
       ecosystem: 'npm',
       limit: 3,
-      githubToken:
-        typeof config.githubToken === 'string' && config.githubToken.trim().length > 0
-          ? config.githubToken
-          : undefined,
+      githubToken: nonEmptyStringField(config, 'githubToken'),
     }),
 };

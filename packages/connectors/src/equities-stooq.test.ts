@@ -97,7 +97,7 @@ describe('equitiesStooq', () => {
   it('falls back to Yahoo when Stooq returns a non-quote row', async () => {
     const missing = [
       'Symbol,Date,Time,Open,High,Low,Close,Volume',
-      'AZN.UK,N/D,N/D,N/D,N/D,N/D,N/D,N/D',
+      'BA.UK,N/D,N/D,N/D,N/D,N/D,N/D,N/D',
     ].join('\n');
     vi.stubGlobal(
       'fetch',
@@ -111,7 +111,7 @@ describe('equitiesStooq', () => {
                 result: [
                   {
                     meta: {
-                      symbol: 'AZN.L',
+                      symbol: 'BA.L',
                       currency: 'GBp',
                       chartPreviousClose: 1961,
                       regularMarketPrice: 1995,
@@ -127,20 +127,20 @@ describe('equitiesStooq', () => {
         ),
     );
 
-    const result = await equitiesStooq({ tickers: ['AZN.UK'] });
+    const result = await equitiesStooq({ tickers: ['BA.UK'] });
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.points).toEqual([
       {
-        dimensions: { ticker: 'AZN.L', exchange: 'YAHOO' },
+        dimensions: { ticker: 'BA.L', exchange: 'YAHOO' },
         value: 1995,
         unit: 'GBp',
         ts: 1_700_000_000_000,
-        sourceUrl: 'https://finance.yahoo.com/quote/AZN.L/',
+        sourceUrl: 'https://finance.yahoo.com/quote/BA.L/',
       },
     ]);
-    expect(result.rawPayload).toContain('AZN.UK: stooq parse_failed: no rows parsed; used yahoo');
+    expect(result.rawPayload).toContain('BA.UK: stooq parse_failed: no rows parsed; used yahoo');
   });
 
   it('maps non-2xx to fetch_failed', async () => {

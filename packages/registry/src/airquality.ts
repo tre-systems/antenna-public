@@ -28,7 +28,7 @@ export const airQualityTemplate: ConnectorTemplate<AirTemplateConfig> = {
     lat: () => undefined,
     lon: () => undefined,
   },
-  rightsStatus: 'with-attribution',
+  rightsStatus: 'public',
   defaultRefreshSeconds: 1800,
   pointRetentionDays: 30,
   adapter: async (config) => {

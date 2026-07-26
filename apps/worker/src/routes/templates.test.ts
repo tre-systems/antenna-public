@@ -26,7 +26,7 @@ describe('GET /api/templates', () => {
       display_name: 'FX pair',
       param_keys: ['base', 'quote'],
       planner_enabled: true,
-      rights_status: 'with-attribution',
+      rights_status: 'public',
       default_refresh_seconds: 900,
       retain_raw_payload: false,
       server_secret_required: false,
@@ -34,13 +34,13 @@ describe('GET /api/templates', () => {
       source_policy: {
         source_id: 'frankfurter-ecb',
         label: 'Frankfurter (ECB)',
-        source_url: 'https://frankfurter.dev/',
-        rights_status: 'with-attribution',
+        source_url: 'https://www.frankfurter.app/',
+        rights_status: 'public',
         execution_mode: 'public_cloud',
         public_display_eligible: true,
         public_display_blocker: null,
         attribution: 'Frankfurter, using European Central Bank reference rates',
-        last_reviewed: '2026-07-24',
+        last_reviewed: '2026-05-21',
       },
     });
     expect(JSON.stringify(body)).not.toContain('matchHints');
@@ -80,6 +80,7 @@ describe('GET /api/templates/collections', () => {
     expect(body.templates.map((template) => template.id)).toEqual([
       'founder-morning',
       'ai-frontier-watch',
+      'problem-radar',
       'trader-morning',
       'ops-morning',
       'investor-watchlist',

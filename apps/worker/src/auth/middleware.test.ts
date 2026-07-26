@@ -2,8 +2,8 @@ import { Hono } from 'hono';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import type { AuthVars, MiddlewareEnv } from './middleware';
 
-// We stub `./index` (which exports `createAuth`) so the middleware test
-// doesn't require Better Auth's runtime initialisation or a database.
+// `./index` and `./ensure-user-collection` are stubbed so the middleware test
+// needs neither Better Auth's runtime initialisation nor a database.
 const mockGetSession = vi.fn();
 const mockEnsureUserCollection = vi.fn();
 const mockAuthenticateBearer = vi.fn();
@@ -11,14 +11,9 @@ vi.mock('./index', () => ({
   createAuth: (_env: unknown) => ({
     api: { getSession: mockGetSession },
   }),
+}));
+vi.mock('./ensure-user-collection', () => ({
   ensureUserCollection: mockEnsureUserCollection,
-  parseWhitelist: (raw: string | undefined) =>
-    new Set(
-      (raw ?? '')
-        .split(',')
-        .map((email) => email.trim().toLowerCase())
-        .filter(Boolean),
-    ),
 }));
 vi.mock('./mcp-token', () => ({
   authenticateBearer: mockAuthenticateBearer,
@@ -39,7 +34,7 @@ const baseEnv: TestEnv = {
   GOOGLE_CLIENT_ID: 'x',
   GOOGLE_CLIENT_SECRET: 'x',
   BETTER_AUTH_SECRET: 'x',
-  ALLOWED_EMAILS: 'member@example.com,anon@example.com,user@test.local',
+  ENCRYPTION_KEY: '0'.repeat(64),
 };
 
 const buildApp = () => {
@@ -94,28 +89,61 @@ describe('auth/middleware', () => {
     });
   });
 
-  it('revokes an existing session when its email leaves the allowlist', async () => {
+  // Blocking is enforced per request, so it cuts off a live cookie session
+  // rather than waiting for the next sign-in.
+  it('revokes an existing session when its email is blocked', async () => {
     mockGetSession.mockResolvedValueOnce({
-      user: { id: 'u1', email: 'removed@example.com', name: 'Removed' },
+      user: { id: 'u1', email: 'blocked@example.com', name: 'Blocked' },
       session: { id: 's1' },
+    });
+
+    const res = await invoke(
+      { ...baseEnv, BLOCKED_EMAILS: 'blocked@example.com' },
+      { cookie: 'better-auth.session=abc' },
+    );
+
+    expect(res.status).toBe(401);
+  });
+
+  it('revokes bearer access when its user is blocked', async () => {
+    mockAuthenticateBearer.mockResolvedValueOnce({
+      user: { id: 'u1', email: 'blocked@example.com', name: 'Blocked', image: null },
+    });
+
+    const res = await invoke(
+      { ...baseEnv, BLOCKED_EMAILS: 'blocked@example.com' },
+      { authorization: 'Bearer pbk_live' },
+    );
+
+    expect(res.status).toBe(401);
+  });
+
+  it('revokes an existing session when a configured allowlist no longer covers it', async () => {
+    mockGetSession.mockResolvedValueOnce({
+      user: { id: 'u1', email: 'ex-member@example.com', name: 'Ex' },
+      session: { id: 's1' },
+    });
+
+    const res = await invoke(
+      { ...baseEnv, ALLOWED_EMAILS: 'someone-else@example.com' },
+      { cookie: 'better-auth.session=abc' },
+    );
+
+    expect(res.status).toBe(401);
+  });
+
+  it('admits a brand-new account that nobody has heard of before', async () => {
+    mockGetSession.mockResolvedValueOnce({
+      user: { id: 'u9', email: 'stranger@example.com', name: 'Stranger' },
+      session: { id: 's9' },
     });
 
     const res = await invoke(baseEnv, { cookie: 'better-auth.session=abc' });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
   });
 
-  it('revokes bearer access when its user leaves the allowlist', async () => {
-    mockAuthenticateBearer.mockResolvedValueOnce({
-      user: { id: 'u1', email: 'removed@example.com', name: 'Removed', image: null },
-    });
-
-    const res = await invoke(baseEnv, { authorization: 'Bearer pbk_live' });
-
-    expect(res.status).toBe(401);
-  });
-
-  it('accepts bearer access for a currently allowlisted user', async () => {
+  it('accepts bearer access for a user who is not blocked', async () => {
     mockAuthenticateBearer.mockResolvedValueOnce({
       user: { id: 'u1', email: 'user@test.local', name: 'User', image: null },
     });

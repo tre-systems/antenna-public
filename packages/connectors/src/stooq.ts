@@ -1,13 +1,8 @@
+import { browserRequestInit } from './browser-request';
+import { errorMessage } from './error-message';
 import type { AdapterResult } from './types';
 
-export const STOOQ_CSV_REQUEST_INIT = {
-  headers: {
-    accept: 'text/csv,*/*;q=0.8',
-    'accept-language': 'en-US,en;q=0.9',
-    'user-agent':
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
-  },
-} satisfies RequestInit;
+export const STOOQ_CSV_REQUEST_INIT = browserRequestInit('text/csv,*/*;q=0.8');
 
 type CsvFetchResult =
   { readonly ok: true; readonly body: string } | Extract<AdapterResult, { ok: false }>;
@@ -42,7 +37,7 @@ const fetchStooqHost = async (
   } catch (err) {
     return {
       ok: false,
-      error: { code: 'fetch_failed', message: err instanceof Error ? err.message : String(err) },
+      error: { code: 'fetch_failed', message: errorMessage(err) },
     };
   }
 
@@ -62,7 +57,7 @@ const fetchStooqHost = async (
   } catch (err) {
     return {
       ok: false,
-      error: { code: 'fetch_failed', message: err instanceof Error ? err.message : String(err) },
+      error: { code: 'fetch_failed', message: errorMessage(err) },
     };
   }
 };

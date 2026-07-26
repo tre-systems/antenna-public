@@ -1,6 +1,7 @@
 import type { Adapter, AdapterResult, DataPoint } from './types';
 import { discardResponse } from './discard-response';
-import { githubRateLimitError } from './github-rate-limit';
+import { errorMessage } from './error-message';
+import { githubAuthHeader, githubRateLimitError } from './github-http';
 import { extractHtmlElements, hasHtmlClass, htmlAttribute, htmlToText } from './html-text';
 
 type TrendingWindow = 'daily' | 'weekly' | 'monthly';
@@ -44,18 +45,12 @@ export const githubTrending: Adapter<GithubTrendingConfig> = async (
       },
     });
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'fetch_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }
 
   if (response.status === 403 || response.status === 429) {
     await discardResponse(response);
-    return {
-      ok: false,
-      error: githubRateLimitError(response, 'GitHub trending rate limit'),
-    };
+    return { ok: false, error: githubRateLimitError(response, 'GitHub trending rate limit') };
   }
   if (!response.ok) {
     await discardResponse(response);
@@ -66,10 +61,7 @@ export const githubTrending: Adapter<GithubTrendingConfig> = async (
   try {
     html = await response.text();
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'parse_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
   }
 
   const repos = parseGithubTrending(html).slice(0, limit);
@@ -138,10 +130,8 @@ const toPoint = (repo: GithubTrendingRepo, ts: number): DataPoint => {
   if (repo.language) parts.push(repo.language);
   if (repo.starsToday !== undefined)
     parts.push(`+${repo.starsToday.toLocaleString('en-US')} stars today`);
-  // No per-point sourceUrl: the registry derives the per-repo URL from the
-  // value text (display.ts pointSourceUrl). Setting one here would also become
-  // the signal-level source URL — the first non-empty point URL wins there —
-  // pointing the card's "view source" at repo #1 instead of the trending list.
+  // No per-point sourceUrl: display.ts derives it, and the first non-empty one
+  // would also become the card's signal-level source URL.
   return {
     dimensions: { source: 'github-trending', rank: repo.rank },
     value: parts.join(' · '),
@@ -160,6 +150,8 @@ const normaliseLimit = (value: unknown): number => {
 
 const matchFirst = (input: string, rx: RegExp): string | undefined => rx.exec(input)?.[1];
 
+// A trending row links to `/owner/repo`; anything else on the page is not a
+// repository, so the shape is checked rather than pattern-matched out of markup.
 const repositoryName = (article: string): string | undefined => {
   const heading = extractHtmlElements(article, 'h2')[0];
   const anchor = heading ? extractHtmlElements(heading.innerHtml, 'a')[0] : undefined;
@@ -179,6 +171,3 @@ const parseNumber = (raw: string | undefined): number | undefined => {
   const value = Number(raw.replace(/[^\d.-]/g, ''));
   return Number.isFinite(value) ? value : undefined;
 };
-
-const githubAuthHeader = (token: string | undefined): Record<string, string> =>
-  typeof token === 'string' && token.trim().length > 0 ? { Authorization: `Bearer ${token}` } : {};

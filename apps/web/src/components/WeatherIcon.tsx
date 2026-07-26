@@ -1,7 +1,4 @@
-// Tiny inline SVGs for the small set of weather conditions our signal
-// surfaces. Sized by the parent (currentColor on strokes lets us colour by
-// daylight or band). Drawn at 24×24, no fills except where needed for a
-// sun core, so they read well at 16-32px against light or dark signals.
+// Drawn at 24×24 with currentColor strokes so the parent sizes and colours them.
 
 import type { WeatherCondition } from '../signalFormat';
 

@@ -47,7 +47,7 @@ const fleetPayload = {
             },
             {
               sum: { requests: 50, errors: 0 },
-              dimensions: { scriptName: 'example-worker', status: 'success' },
+              dimensions: { scriptName: 'cepheus', status: 'success' },
             },
           ],
           previous: [

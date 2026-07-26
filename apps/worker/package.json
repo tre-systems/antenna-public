@@ -8,7 +8,9 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy ${SENTRY_RELEASE:+--var SENTRY_RELEASE:$SENTRY_RELEASE}",
     "typecheck": "tsc --noEmit",
-    "db:migrate:local": "wrangler d1 migrations apply antenna --local"
+    "db:migrate:local": "wrangler d1 migrations apply antenna --local",
+    "r2:lifecycle": "wrangler r2 bucket lifecycle add antenna-payloads expire-raw-payloads-365d --expire-days 365 --force",
+    "r2:lifecycle:list": "wrangler r2 bucket lifecycle list antenna-payloads"
   },
   "dependencies": {
     "@antenna/connectors": "*",

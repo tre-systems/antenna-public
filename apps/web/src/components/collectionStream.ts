@@ -1,24 +1,20 @@
-// Connection plumbing for the collection SSE stream. Kept in a plain module
-// (no Preact dependencies) so it can be unit-tested without DOM/EventSource
-// shims wired into the component itself.
+// Plain module (no Preact) so the SSE plumbing is testable without DOM shims.
 
 const FALLBACK_POLL_MS = 30_000;
 const STALENESS_THRESHOLD_MS = 60_000;
 const STALENESS_CHECK_MS = 10_000;
 const ERROR_FALLBACK_THRESHOLD = 3;
 
-export type StreamHooks = {
+type StreamHooks = {
   readonly onEvent: () => void;
   readonly now?: () => number;
-  // Lets tests swap EventSource / setInterval out. In production the defaults
-  // (globalThis.EventSource, globalThis.setInterval) are wired up by the
-  // browser.
+  // Overridable so tests can swap EventSource and timers for fakes.
   readonly createEventSource?: (url: string) => EventSource | null;
   readonly setIntervalFn?: typeof globalThis.setInterval;
   readonly clearIntervalFn?: typeof globalThis.clearInterval;
 };
 
-export type StreamConnection = { readonly close: () => void };
+type StreamConnection = { readonly close: () => void };
 
 const defaultCreateEventSource = (url: string): EventSource | null => {
   const Ctor = (globalThis as { EventSource?: typeof EventSource }).EventSource;
@@ -73,14 +69,11 @@ export const connectCollectionStream = (url: string, hooks: StreamHooks): Stream
   });
   es.addEventListener('error', () => {
     consecutiveErrors += 1;
-    // EventSource reconnects automatically; we only spin up the poller as a
-    // belt-and-braces fallback after repeated failures (e.g. server returning
-    // a hard 5xx). Once SSE recovers, `open` clears the poller.
+    // EventSource reconnects itself, so poll only after repeated hard failures.
     if (consecutiveErrors >= ERROR_FALLBACK_THRESHOLD) startFallback();
   });
 
-  // Defensive: if no event in 60s (likely a silently dropped connection that
-  // EventSource hasn't noticed), force a refetch to keep data fresh.
+  // A silently dropped connection never fires `error`, so watch for staleness.
   const staleness = setInt(() => {
     if (now() - lastEventAt > STALENESS_THRESHOLD_MS) {
       lastEventAt = now();

@@ -1,3 +1,7 @@
+// Bounded, linear-time HTML scanning for adapters that read external pages.
+// Backtracking regexes over attacker-influenced markup are a denial-of-service
+// risk, and chained entity `.replace` calls decode the same text twice. Every
+// helper here scans forward once and decodes each entity exactly once.
 export type HtmlElement = {
   readonly openingTag: string;
   readonly innerHtml: string;
@@ -21,36 +25,54 @@ export const decodeHtmlEntitiesOnce = (value: string): string =>
     return ENTITY_VALUES[entity.toLowerCase()] ?? entity;
   });
 
+// `tagReplacement` is configurable because some sources splice markup mid-token,
+// where inserting a space would split a value that has to stay contiguous.
+export const stripHtmlTags = (html: string, tagReplacement = ' '): string => {
+  let text = '';
+  let inTag = false;
+  for (const character of html) {
+    if (character === '<') {
+      inTag = true;
+      text += tagReplacement;
+    } else if (character === '>') {
+      inTag = false;
+    } else if (!inTag) {
+      text += character;
+    }
+  }
+  return text;
+};
+
 export const extractHtmlElements = (html: string, tagName: string): HtmlElement[] => {
+  // Lowercased once: case-folding per element would make the scan quadratic.
   const lower = html.toLowerCase();
-  const openPrefix = `<${tagName.toLowerCase()}`;
-  const closePrefix = `</${tagName.toLowerCase()}`;
+  const prefixes = { open: `<${tagName.toLowerCase()}`, close: `</${tagName.toLowerCase()}` };
   const elements: HtmlElement[] = [];
   let cursor = 0;
 
   while (cursor < html.length) {
-    const openStart = findTag(lower, openPrefix, cursor);
-    if (openStart === -1) break;
-    const openEnd = html.indexOf('>', openStart + openPrefix.length);
-    if (openEnd === -1) break;
-    const closeStart = lower.indexOf(closePrefix, openEnd + 1);
-    if (closeStart === -1) break;
-    const closeEnd = html.indexOf('>', closeStart + closePrefix.length);
-    if (closeEnd === -1) break;
-
-    elements.push({
-      openingTag: html.slice(openStart, openEnd + 1),
-      innerHtml: html.slice(openEnd + 1, closeStart),
-    });
-    cursor = closeEnd + 1;
+    const found = nextElement(html, lower, prefixes, cursor);
+    if (!found) break;
+    elements.push(found.element);
+    cursor = found.next;
   }
 
   return elements;
 };
 
+// Self-closing tags (Atom `<link href=… />`) never have a matching close tag,
+// so attribute reads cannot go through extractHtmlElements.
+export const firstOpeningTag = (html: string, tagName: string): string | undefined => {
+  const prefix = `<${tagName.toLowerCase()}`;
+  const start = findTag(html.toLowerCase(), prefix, 0);
+  if (start === -1) return undefined;
+  const end = html.indexOf('>', start + prefix.length);
+  return end === -1 ? undefined : html.slice(start, end + 1);
+};
+
 export const htmlAttribute = (openingTag: string, attributeName: string): string | undefined => {
   const target = attributeName.toLowerCase();
-  let cursor = openingTag.indexOf(' ');
+  let cursor = firstSpacing(openingTag);
   if (cursor === -1) return undefined;
 
   while (cursor < openingTag.length) {
@@ -74,20 +96,28 @@ export const htmlAttribute = (openingTag: string, attributeName: string): string
 export const hasHtmlClass = (openingTag: string, className: string): boolean =>
   htmlAttribute(openingTag, 'class')?.split(/\s+/).includes(className) ?? false;
 
-const stripHtmlTags = (html: string): string => {
-  let text = '';
-  let inTag = false;
-  for (const character of html) {
-    if (character === '<') {
-      inTag = true;
-      text += ' ';
-    } else if (character === '>') {
-      inTag = false;
-    } else if (!inTag) {
-      text += character;
-    }
-  }
-  return text;
+type TagPrefixes = { readonly open: string; readonly close: string };
+
+const nextElement = (
+  html: string,
+  lower: string,
+  prefixes: TagPrefixes,
+  from: number,
+): { readonly element: HtmlElement; readonly next: number } | undefined => {
+  const openStart = findTag(lower, prefixes.open, from);
+  if (openStart === -1) return undefined;
+  const openEnd = html.indexOf('>', openStart + prefixes.open.length);
+  if (openEnd === -1) return undefined;
+  const closeStart = lower.indexOf(prefixes.close, openEnd + 1);
+  if (closeStart === -1) return undefined;
+  const closeEnd = html.indexOf('>', closeStart + prefixes.close.length);
+  if (closeEnd === -1) return undefined;
+
+  const element = {
+    openingTag: html.slice(openStart, openEnd + 1),
+    innerHtml: html.slice(openEnd + 1, closeStart),
+  };
+  return { element, next: closeEnd + 1 };
 };
 
 const findTag = (lowerHtml: string, prefix: string, from: number): number => {
@@ -114,6 +144,13 @@ const attributeValueAt = (
   while (end < openingTag.length && !isSpacing(openingTag[end]) && openingTag[end] !== '>')
     end += 1;
   return { value: openingTag.slice(start, end), next: end };
+};
+
+const firstSpacing = (value: string): number => {
+  for (let index = 0; index < value.length; index += 1) {
+    if (isSpacing(value[index])) return index;
+  }
+  return -1;
 };
 
 const skipSpacing = (value: string, start: number): number => {

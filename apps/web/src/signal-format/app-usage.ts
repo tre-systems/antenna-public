@@ -1,11 +1,7 @@
 import type { RenderSignal } from './types';
 import { numericValue, recentDays, resolveWindowDays, stringDim } from './daily-window';
 
-// Turns the app-usage signal's per-(day, event) points into a daily trend:
-// a zero-filled series over the configured window, the window total, and the
-// top events by volume. The connector only returns days that had events, so
-// the zero-fill here is what makes the bar chart show the whole window
-// (including quiet days) rather than a lone spike.
+// The connector only returns days that had events, so the zero-fill is what shows quiet days.
 
 export type AppUsageEventTotal = {
   readonly event: string;
