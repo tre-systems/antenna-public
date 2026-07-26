@@ -17,8 +17,8 @@ const encoder = new TextEncoder();
 
 export type SseEvent = Readonly<Record<string, unknown>>;
 
-// Encode one SSE chunk. Exported for direct unit testing — the DO API is
-// awkward to mock, but the byte format is the load-bearing piece.
+// Exported for direct unit testing: the DO API is awkward to mock, but the byte
+// format is the load-bearing piece.
 export const encodeSseChunk = (event: SseEvent): Uint8Array =>
   encoder.encode(`data: ${JSON.stringify(event)}\n\n`);
 

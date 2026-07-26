@@ -6,34 +6,191 @@
 @theme {
   --font-sans:
     'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 }
 
 @layer base {
+  :root {
+    --antenna-ink: #0b1624;
+    --antenna-green: #19c15e;
+    --antenna-accent: #0d7b3c;
+    --antenna-accent-hover: #096332;
+    --antenna-accent-contrast: #fff;
+    --antenna-paper: #f3f7f4;
+    --antenna-surface: rgb(255 255 255 / 0.82);
+    --antenna-surface-solid: #fff;
+    --antenna-surface-muted: rgb(247 250 248 / 0.9);
+    --antenna-line: rgb(11 22 36 / 0.09);
+    --antenna-line-accent: rgb(25 193 94 / 0.25);
+    --antenna-line-accent-strong: rgb(25 193 94 / 0.45);
+    --antenna-focus: #0d7b3c;
+    --antenna-shadow: 0 1px 2px rgb(11 22 36 / 0.04), 0 18px 48px -32px rgb(11 56 36 / 0.32);
+    --antenna-shadow-hover: 0 2px 4px rgb(11 22 36 / 0.06), 0 22px 56px -30px rgb(11 56 36 / 0.4);
+  }
+
   html {
     min-height: 100%;
     color-scheme: light dark;
   }
+
   body {
     @apply min-h-screen text-slate-900 antialiased;
     min-height: 100dvh;
-    background-color: #f6f7fb;
+    background-color: var(--antenna-paper);
     background-image:
-      radial-gradient(60% 55% at 12% -5%, oklch(0.86 0.09 280 / 0.45), transparent 60%),
-      radial-gradient(45% 45% at 95% 8%, oklch(0.9 0.08 200 / 0.4), transparent 60%),
-      radial-gradient(55% 50% at 50% 100%, oklch(0.92 0.06 145 / 0.35), transparent 65%);
+      radial-gradient(58% 50% at 10% -8%, rgb(25 193 94 / 0.13), transparent 68%),
+      radial-gradient(46% 42% at 98% 4%, rgb(11 22 36 / 0.05), transparent 72%),
+      linear-gradient(rgb(25 193 94 / 0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(25 193 94 / 0.018) 1px, transparent 1px);
+    background-size:
+      auto,
+      auto,
+      32px 32px,
+      32px 32px;
     background-attachment: fixed;
   }
+
   #app {
     min-height: 100dvh;
   }
+
+  .dark {
+    --antenna-ink: #eef8f1;
+    --antenna-accent: #4ade80;
+    --antenna-accent-hover: #6ee7a0;
+    --antenna-accent-contrast: #04130a;
+    --antenna-paper: #08110f;
+    --antenna-surface: rgb(12 25 21 / 0.82);
+    --antenna-surface-solid: #0c1915;
+    --antenna-surface-muted: rgb(15 31 25 / 0.88);
+    --antenna-line: rgb(255 255 255 / 0.09);
+    --antenna-line-accent: rgb(25 193 94 / 0.22);
+    --antenna-line-accent-strong: rgb(74 222 128 / 0.42);
+    --antenna-focus: #4ade80;
+    --antenna-shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 20px 52px -34px rgb(25 193 94 / 0.22);
+    --antenna-shadow-hover: 0 2px 5px rgb(0 0 0 / 0.48), 0 24px 60px -32px rgb(25 193 94 / 0.28);
+  }
+
   .dark body {
     @apply text-slate-100;
-    background-color: oklch(0.16 0.012 270);
-    background-image: none;
+    background-color: var(--antenna-paper);
+    background-image:
+      radial-gradient(62% 48% at 10% -10%, rgb(25 193 94 / 0.12), transparent 70%),
+      radial-gradient(45% 38% at 96% 2%, rgb(33 82 68 / 0.14), transparent 72%),
+      linear-gradient(rgb(74 222 128 / 0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(74 222 128 / 0.018) 1px, transparent 1px);
+    background-size:
+      auto,
+      auto,
+      32px 32px,
+      32px 32px;
   }
+
   ::selection {
-    background-color: oklch(0.65 0.18 280 / 0.35);
+    color: #04130a;
+    background-color: rgb(74 222 128 / 0.65);
   }
+
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--antenna-focus);
+    outline-offset: 2px;
+  }
+}
+
+/* Antenna has its own calmer workspace identity while inheriting TRE's
+   disciplined green accent, precise borders, and technical-label voice. */
+.antenna-panel {
+  border: 1px solid var(--antenna-line);
+  background: var(--antenna-surface);
+  box-shadow: var(--antenna-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.antenna-card {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.antenna-card:hover {
+  border-color: var(--antenna-line-accent);
+  box-shadow: var(--antenna-shadow-hover);
+}
+
+.antenna-subpanel {
+  border: 1px solid var(--antenna-line);
+  background: var(--antenna-surface-muted);
+}
+
+.antenna-menu {
+  border: 1px solid var(--antenna-line);
+  background: var(--antenna-surface-solid);
+  box-shadow: 0 18px 50px -24px rgb(11 22 36 / 0.42);
+}
+
+.dark .antenna-menu {
+  box-shadow: 0 18px 50px -22px rgb(0 0 0 / 0.72);
+}
+
+.antenna-control {
+  border: 1px solid var(--antenna-line);
+  background: var(--antenna-surface);
+  color: var(--antenna-ink);
+  box-shadow: 0 1px 2px rgb(11 22 36 / 0.04);
+}
+
+.antenna-control:hover {
+  border-color: var(--antenna-line-accent);
+  background: var(--antenna-surface-solid);
+}
+
+.antenna-primary {
+  border: 1px solid color-mix(in srgb, var(--antenna-accent), #000 14%);
+  background: var(--antenna-accent);
+  color: var(--antenna-accent-contrast);
+  box-shadow: 0 8px 24px -14px color-mix(in srgb, var(--antenna-accent), transparent 38%);
+}
+
+.antenna-primary:hover {
+  border-color: var(--antenna-accent-hover);
+  background: var(--antenna-accent-hover);
+  box-shadow: 0 10px 30px -14px color-mix(in srgb, var(--antenna-accent), transparent 25%);
+}
+
+.antenna-primary:disabled {
+  box-shadow: none;
+}
+
+.antenna-eyebrow {
+  color: var(--antenna-accent);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.antenna-chip {
+  border: 1px solid var(--antenna-line-accent);
+  background: color-mix(in srgb, var(--antenna-accent), transparent 93%);
+  color: var(--antenna-accent);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.antenna-console {
+  border: 1px solid rgb(25 193 94 / 0.22);
+  background: radial-gradient(80% 100% at 100% 0%, rgb(25 193 94 / 0.09), transparent 62%), #07100f;
+  color: #fff;
+  box-shadow: inset 0 1px rgb(255 255 255 / 0.04);
+}
+
+.antenna-meta {
+  font-family: var(--font-mono);
+  letter-spacing: -0.01em;
 }
 
 /* Soft entrance for newly mounted signal cards. Keep opacity fixed so delayed

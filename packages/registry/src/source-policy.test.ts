@@ -11,20 +11,22 @@ import {
 const PUBLIC_DISPLAY_READY = [
   'airquality',
   'cisa-kev-recent',
+  'cloudflare-incidents',
+  'crypto-history',
+  'crypto-watchlist',
   'fx-pair',
   'github-repo-activity',
   'github-security-advisories',
+  'uk-economic-calendar',
   'weather',
 ] as const;
 
 const PUBLIC_DISPLAY_BLOCKED = {
   'aa-frontier': /private display with attribution/i,
   'aa-highlights': /public display needs rights review/i,
+  'antenna-users': /never public-display eligible/i,
   'app-usage': /private-only by design/i,
   'cloudflare-analytics': /private-only by design/i,
-  'cloudflare-incidents': /public display terms need explicit review/i,
-  'crypto-history': /restrict third-party redistribution and display/i,
-  'crypto-watchlist': /restrict third-party redistribution and display/i,
   'equity-watchlist': /replace before public sharing/i,
   'karpathy-jobs-snapshot': /public display needs source-rights review/i,
   'macro-market-history': /review each preset before public display/i,
@@ -32,13 +34,13 @@ const PUBLIC_DISPLAY_BLOCKED = {
   'manual-metric': /not public-display eligible/i,
   'market-history': /replace before public sharing/i,
   'market-overview': /replace before public sharing/i,
+  'reddit-problems': /public display needs rights review/i,
   'project-portfolio': /Private aggregate/i,
   'rest-metric': /Disabled for planner matching/i,
   'sector-movers': /replace before public sharing/i,
   'github-trending': /public display needs review/i,
   'tbench-leaderboard': /public display needs review/i,
   'trading-economics-market': /keep as setup\/future source/i,
-  'uk-economic-calendar': /page-specific review/i,
 } satisfies Record<string, RegExp>;
 
 describe('source policy metadata', () => {

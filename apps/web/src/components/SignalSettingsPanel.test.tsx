@@ -88,7 +88,7 @@ describe('SignalSettingsPanel', () => {
           rights_status: 'with-attribution',
           execution_mode: 'public_cloud',
           public_display_eligible: false,
-          public_display_blocker: 'Yahoo Finance — private-only stopgap.',
+          public_display_blocker: 'Yahoo Finance — private dogfood stopgap.',
           attribution: 'Yahoo Finance',
           last_reviewed: '2026-05-21',
         },
@@ -99,7 +99,7 @@ describe('SignalSettingsPanel', () => {
     expect(html).toMatch(/<input[^>]*disabled[^>]*data-testid="signal-visibility-shared"/);
     expect(html).toContain("Can't be shared:");
     expect(html).toContain('source policy blocks public links for this signal');
-    expect(html).not.toContain('private-only stopgap');
+    expect(html).not.toContain('dogfood');
   });
 
   it('renders a Configuration fieldset with one input per editable config field', () => {

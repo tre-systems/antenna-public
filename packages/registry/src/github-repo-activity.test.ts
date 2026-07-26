@@ -7,7 +7,7 @@ const anyHintMatches = (prompt: string): boolean =>
 describe('githubRepoActivityTemplate.matchHints', () => {
   it.each([
     'github repo activity',
-    'track stars for example-org/collection',
+    'track stars for rgilks/collection',
     'how many issues on cloudflare/workers',
     'forks of facebook/react',
     'show me a repo tile',
@@ -27,8 +27,8 @@ describe('githubRepoActivityTemplate.paramExtractors', () => {
   const { owner, repo } = githubRepoActivityTemplate.paramExtractors;
 
   it('extracts owner and repo from "owner/repo"', () => {
-    expect(owner?.('track example-org/collection stars')).toBe('example-org');
-    expect(repo?.('track example-org/collection stars')).toBe('collection');
+    expect(owner?.('track rgilks/collection stars')).toBe('rgilks');
+    expect(repo?.('track rgilks/collection stars')).toBe('collection');
   });
 
   it('handles dots and hyphens in segments', () => {

@@ -1,3 +1,4 @@
+import { errorMessage } from './error-message';
 import { retryAfterSecondsFromHeaders } from './http-retry-after';
 import type { AdapterError, AdapterResult, DataPoint } from './types';
 
@@ -132,10 +133,7 @@ const fetchCoinbaseJson = async (
   try {
     response = await fetch(url, { headers: { accept: 'application/json' } });
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'fetch_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }
   if (response.status === 429) return rateLimitError(response.headers);
   if (!response.ok) {
@@ -144,10 +142,7 @@ const fetchCoinbaseJson = async (
   try {
     return { ok: true, body: await response.json() };
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'parse_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
   }
 };
 

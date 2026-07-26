@@ -1,14 +1,12 @@
-// Hono middleware that gates the JSON API behind a Better Auth session.
-//
-// The session cookie is read from the incoming request headers; BA's
-// `getSession` does the heavy lifting. When BYPASS_AUTH is set in a
-// non-production environment we short-circuit with a synthetic user so the
-// Playwright e2e suite doesn't need real Google credentials.
+// Gates the JSON API behind a Better Auth session, an MCP token, or — outside
+// production, with BYPASS_AUTH set — a synthetic user for the Playwright suite.
 
 import type { Context, MiddlewareHandler } from 'hono';
 import { db } from '../db/client';
 import { err } from '../routes/http';
-import { createAuth, ensureUserCollection, parseWhitelist, type AuthEnv } from './index';
+import { accessRules, emailPermitted } from './access';
+import { ensureUserCollection } from './ensure-user-collection';
+import { createAuth, type AuthEnv } from './index';
 import { authenticateBearer, extractBearerToken } from './mcp-token';
 
 export type SessionUser = {
@@ -56,7 +54,7 @@ export const requireUser =
       // `pbk_` → long-lived MCP token; any other bearer → OAuth access token
       // (mcp plugin), validated with expiry. Both resolve to an owner-scoped user.
       const result = await authenticateBearer(db(c.env), bearerToken);
-      if (result === null || !emailAllowed(c.env, result.user.email)) return unauthorized(c);
+      if (result === null || !permitted(c.env, result.user.email)) return unauthorized(c);
       c.set('user', result.user);
       await next();
       return;
@@ -72,7 +70,7 @@ export const requireUser =
       return unauthorized(c);
     }
     const u = session.user;
-    if (!emailAllowed(c.env, u.email)) return unauthorized(c);
+    if (!permitted(c.env, u.email)) return unauthorized(c);
     c.set('user', {
       id: u.id,
       email: u.email,
@@ -85,18 +83,18 @@ export const requireUser =
     return;
   };
 
-export const getUser = (
-  c: Context<{ Bindings: MiddlewareEnv; Variables: AuthVars }>,
-): SessionUser => c.get('user');
-
 const normalizeImage = (value: unknown): string | null => {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
 };
 
-const emailAllowed = (env: MiddlewareEnv, email: string): boolean =>
-  parseWhitelist(env.ALLOWED_EMAILS).has(email.trim().toLowerCase());
+// Checked on every browser-session and bearer-token request, so adding an
+// Checked on every browser-session and bearer-token request, so adding an
+// address to BLOCKED_EMAILS, or removing one from a configured ALLOWED_EMAILS,
+// cuts off live sessions and MCP tokens immediately rather than at next sign-in.
+const permitted = (env: MiddlewareEnv, email: string): boolean =>
+  emailPermitted(accessRules(env), email);
 
 const unauthorized = (c: Context<{ Bindings: MiddlewareEnv; Variables: AuthVars }>): Response => {
   if (c.req.path === '/api/mcp' || c.req.path.startsWith('/api/mcp/')) {

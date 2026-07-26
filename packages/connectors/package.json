@@ -1,10 +1,12 @@
 {
   "name": "@antenna/connectors",
   "private": true,
-  "license": "MIT",
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250109.0"
   }
 }

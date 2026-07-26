@@ -6,10 +6,7 @@ describe('runTokenCli', () => {
     let error = '';
     const code = await runTokenCli({
       args: ['create', 'Claude Code'],
-      env: {
-        ANTENNA_BASE_URL: 'https://collection.example',
-        ANTENNA_SESSION: 'session-value',
-      },
+      env: { ANTENNA_SESSION: 'session-value' },
       fetchImpl: jsonFetch([], {}),
       writeError: (text) => {
         error += text;
@@ -76,22 +73,6 @@ describe('runTokenCli', () => {
 
     expect(code).toBe(1);
     expect(error).toContain('ANTENNA_SESSION or ANTENNA_TOKEN');
-  });
-
-  it('requires an explicit deployment base URL', async () => {
-    let error = '';
-
-    const code = await runTokenCli({
-      args: ['list'],
-      env: { ANTENNA_TOKEN: 'pbk_existing' },
-      fetchImpl: jsonFetch([], []),
-      writeError: (text) => {
-        error += text;
-      },
-    });
-
-    expect(code).toBe(1);
-    expect(error).toContain('ANTENNA_BASE_URL');
   });
 });
 

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { WorkerEnv } from './env';
+import { beforeSend } from './sentry-redaction';
 import {
   beforeBreadcrumb,
-  beforeSend,
   beforeSendSpan,
   beforeSendTransaction,
   isLowValueD1TransactionName,

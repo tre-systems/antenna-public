@@ -1,15 +1,17 @@
 import { yahooMarketHistory } from './market-yahoo';
 import {
-  dateRange,
+  parseBoeCsv,
+  parseEiaPetroleumDailyHtml,
+  parseFrankfurter,
+  parseFredCsv,
+} from './macro-market-history-parsers';
+import {
   boeDateParam,
+  dateRange,
   fetchJson,
   fetchText,
   isoDateRange,
-  parseBoeCsv,
-  parseEiaPetroleumDailyHtml,
   parseFailed,
-  parseFrankfurter,
-  parseFredCsv,
   pointsResult,
 } from './macro-market-history-utils';
 import type { Adapter, AdapterResult } from './types';

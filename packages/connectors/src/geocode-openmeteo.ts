@@ -1,7 +1,5 @@
-// Pure helper — adapters and planner both use it; doesn't touch the DB or env.
-// Wraps Open-Meteo's free geocoding endpoint and collapses every failure mode
-// to `null` so callers can fall back to manual lat/lon entry uniformly.
-
+// Every failure mode collapses to `null` so callers can fall back to manual
+// lat/lon entry uniformly.
 export type GeocodeHit = {
   readonly lat: number;
   readonly lon: number;

@@ -32,14 +32,26 @@ describe('Ask Antenna prompt parity smoke', () => {
       signals: [{ templateId: 'fx-pair', sourceLabel: 'Frankfurter (ECB)' }],
     },
     {
+      prompt: 'BTC yearly graph',
+      signals: [{ templateId: 'crypto-history', sourceLabel: 'Coinbase' }],
+    },
+    {
       prompt: 'npm security advisories',
       signals: [
         { templateId: 'github-security-advisories', sourceLabel: 'GitHub Security Advisories' },
       ],
     },
     {
+      prompt: 'Cloudflare incidents',
+      signals: [{ templateId: 'cloudflare-incidents', sourceLabel: 'Cloudflare Status' }],
+    },
+    {
       prompt: 'security vulnerabilities being exploited',
       signals: [{ templateId: 'cisa-kev-recent', sourceLabel: 'CISA KEV' }],
+    },
+    {
+      prompt: 'UK economic calendar',
+      signals: [{ templateId: 'uk-economic-calendar', sourceLabel: 'Bank of England' }],
     },
   ])('keeps public-safe prompt "$prompt" on public cloud sources', ({ prompt, signals }) => {
     const matched = expectSignals(prompt, signals);
@@ -47,15 +59,14 @@ describe('Ask Antenna prompt parity smoke', () => {
       const policy = sourcePolicyForTemplate(signal.template_id);
       expect(policy?.executionMode, signal.template_id).toBe('public_cloud');
       expect(policy?.publicDisplayEligible, signal.template_id).toBe(true);
-      expect(['public', 'with-attribution'], signal.template_id).toContain(policy?.rightsStatus);
+      expect(policy?.rightsStatus, signal.template_id).toBe('public');
     }
   });
 
   it.each([
     {
-      prompt: 'yearly graph for AZN.L',
+      prompt: 'yearly graph for BA.L',
       signals: [{ templateId: 'market-history', sourceLabel: 'Yahoo Finance' }],
-      rightsStatus: 'with-attribution',
     },
     {
       prompt: 'UK 10Y gilt and GBP/USD one year chart',
@@ -63,45 +74,24 @@ describe('Ask Antenna prompt parity smoke', () => {
         { templateId: 'macro-market-history', sourceLabel: 'Free macro sources' },
         { templateId: 'macro-market-history', sourceLabel: 'Free macro sources' },
       ],
-      rightsStatus: 'with-attribution',
     },
     {
       prompt: 'GitHub Trending',
       signals: [{ templateId: 'github-trending', sourceLabel: 'GitHub Trending' }],
-      rightsStatus: 'with-attribution',
     },
     {
       prompt: 'Karpathy jobs snapshot',
       signals: [{ templateId: 'karpathy-jobs-snapshot', sourceLabel: 'Karpathy / BLS' }],
-      rightsStatus: 'with-attribution',
     },
-    {
-      prompt: 'BTC yearly graph',
-      signals: [{ templateId: 'crypto-history', sourceLabel: 'Coinbase' }],
-      rightsStatus: 'needs-review',
-    },
-    {
-      prompt: 'Cloudflare incidents',
-      signals: [{ templateId: 'cloudflare-incidents', sourceLabel: 'Cloudflare Status' }],
-      rightsStatus: 'needs-review',
-    },
-    {
-      prompt: 'UK economic calendar',
-      signals: [{ templateId: 'uk-economic-calendar', sourceLabel: 'Bank of England' }],
-      rightsStatus: 'needs-review',
-    },
-  ])(
-    'keeps private-only prompt "$prompt" clearly non-public',
-    ({ prompt, signals, rightsStatus }) => {
-      const matched = expectSignals(prompt, signals);
-      for (const signal of matched) {
-        const policy = sourcePolicyForTemplate(signal.template_id);
-        expect(policy?.executionMode, signal.template_id).toBe('public_cloud');
-        expect(policy?.publicDisplayEligible, signal.template_id).toBe(false);
-        expect(signal.rights_status, signal.template_id).toBe(rightsStatus);
-      }
-    },
-  );
+  ])('keeps dogfood-only prompt "$prompt" clearly non-public', ({ prompt, signals }) => {
+    const matched = expectSignals(prompt, signals);
+    for (const signal of matched) {
+      const policy = sourcePolicyForTemplate(signal.template_id);
+      expect(policy?.executionMode, signal.template_id).toBe('public_cloud');
+      expect(policy?.publicDisplayEligible, signal.template_id).toBe(false);
+      expect(signal.rights_status, signal.template_id).toBe('with-attribution');
+    }
+  });
 
   it.each([
     {

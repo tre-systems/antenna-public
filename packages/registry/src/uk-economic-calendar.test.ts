@@ -25,9 +25,9 @@ describe('ukEconomicCalendarTemplate.matchHints', () => {
 });
 
 describe('ukEconomicCalendarTemplate metadata', () => {
-  it('requires a page-specific rights review and uses a six-hour refresh', () => {
+  it('uses public source policy and six-hour refresh', () => {
     expect(ukEconomicCalendarTemplate.paramKeys).toEqual([]);
-    expect(ukEconomicCalendarTemplate.rightsStatus).toBe('needs-review');
+    expect(ukEconomicCalendarTemplate.rightsStatus).toBe('public');
     expect(ukEconomicCalendarTemplate.defaultRefreshSeconds).toBe(21_600);
   });
 });

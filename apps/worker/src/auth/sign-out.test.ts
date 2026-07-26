@@ -79,7 +79,7 @@ const buildEnv = (): TestEnv => {
     GOOGLE_CLIENT_ID: 'test-client',
     GOOGLE_CLIENT_SECRET: 'test-secret',
     BETTER_AUTH_SECRET: 'test-better-auth-secret-please-ignore',
-    ALLOWED_EMAILS: 'a@b.com',
+    ENCRYPTION_KEY: '0'.repeat(64),
   };
 };
 

@@ -1,5 +1,24 @@
 import { z } from 'zod';
 
+export const rightsStatusSchema = z.enum([
+  'public',
+  'with-attribution',
+  'requires-auth',
+  'needs-review',
+]);
+
+export const visibilitySchema = z.enum(['private', 'shared', 'public']);
+
+export const sourceBlockerReasonSchema = z.enum([
+  'irrelevant_request',
+  'unsupported_source',
+  'unsupported_symbol',
+  'source_rights_blocked',
+  'auth_required_source',
+  'private_display_only_source',
+  'unsafe_generated_extraction',
+]);
+
 export const sourceAcquisitionStateSchema = z.enum([
   'known_connector',
   'needs_credentials',
@@ -28,24 +47,14 @@ export const proposedSignalSchema = z.object({
   config: z.record(z.string(), z.unknown()),
   missing: z.array(z.string()),
   refresh_seconds: z.number().int().positive(),
-  rights_status: z.enum(['public', 'with-attribution', 'requires-auth', 'needs-review']),
+  rights_status: rightsStatusSchema,
   source_label: z.string(),
 });
 
 export const unmatchedHintSchema = z.object({
   fragment: z.string(),
   closest_template_id: z.string().optional(),
-  blocker_reason: z
-    .enum([
-      'irrelevant_request',
-      'unsupported_source',
-      'unsupported_symbol',
-      'source_rights_blocked',
-      'auth_required_source',
-      'private_display_only_source',
-      'unsafe_generated_extraction',
-    ])
-    .optional(),
+  blocker_reason: sourceBlockerReasonSchema.optional(),
   acquisition_state: sourceAcquisitionStateSchema.optional(),
   acquisition_strategy: sourceAcquisitionStrategySchema.optional(),
 });
@@ -138,7 +147,7 @@ export const signalUpdateSchema = z
   .object({
     config: z.record(z.string(), z.unknown()).optional(),
     refresh_seconds: z.number().int().positive().optional(),
-    visibility: z.enum(['private', 'shared', 'public']).optional(),
+    visibility: visibilitySchema.optional(),
   })
   .strict()
   .refine(
@@ -165,7 +174,7 @@ export const collectionUpdateSchema = z
   .object({
     title: z.string().trim().min(1).max(120).optional(),
     description: z.string().trim().max(500).nullable().optional(),
-    visibility: z.enum(['private', 'shared', 'public']).optional(),
+    visibility: visibilitySchema.optional(),
     layout: collectionLayoutSchema.nullable().optional(),
   })
   .strict()
@@ -181,7 +190,7 @@ export const collectionCreateSchema = z
   .object({
     title: z.string().trim().min(1).max(120),
     description: z.string().trim().max(500).nullable().optional(),
-    visibility: z.enum(['private', 'shared', 'public']).optional(),
+    visibility: visibilitySchema.optional(),
     template_id: z.string().trim().min(1).max(80).optional(),
   })
   .strict();

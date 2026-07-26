@@ -15,7 +15,7 @@ export const ukEconomicCalendarTemplate: ConnectorTemplate = {
     /\b(?:rate decision|monetary policy summary|monetary policy report|fpc record)\b/i,
   ],
   paramExtractors: {},
-  rightsStatus: 'needs-review',
+  rightsStatus: 'public',
   defaultRefreshSeconds: 21_600,
   adapter: () => boeUpcomingPublications({ limit: 3 }),
 };

@@ -16,7 +16,7 @@ export const cryptoHistoryTemplate: ConnectorTemplate<{ pairs: string }> = {
   paramExtractors: {
     pairs: extractPairs,
   },
-  rightsStatus: 'needs-review',
+  rightsStatus: 'public',
   defaultRefreshSeconds: 21_600,
   pointRetentionDays: 400,
   adapter: (config) => cryptoCoinbaseCandles({ pairs: config.pairs.split(','), days: 365 }),

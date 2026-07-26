@@ -1,12 +1,28 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const e2eDir = join(process.cwd(), 'tests', 'e2e');
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const npxCommand = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+// Must match the port in playwright.config.ts.
+const E2E_PORT = 8787;
+
+// A wrangler dev left over from an earlier run answers /healthz but is bound to
+// a different D1, so the suite would fail every API call for reasons that look
+// nothing like the real cause. Catch it before Playwright starts and say what
+// to do about it.
+function portInUse(port) {
+  return new Promise((resolve) => {
+    const probe = createServer();
+    probe.once('error', (err) => resolve(err.code === 'EADDRINUSE'));
+    probe.once('listening', () => probe.close(() => resolve(false)));
+    probe.listen(port, '127.0.0.1');
+  });
+}
 
 function hasSpecs(dir) {
   if (!existsSync(dir)) return false;
@@ -56,14 +72,19 @@ try {
     ? cleanTestEnv({ E2E_WRANGLER_PERSIST_TO: persistTo })
     : cleanTestEnv();
 
-  if (usesManagedLocalServer) {
-    console.log('e2e: building the MCP package required by the Worker');
-    exitCode = run(npmCommand, ['run', 'build', '--workspace=@antenna/mcp'], {
-      env: cleanTestEnv({ CI: process.env.CI || 'true' }),
-    });
+  if (usesManagedLocalServer && (await portInUse(E2E_PORT))) {
+    console.error(
+      [
+        `e2e: something is already listening on 127.0.0.1:${E2E_PORT}.`,
+        'This run needs that port for its own worker, pointed at a throwaway D1.',
+        'A leftover `wrangler dev` is the usual cause — stop it, or run against it',
+        `directly with BASE_URL=http://127.0.0.1:${E2E_PORT} npx playwright test.`,
+      ].join('\n'),
+    );
+    exitCode = 1;
   }
 
-  if (usesManagedLocalServer && exitCode === 0) {
+  if (exitCode === 0 && usesManagedLocalServer) {
     console.log(`e2e: preparing local D1 state in ${persistTo}`);
     exitCode = run(
       npmCommand,

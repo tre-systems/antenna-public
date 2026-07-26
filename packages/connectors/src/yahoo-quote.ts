@@ -1,3 +1,5 @@
+import { browserRequestInit } from './browser-request';
+import { errorMessage } from './error-message';
 import type { AdapterError } from './types';
 
 export type YahooLatestQuote = {
@@ -41,14 +43,7 @@ type ClosePoint = {
   readonly ts: number;
 };
 
-export const YAHOO_CHART_REQUEST_INIT = {
-  headers: {
-    accept: 'application/json',
-    'accept-language': 'en-US,en;q=0.9',
-    'user-agent':
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
-  },
-} satisfies RequestInit;
+export const YAHOO_CHART_REQUEST_INIT = browserRequestInit('application/json');
 
 export const fetchYahooLatestQuote = async (symbol: string): Promise<YahooQuoteResult> => {
   const requestedSymbol = symbol.trim();
@@ -165,5 +160,3 @@ const finiteNumber = (value: unknown): number | null =>
 
 const validMarketPrice = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value) && value > 0;
-
-const errorMessage = (err: unknown): string => (err instanceof Error ? err.message : String(err));

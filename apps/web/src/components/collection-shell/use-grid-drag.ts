@@ -3,22 +3,14 @@ import type { ApiSignal } from '../../api';
 import { applyReorder, draggingSignalId, reorderForDrop, signals } from '../../signals/signals';
 import { startEdgeAutoScroll } from './auto-scroll';
 import { createDragGhost, type DragGhost } from './drag-ghost';
+import { finishAllSlides, finishSlides, isSliding } from './flip';
 
-// Pointer drag for grid cards. While dragging, a floating ghost of the card
-// tracks the pointer, the real cell dims into a placeholder, and the grid
-// live-previews the drop by reordering under the pointer (the FLIP hook in
-// SignalGrid animates the shuffle). Releasing settles the ghost into the
-// placeholder and persists the order; Escape or pointercancel restores it.
-//
-// Two ways to start a drag: the grip handle takes any pointer type (it is
-// touch-action:none, so touch drags reorder instead of scrolling), and the
-// card surface takes mouse drags only — a whole-card touch drag would fight
-// page scrolling, and mouse clicks without movement still work because the
-// drag only arms after a 6px threshold.
-//
-// Listeners live on window rather than via setPointerCapture: the live
-// preview re-parents grid cells, and moving a node silently releases pointer
-// capture, which would strand the drag without a pointerup.
+// Pointer drag for grid cards: a ghost tracks the pointer while the grid
+// live-previews the drop order.
+// The card surface takes mouse drags only — a whole-card touch drag would fight
+// page scrolling — so touch reorders must start on the grip handle.
+// Listeners live on window, not setPointerCapture: the live preview re-parents
+// cells, and moving a node silently releases capture.
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -81,13 +73,9 @@ function armDrag({ down, cell, signalId, initialOrder, onDone }: DragArgs): () =
   let pointer = { x: down.clientX, y: down.clientY };
   let reflowPending = false;
 
-  // Hit-testing is only meaningful against settled layout. While dragging,
-  // skip hit-tests until the last reorder's DOM update has painted
-  // (reflowPending) and cards have finished FLIP-sliding — a mid-animation
-  // card sits at a moving visual position, and reordering against it
-  // thrashes the grid. On drop (isDrop), snap the slides to their end state
-  // instead and take one exact pass, so a fast flick still lands on the slot
-  // under the pointer rather than one preview behind.
+  // Hit-testing a mid-slide card reads a moving position and thrashes the grid,
+  // so wait for settled layout — except on drop, which snaps first so a fast
+  // flick still lands on the slot under the pointer.
   const previewAtPointer = (isDrop = false): void => {
     if (reflowPending) return;
     if (isDrop) finishAllSlides(cell);
@@ -139,16 +127,13 @@ function armDrag({ down, cell, signalId, initialOrder, onDone }: DragArgs): () =
     const changed = orderChanged(current, initialOrder);
     if (commit && changed) void applyReorder(current, initialOrder);
     if (!commit && changed) signals.value = [...initialOrder];
-    // Un-dim the real card now, while the ghost still covers it — by the
-    // time the ghost lands and disappears there is no opacity pop beneath.
+    // Un-dim while the ghost still covers the card, so there is no opacity pop.
     draggingSignalId.value = null;
     if (!commit) {
       activeGhost.remove();
       return;
     }
-    // Land one frame later, once the final reorder has re-rendered, and on
-    // the cell's settled position — a ghost aimed at a stale or mid-slide
-    // rect snaps on arrival.
+    // Land a frame later on the settled rect; a stale or mid-slide target snaps.
     requestAnimationFrame(() => {
       finishSlides(cell);
       activeGhost.settleInto(cell.getBoundingClientRect());
@@ -189,20 +174,6 @@ function armDrag({ down, cell, signalId, initialOrder, onDone }: DragArgs): () =
 
 const orderChanged = (a: readonly ApiSignal[], b: readonly ApiSignal[]): boolean =>
   a.length !== b.length || a.some((item, index) => item.id !== b[index]?.id);
-
-// Cell-level animations are only the FLIP slides played by useGridFlip.
-const isSliding = (el: HTMLElement): boolean =>
-  typeof el.getAnimations === 'function' && el.getAnimations().length > 0;
-
-const finishSlides = (el: HTMLElement): void => {
-  if (typeof el.getAnimations !== 'function') return;
-  for (const animation of el.getAnimations()) animation.finish();
-};
-
-const finishAllSlides = (anyCell: HTMLElement): void => {
-  const cells = anyCell.parentElement?.querySelectorAll<HTMLElement>('[data-signal-id]');
-  if (cells) for (const gridCell of cells) finishSlides(gridCell);
-};
 
 // A drop over the card would otherwise land as a click and toggle the card's
 // compact/expanded state. Swallow the one click that follows a real drag.

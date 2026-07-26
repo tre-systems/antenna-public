@@ -2,7 +2,7 @@ import type { DataPoint } from '../api';
 import { fixed1 } from './common';
 import type { RenderSignal } from './types';
 
-export type AqiBand = {
+type AqiBand = {
   readonly label: string;
   readonly health: string;
   readonly textClass: string;

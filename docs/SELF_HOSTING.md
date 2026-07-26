@@ -52,8 +52,14 @@ Google sign-in requests only `openid`, `email`, and `profile`.
 
 ## 5. Set secrets
 
-Follow [SECRETS.md](SECRETS.md). Use a narrow `ALLOWED_EMAILS` value before the
-first deployment.
+Follow [SECRETS.md](SECRETS.md).
+
+Set `ALLOWED_EMAILS` before the first deployment. Access is decided by two
+lists: with `ALLOWED_EMAILS` set, only those addresses can sign in; leave it
+unset and **anyone with a Google account who finds your Worker URL can create an
+account on it**. `BLOCKED_EMAILS` always refuses and wins over the allowlist.
+Both are rechecked on every request, so editing either ends live sessions and
+MCP tokens immediately rather than at the next sign-in.
 
 ## 6. Apply the database baseline
 

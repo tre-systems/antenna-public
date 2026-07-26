@@ -14,7 +14,7 @@ describe('githubTrendingTemplate.matchHints', () => {
     expect(anyHintMatches(prompt)).toBe(true);
   });
 
-  it.each(['track stars for example-org/antenna', 'weather in London', 'bitcoin yearly graph'])(
+  it.each(['track stars for tre-systems/antenna', 'weather in London', 'bitcoin yearly graph'])(
     'does not match "%s"',
     (prompt) => {
       expect(anyHintMatches(prompt)).toBe(false);

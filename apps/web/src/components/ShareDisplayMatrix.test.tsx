@@ -24,7 +24,7 @@ const signal = (overrides: Partial<ApiSignal>): ApiSignal => ({
   source_policy: {
     source_id: 'frankfurter-ecb',
     label: 'Frankfurter (ECB)',
-    source_url: 'https://frankfurter.dev/',
+    source_url: 'https://www.frankfurter.app/',
     rights_status: 'public',
     execution_mode: 'public_cloud',
     public_display_eligible: true,
@@ -84,7 +84,7 @@ describe('ShareDisplayMatrix', () => {
           rights_status: 'with-attribution',
           execution_mode: 'public_cloud',
           public_display_eligible: false,
-          public_display_blocker: 'Yahoo Finance - private-only stopgap.',
+          public_display_blocker: 'Yahoo Finance - private dogfood stopgap.',
           attribution: 'Yahoo Finance',
           last_reviewed: '2026-05-21',
         },
@@ -95,7 +95,7 @@ describe('ShareDisplayMatrix', () => {
     expect(html).toContain('2 hidden');
     expect(html).toContain('1 blocked by source policy');
     expect(html).toContain('1 not marked shared');
-    expect(html).not.toContain('private-only stopgap');
+    expect(html).not.toContain('dogfood');
   });
 
   it('renders nothing when there are no signals yet', () => {

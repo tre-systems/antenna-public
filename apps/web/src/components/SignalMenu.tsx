@@ -4,9 +4,8 @@ import { settingsSignalId, startRemoval } from '../signals/signals';
 
 type Props = { readonly signal: ApiSignal };
 
-// Signal-corner kebab menu. Today it only carries Remove; the slot is set up
-// for future actions (Edit, Refresh, Duplicate) without rewiring the signal
-// chrome each time.
+// Signal-corner kebab menu; the slot exists so future actions do not rewire the
+// card chrome.
 export function SignalMenu({ signal }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -52,7 +51,7 @@ export function SignalMenu({ signal }: Props) {
         onClick={() => {
           setOpen((prev) => !prev);
         }}
-        class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400/40 dark:text-slate-500 dark:hover:bg-white/5 dark:hover:text-slate-200"
+        class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:text-slate-500 dark:hover:bg-white/5 dark:hover:text-slate-200"
         data-testid={`signal-menu-${signal.id}`}
       >
         <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="h-4 w-4">

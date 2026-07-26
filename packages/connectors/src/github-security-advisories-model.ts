@@ -1,3 +1,4 @@
+import { stringValue } from './config-values';
 import type { DataPoint } from './types';
 
 type GithubAdvisoryResponse = {
@@ -34,13 +35,10 @@ export type NormalisedAdvisory = {
 export const SOURCE_PAGE = 'https://github.com/advisories';
 export const API_URL = 'https://api.github.com/advisories';
 export const DEFAULT_ECOSYSTEM = 'npm';
-export const DEFAULT_SEVERITIES = ['critical', 'high'] as const;
+const DEFAULT_SEVERITIES = ['critical', 'high'] as const;
 export const DEFAULT_LOOKBACK_DAYS = 7;
 export const DEFAULT_LIMIT = 3;
 export const MAX_PER_SEVERITY = 30;
-
-export const githubAuthHeader = (token: string | undefined): Record<string, string> =>
-  typeof token === 'string' && token.trim().length > 0 ? { Authorization: `Bearer ${token}` } : {};
 
 export const normaliseGithubSecurityAdvisories = (body: unknown): NormalisedAdvisory[] => {
   if (!Array.isArray(body)) return [];
@@ -114,12 +112,6 @@ export const normaliseSeverities = (value: unknown): readonly string[] => {
     .filter((item): item is string => item === 'critical' || item === 'high');
   return allowed.length ? [...new Set(allowed)] : DEFAULT_SEVERITIES;
 };
-
-export const stringValue = (value: unknown): string | undefined =>
-  typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
-
-export const positiveInt = (value: unknown): number | undefined =>
-  typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : undefined;
 
 const normaliseAdvisory = (advisory: GithubAdvisoryResponse): NormalisedAdvisory | null => {
   const ghsaId = stringValue(advisory.ghsa_id);

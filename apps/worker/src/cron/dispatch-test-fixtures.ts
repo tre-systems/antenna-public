@@ -12,6 +12,9 @@ import * as schema from '../db/schema';
 export type Sqlite = ReturnType<typeof Database>;
 export type Drizzle = BetterSQLite3Database<typeof schema>;
 
+export const TEST_ENCRYPTION_KEY =
+  '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+
 const SCHEMA_DDL = `
   CREATE TABLE collections (
     id text PRIMARY KEY NOT NULL,
@@ -101,6 +104,18 @@ const SCHEMA_DDL = `
     password text,
     created_at integer NOT NULL,
     updated_at integer NOT NULL
+  );
+  CREATE TABLE upstream_snapshots (
+    cache_key text PRIMARY KEY NOT NULL,
+    template_id text NOT NULL,
+    points text NOT NULL,
+    fetched_at integer NOT NULL
+  );
+  CREATE TABLE user_collection_visits (
+    user_id text NOT NULL,
+    collection_id text NOT NULL REFERENCES collections(id) ON DELETE cascade,
+    last_seen_at integer NOT NULL,
+    PRIMARY KEY (user_id, collection_id)
   );
 `;
 

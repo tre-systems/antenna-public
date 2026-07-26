@@ -87,7 +87,7 @@ function TitleLink({ sourceUrl, title }: { readonly sourceUrl: string; readonly 
       href={sourceUrl}
       target="_blank"
       rel="noreferrer"
-      class="rounded-sm decoration-slate-400/60 underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sky-400/60 dark:decoration-slate-500/60"
+      class="rounded-sm decoration-slate-400/60 underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-500/60 dark:decoration-slate-500/60"
     >
       {title}
     </a>
@@ -105,7 +105,7 @@ function SignalMeta({
 }) {
   const source = signalSourceLabel(signal);
   return (
-    <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+    <p class="antenna-meta mt-1 text-[0.68rem] text-slate-500 dark:text-slate-400">
       {sourceUrl ? <SourceLink source={source} sourceUrl={sourceUrl} /> : source}
       <Separator />
       <time class="text-slate-400 dark:text-slate-500">
@@ -128,7 +128,7 @@ function SourceLink({
       href={sourceUrl}
       target="_blank"
       rel="noreferrer"
-      class="rounded-sm underline-offset-2 hover:text-slate-700 hover:underline focus:outline-none focus:ring-2 focus:ring-sky-400/60 dark:hover:text-slate-200"
+      class="rounded-sm underline-offset-2 hover:text-slate-700 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-500/60 dark:hover:text-slate-200"
     >
       {source}
     </a>

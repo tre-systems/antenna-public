@@ -7,7 +7,7 @@ const anyHintMatches = (prompt: string): boolean =>
 describe('appUsageTemplate.matchHints', () => {
   it.each([
     'app usage for antenna',
-    'usage of sample-app',
+    'usage of swade-toolbox',
     'real users activity on my projects',
     'analytics engine events',
   ])('matches "%s"', (prompt) => {
@@ -24,7 +24,9 @@ describe('appUsageTemplate.matchHints', () => {
 
 describe('appUsageTemplate.paramExtractors', () => {
   it('extracts the project slug from natural prompts', () => {
-    expect(appUsageTemplate.paramExtractors.project?.('usage for sample-app')).toBe('sample-app');
+    expect(appUsageTemplate.paramExtractors.project?.('usage for swade-toolbox')).toBe(
+      'swade-toolbox',
+    );
     expect(appUsageTemplate.paramExtractors.project?.('app usage of Antenna')).toBe('antenna');
     expect(appUsageTemplate.paramExtractors.project?.('app usage')).toBeUndefined();
   });

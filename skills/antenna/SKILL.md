@@ -130,38 +130,39 @@ Use `list_templates` for authoritative runtime details. The list below is
 generated from `packages/registry/src/index.ts`; run `npm run skill:templates`
 after changing the connector registry.
 
-<!-- prettier-ignore-start -->
 <!-- BEGIN GENERATED TEMPLATE LIST -->
 
-- `fx-pair` - FX pair; params: `base`, `quote`; rights: with-attribution; refresh: 15m.
-- `crypto-history` - Crypto history; params: `pairs`; rights: needs-review; refresh: 6h.
-- `crypto-watchlist` - Crypto watchlist; params: `pairs`; rights: needs-review; refresh: 10m.
+- `fx-pair` - FX pair; params: `base`, `quote`; rights: public; refresh: 15m.
+- `crypto-history` - Crypto history; params: `pairs`; rights: public; refresh: 6h.
+- `crypto-watchlist` - Crypto watchlist; params: `pairs`; rights: public; refresh: 10m.
 - `macro-market-history` - Macro market history; params: `preset`; rights: with-attribution; refresh: 6h.
 - `market-history` - Market history; params: `symbol`; rights: with-attribution; refresh: 6h.
 - `market-overview` - Market overview; params: none; rights: with-attribution; refresh: 30m.
 - `trading-economics-market` - Trading Economics market; params: `symbol`, `label`, `unit`, `sourceUrl`; rights: with-attribution; refresh: 6h; secret: `TRADING_ECONOMICS_API_KEY`.
-- `weather` - Weather; params: `location`, `lat`, `lon`; rights: with-attribution; refresh: 30m.
-- `airquality` - Air quality; params: `location`, `lat`, `lon`; rights: with-attribution; refresh: 30m.
+- `weather` - Weather; params: `location`, `lat`, `lon`; rights: public; refresh: 30m.
+- `airquality` - Air quality; params: `location`, `lat`, `lon`; rights: public; refresh: 30m.
 - `equity-watchlist` - Equity watchlist; params: `tickers`; rights: with-attribution; refresh: 10m.
 - `sector-movers` - US sector movers; params: none; rights: with-attribution; refresh: 10m.
 - `github-trending` - GitHub Trending; params: none; rights: with-attribution; refresh: 6h.
-- `github-repo-activity` - GitHub repo activity; params: `owner`, `repo`; rights: with-attribution; refresh: 30m.
+- `github-repo-activity` - GitHub repo activity; params: `owner`, `repo`; rights: public; refresh: 30m.
 - `karpathy-jobs-snapshot` - Karpathy jobs snapshot; params: none; rights: with-attribution; refresh: 1d.
 - `manual-cost` - Manual cost; params: `provider`, `amount`, `currency`, `period`; rights: requires-auth; refresh: 1d.
 - `manual-metric` - Manual metric; params: `value`, `unit`, `label`; rights: public; refresh: 1d.
+- `antenna-users` - Antenna users; params: none; rights: requires-auth; refresh: 1h.
 - `rest-metric` - REST metric; params: `url`, `jsonPath`, `label`, `unit`; rights: needs-review; refresh: 30m; planner disabled.
-- `uk-economic-calendar` - UK economic calendar; params: none; rights: needs-review; refresh: 6h.
+- `uk-economic-calendar` - UK economic calendar; params: none; rights: public; refresh: 6h.
 - `cisa-kev-recent` - CISA KEV recent additions; params: none; rights: public; refresh: 1h.
-- `github-security-advisories` - GitHub Security Advisories; params: none; rights: with-attribution; refresh: 6h.
-- `cloudflare-incidents` - Cloudflare incidents; params: none; rights: needs-review; refresh: 15m.
+- `github-security-advisories` - GitHub Security Advisories; params: none; rights: public; refresh: 6h.
+- `cloudflare-incidents` - Cloudflare incidents; params: none; rights: public; refresh: 15m.
 - `tbench-leaderboard` - Terminal Bench leaderboard; params: none; rights: with-attribution; refresh: 6h.
 - `aa-highlights` - Artificial Analysis highlights; params: `category`; rights: with-attribution; refresh: 1h.
 - `aa-frontier` - Frontier model comparison; params: none; rights: with-attribution; refresh: 6h.
 - `app-usage` - App usage; params: `project`, `account_id`; rights: requires-auth; refresh: 1h; secret: `CF_ANALYTICS_API_TOKEN`.
 - `cloudflare-analytics` - Cloudflare traffic; params: `account_id`; rights: requires-auth; refresh: 1h; secret: `CF_ANALYTICS_API_TOKEN`.
 - `project-portfolio` - Project portfolio; params: `projects`, `account_id`; rights: requires-auth; refresh: 1h; secret: `CF_ANALYTICS_API_TOKEN`.
+- `reddit-problems` - Reddit problem candidates; params: `subreddits`; rights: with-attribution; refresh: 6h.
+
 <!-- END GENERATED TEMPLATE LIST -->
-<!-- prettier-ignore-end -->
 
 ## Source Rights
 

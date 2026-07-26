@@ -1,5 +1,6 @@
 import { githubTrending } from '@antenna/connectors';
 import { z } from 'zod';
+import { nonEmptyStringField } from './config-fields';
 import { type ConnectorTemplate } from './types';
 
 export const githubTrendingTemplate: ConnectorTemplate = {
@@ -22,9 +23,6 @@ export const githubTrendingTemplate: ConnectorTemplate = {
     githubTrending({
       since: 'daily',
       limit: 5,
-      githubToken:
-        typeof config.githubToken === 'string' && config.githubToken.trim().length > 0
-          ? config.githubToken
-          : undefined,
+      githubToken: nonEmptyStringField(config, 'githubToken'),
     }),
 };

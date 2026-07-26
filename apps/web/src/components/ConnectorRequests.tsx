@@ -26,10 +26,8 @@ const loadRequests = async () => {
 export function ConnectorRequests() {
   useEffect(() => {
     void loadRequests();
-    // Refetch whenever currentPlan transitions back to null — that's the
-    // moment a plan was confirmed/rejected, so a new connector_request row
-    // may have just landed. Skip the first synchronous fire of `effect()`
-    // (currentPlan starts as null) so we don't double-load on mount.
+    // currentPlan returning to null means a plan was just confirmed/rejected, so
+    // a new request row may exist. `primed` skips effect()'s synchronous fire.
     let primed = false;
     return effect(() => {
       const plan = currentPlan.value;
@@ -45,10 +43,7 @@ export function ConnectorRequests() {
   if (requests.length === 0) return null;
 
   return (
-    <details
-      class="rounded-2xl bg-white/70 p-4 text-sm ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.04] dark:ring-white/10"
-      data-testid="connector-requests"
-    >
+    <details class="antenna-panel rounded-2xl p-4 text-sm" data-testid="connector-requests">
       <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-slate-900 marker:hidden dark:text-white">
         <span class="flex min-w-0 items-center gap-1.5">
           <svg

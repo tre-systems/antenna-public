@@ -2,7 +2,7 @@ import type { ApiSignal } from '../api';
 
 const SNAPSHOT_KEY_PREFIX = 'antenna.signals.snapshot.v2';
 
-export type SignalSnapshot = {
+type SignalSnapshot = {
   readonly signals: ApiSignal[];
   readonly fetchedAt: number;
 };

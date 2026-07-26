@@ -1,8 +1,6 @@
 import type { ApiSignal } from '../api';
 
-// Move the dragged signal to the target's current position (splice-move).
-// Unlike insert-before-target semantics, this makes dragging onto the next
-// neighbour swap the two cards instead of being a no-op.
+// Splice-move rather than insert-before-target, so dragging onto the next neighbour swaps them.
 export function reorderForDrop(
   current: readonly ApiSignal[],
   draggedId: string,

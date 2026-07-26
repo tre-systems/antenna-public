@@ -1,5 +1,5 @@
 import { InlineEditableText } from './InlineEditableText';
-import { PRODUCT_NAME } from '../brand';
+import { PRODUCT_NAME, SHORT_PRODUCT_NAME } from '../brand';
 
 type Props = {
   readonly title: string;
@@ -17,8 +17,8 @@ export function CollectionHeader({ title, onSaveTitle }: Props) {
         maxLength={TITLE_MAX}
         ariaLabel="Collection title"
         onSave={onSaveTitle}
-        displayClass="-mx-1 block max-w-full overflow-hidden rounded-md px-1 text-left text-xl font-semibold tracking-tight text-slate-900 transition-colors hover:bg-slate-900/[0.04] focus:outline-none focus:ring-2 focus:ring-sky-400/40 sm:text-2xl dark:text-white dark:hover:bg-white/5"
-        inputClass="w-full max-w-md rounded-md border border-slate-300 bg-white/90 px-2 py-1 text-xl font-semibold tracking-tight text-slate-900 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:opacity-60 sm:text-2xl dark:border-white/15 dark:bg-white/[0.06] dark:text-white"
+        displayClass="-mx-1 block max-w-full overflow-hidden rounded-md px-1 text-left text-xl font-semibold tracking-tight text-slate-900 transition-colors hover:bg-slate-900/[0.04] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 sm:text-2xl dark:text-white dark:hover:bg-white/5"
+        inputClass="w-full max-w-md rounded-md border border-emerald-700/20 bg-white/90 px-2 py-1 text-xl font-semibold tracking-tight text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-60 sm:text-2xl dark:border-emerald-300/20 dark:bg-white/[0.06] dark:text-white"
         testidPrefix="collection-title"
         renderDisplay={(text) => <CollectionTitle text={text} />}
       />
@@ -27,7 +27,10 @@ export function CollectionHeader({ title, onSaveTitle }: Props) {
 }
 
 function CollectionTitle({ text }: { readonly text: string }) {
-  if (text.trim() !== PRODUCT_NAME) return <h1 class="min-w-0 truncate">{text}</h1>;
+  const title = text.trim();
+  if (title !== PRODUCT_NAME && title !== SHORT_PRODUCT_NAME) {
+    return <h1 class="min-w-0 truncate">{text}</h1>;
+  }
 
   return (
     <h1 class="flex min-w-0 max-w-full items-center gap-2.5 overflow-hidden">
@@ -36,9 +39,7 @@ function CollectionTitle({ text }: { readonly text: string }) {
         alt=""
         class="h-8 w-8 shrink-0 rounded-lg shadow-sm sm:h-9 sm:w-9 sm:rounded-xl"
       />
-      <span class="block min-w-0 truncate bg-gradient-to-r from-slate-950 via-teal-700 to-sky-700 bg-clip-text text-transparent dark:from-white dark:via-teal-200 dark:to-sky-200">
-        {PRODUCT_NAME}
-      </span>
+      <span class="block min-w-0 truncate text-slate-950 dark:text-white">{PRODUCT_NAME}</span>
     </h1>
   );
 }

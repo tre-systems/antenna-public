@@ -38,11 +38,11 @@ describe('appendConfig', () => {
 
   it('exposes a tickers-shaped config for equity-watchlist', () => {
     const cfg = appendConfig(
-      baseSignal({ template_id: 'equity-watchlist', config: { tickers: 'AZN.UK,VTI.US' } }),
+      baseSignal({ template_id: 'equity-watchlist', config: { tickers: 'BA.UK,VTI.US' } }),
     );
     expect(cfg).not.toBeNull();
     expect(cfg?.field).toBe('tickers');
-    expect(cfg?.split()).toEqual(['AZN.UK', 'VTI.US']);
+    expect(cfg?.split()).toEqual(['BA.UK', 'VTI.US']);
     expect(cfg?.normalise('aapl.us')).toBe('AAPL.US');
     expect(cfg?.isValid('AAPL.US')).toBe(true);
     expect(cfg?.isValid('AAPL')).toBe(false);
@@ -68,7 +68,7 @@ describe('WatchlistAppend', () => {
   it('renders the trigger button for an equity watchlist', () => {
     const html = renderToString(
       <WatchlistAppend
-        signal={baseSignal({ template_id: 'equity-watchlist', config: { tickers: 'AZN.UK' } })}
+        signal={baseSignal({ template_id: 'equity-watchlist', config: { tickers: 'BA.UK' } })}
       />,
     );
     expect(html).toContain('+ Add ticker');

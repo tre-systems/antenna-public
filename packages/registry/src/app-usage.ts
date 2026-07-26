@@ -1,10 +1,9 @@
 import { appUsage } from '@antenna/connectors';
 import { z } from 'zod';
+import { numberField, stringField } from './config-fields';
 import { type ConnectorTemplate } from './types';
 
-// Per-project product usage counts from the shared app_usage Analytics Engine
-// dataset. Private-only: this is the deployment owner's own telemetry, read
-// back through the Cloudflare SQL API.
+// Deployment-owner telemetry from the shared app_usage dataset (docs/USAGE_RADAR.md).
 
 const SLUG_RX = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 const ACCOUNT_ID_RX = /^[0-9a-f]{32}$/;
@@ -46,9 +45,9 @@ export const appUsageTemplate: ConnectorTemplate = {
   },
   adapter: (config) =>
     appUsage({
-      project: typeof config.project === 'string' ? config.project : '',
-      accountId: typeof config.account_id === 'string' ? config.account_id : '',
-      apiToken: typeof config.apiToken === 'string' ? config.apiToken : '',
-      days: typeof config.days === 'number' ? config.days : undefined,
+      project: stringField(config, 'project'),
+      accountId: stringField(config, 'account_id'),
+      apiToken: stringField(config, 'apiToken'),
+      days: numberField(config, 'days'),
     }),
 };

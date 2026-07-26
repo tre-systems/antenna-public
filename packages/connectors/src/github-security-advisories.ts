@@ -1,6 +1,8 @@
+import { positiveInt, stringValue } from './config-values';
 import type { Adapter, AdapterResult } from './types';
 import { discardResponse } from './discard-response';
-import { githubRateLimitError } from './github-rate-limit';
+import { errorMessage } from './error-message';
+import { githubAuthHeader, githubRateLimitError } from './github-http';
 import {
   API_URL,
   countBySeverity,
@@ -8,14 +10,11 @@ import {
   DEFAULT_ECOSYSTEM,
   DEFAULT_LIMIT,
   DEFAULT_LOOKBACK_DAYS,
-  githubAuthHeader,
   MAX_PER_SEVERITY,
   normaliseGithubSecurityAdvisories,
   normaliseSeverities,
-  positiveInt,
   recentAdvisories,
   SOURCE_PAGE,
-  stringValue,
   toAdvisoryPoint,
   type NormalisedAdvisory,
 } from './github-security-advisories-model';
@@ -52,18 +51,12 @@ export const githubSecurityAdvisories: Adapter<GithubSecurityAdvisoriesConfig> =
         },
       });
     } catch (err) {
-      return {
-        ok: false,
-        error: { code: 'fetch_failed', message: err instanceof Error ? err.message : String(err) },
-      };
+      return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
     }
 
     if (response.status === 403 || response.status === 429) {
       await discardResponse(response);
-      return {
-        ok: false,
-        error: githubRateLimitError(response, 'GitHub advisory API rate limit'),
-      };
+      return { ok: false, error: githubRateLimitError(response, 'GitHub advisory API rate limit') };
     }
     if (!response.ok) {
       await discardResponse(response);
@@ -74,13 +67,7 @@ export const githubSecurityAdvisories: Adapter<GithubSecurityAdvisoriesConfig> =
     try {
       body = await response.json();
     } catch (err) {
-      return {
-        ok: false,
-        error: {
-          code: 'parse_failed',
-          message: err instanceof Error ? err.message : String(err),
-        },
-      };
+      return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
     }
 
     if (!Array.isArray(body)) {

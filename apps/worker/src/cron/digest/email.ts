@@ -1,7 +1,8 @@
 import { RESEND_EMAILS_URL } from './constants';
 import { PRODUCT_NAME } from '../../brand';
 import { renderHtml, renderText } from './render';
-import { errorMessage, hasText, safeResponseText } from './strings';
+import { errorMessage } from '../log';
+import { hasText, safeResponseText } from './strings';
 import type { AlertRow, Candidate, DigestCadence, DigestEnv, DigestPeriod } from './types';
 
 export const canSendEmail = (env: DigestEnv): boolean =>

@@ -31,7 +31,7 @@ export const fxPairTemplate: ConnectorTemplate<{ base: string; quote: string }> 
     base: (prompt) => extractPair(prompt)?.base,
     quote: (prompt) => extractPair(prompt)?.quote,
   },
-  rightsStatus: 'with-attribution',
+  rightsStatus: 'public',
   defaultRefreshSeconds: 900,
   alertRules: [
     {

@@ -47,9 +47,7 @@ const extractTickers = (prompt: string): string | undefined => {
     const sym = raw.toUpperCase();
     const head = sym.split('.')[0] ?? sym;
     if (STOPWORDS.has(head)) continue;
-    // Stooq requires an exchange suffix. A bare uppercase symbol defaults to
-    // .US since that's the most common case ('AAPL' → 'AAPL.US'); users who
-    // mean a London listing can write the suffix explicitly ('AZN.UK').
+    // Stooq requires an exchange suffix; bare symbols default to the common case.
     const withSuffix = sym.includes('.') ? sym : `${sym}.US`;
     if (seen.has(withSuffix)) continue;
     seen.add(withSuffix);
@@ -58,8 +56,7 @@ const extractTickers = (prompt: string): string | undefined => {
   return tickers.length === 0 ? undefined : tickers.join(',');
 };
 
-// Adapter wants string[]; the registry contract only allows string extractors,
-// so we round-trip via comma.
+// paramExtractors may only return strings, so tickers round-trip via comma.
 export const equityWatchlistTemplate: ConnectorTemplate<{ tickers: string }> = {
   id: 'equity-watchlist',
   displayName: 'Equity watchlist',

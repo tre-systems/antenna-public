@@ -1,3 +1,5 @@
+import { stringValue } from './config-values';
+
 type StatuspageIncident = {
   readonly id?: unknown;
   readonly name?: unknown;
@@ -64,12 +66,6 @@ export const recentIncidents = (
     .filter((incident) => incident.createdAtMs >= since && incident.createdAtMs <= now)
     .sort((a, b) => b.createdAtMs - a.createdAtMs || a.name.localeCompare(b.name));
 };
-
-export const stringValue = (value: unknown): string | undefined =>
-  typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
-
-export const positiveInt = (value: unknown): number | undefined =>
-  typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : undefined;
 
 const normaliseIncident = (incident: StatuspageIncident): NormalisedIncident | null => {
   const id = stringValue(incident.id);

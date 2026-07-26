@@ -37,7 +37,7 @@ export function SparklinePresentationFigure({ label, points }: SparklinePresenta
         ) : null}
       </div>
       <svg
-        class="mt-5 h-40 w-full overflow-visible text-sky-600 sm:h-48 dark:text-sky-300"
+        class="mt-5 h-40 w-full overflow-visible text-emerald-600 sm:h-48 dark:text-emerald-300"
         viewBox={`0 0 ${SPARKLINE_WIDTH} ${SPARKLINE_HEIGHT}`}
         role="img"
         aria-label={`${label} ${rangeLabel} presentation chart`}

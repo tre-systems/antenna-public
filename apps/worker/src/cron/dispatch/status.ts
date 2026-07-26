@@ -2,7 +2,7 @@ import type { AdapterError } from '@antenna/connectors';
 import { eq } from 'drizzle-orm';
 import { signalStatus } from '../../db/schema';
 import { notifyCollection } from '../notify';
-import { logDispatch } from './log';
+import { logEvent } from '../log';
 import type { SignalRow, Client, DispatchContext, DispatchEnv, StatusRow } from './types';
 
 type ErrorStatus = 'error' | 'stale';
@@ -95,7 +95,7 @@ const logSignalStatus = (
   status: 'live' | ErrorStatus,
   error?: string,
 ): void => {
-  logDispatch({
+  logEvent({
     event: 'signal_dispatch_completed',
     run_id: ctx.runId,
     signal_id: signal.id,

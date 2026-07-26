@@ -1,10 +1,8 @@
 import { isOffline, lastFetchedAt } from '../signals/signals';
 import { relativeTime } from '../relativeTime';
 
-// Banner shown above the collection grid when we're rendering cached data
-// because the latest /api/signals fetch failed or the browser is offline.
-// The service worker keeps the app shell loadable; this component is what
-// tells the user the numbers under it might be stale.
+// The service worker keeps the shell loadable offline; this warns that the
+// numbers under it are cached.
 export function OfflineBanner() {
   if (!isOffline.value) return null;
   const lastSeen = lastFetchedAt.value;

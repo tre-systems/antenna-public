@@ -15,7 +15,7 @@ describe('yahooMarketHistory', () => {
             chart: {
               result: [
                 {
-                  meta: { symbol: 'AZN.L', currency: 'GBp', shortName: 'AstraZeneca' },
+                  meta: { symbol: 'BA.L', currency: 'GBp', shortName: 'BAE Systems' },
                   timestamp: [1_700_000_000, 1_700_086_400, 1_700_172_800],
                   indicators: { quote: [{ close: [100.1, null, 103.5] }] },
                 },
@@ -28,10 +28,10 @@ describe('yahooMarketHistory', () => {
       ),
     );
 
-    const result = await yahooMarketHistory({ symbol: 'AZN.L' });
+    const result = await yahooMarketHistory({ symbol: 'BA.L' });
 
     expect(fetch).toHaveBeenCalledWith(
-      'https://query1.finance.yahoo.com/v8/finance/chart/AZN.L?range=1y&interval=1d',
+      'https://query1.finance.yahoo.com/v8/finance/chart/BA.L?range=1y&interval=1d',
       {
         headers: {
           accept: 'application/json',
@@ -45,18 +45,18 @@ describe('yahooMarketHistory', () => {
     if (!result.ok) return;
     expect(result.points).toEqual([
       {
-        dimensions: { ticker: 'AZN.L' },
+        dimensions: { ticker: 'BA.L' },
         value: 100.1,
         unit: 'GBp',
         ts: 1_700_000_000_000,
-        sourceUrl: 'https://finance.yahoo.com/quote/AZN.L/',
+        sourceUrl: 'https://finance.yahoo.com/quote/BA.L/',
       },
       {
-        dimensions: { ticker: 'AZN.L' },
+        dimensions: { ticker: 'BA.L' },
         value: 103.5,
         unit: 'GBp',
         ts: 1_700_172_800_000,
-        sourceUrl: 'https://finance.yahoo.com/quote/AZN.L/',
+        sourceUrl: 'https://finance.yahoo.com/quote/BA.L/',
       },
     ]);
   });

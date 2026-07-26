@@ -6,10 +6,10 @@ const anyHintMatches = (prompt: string): boolean =>
 
 describe('marketHistoryTemplate.matchHints', () => {
   it.each([
-    'yearly graph for AZN.L',
+    'yearly graph for BA.L',
     'show VTI chart',
-    'share price history for SHEL.L',
-    'fund chart MSFT',
+    'share price history for ANTO.L',
+    'fund chart 0P000125KV.L',
     'show me AAPL.US over time',
   ])('matches "%s"', (prompt) => {
     expect(anyHintMatches(prompt)).toBe(true);
@@ -20,9 +20,9 @@ describe('marketHistoryTemplate.paramExtractors.symbol', () => {
   const { symbol } = marketHistoryTemplate.paramExtractors;
 
   it('extracts Yahoo-style tickers', () => {
-    expect(symbol?.('yearly graph for AZN.L')).toBe('AZN.L');
+    expect(symbol?.('yearly graph for BA.L')).toBe('BA.L');
     expect(symbol?.('show VTI chart')).toBe('VTI');
-    expect(symbol?.('fund chart MSFT')).toBe('MSFT');
+    expect(symbol?.('fund chart 0P000125KV.L')).toBe('0P000125KV.L');
     expect(symbol?.('show me AAPL.US over time')).toBe('AAPL.US');
   });
 

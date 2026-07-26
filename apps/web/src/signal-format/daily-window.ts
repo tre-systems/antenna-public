@@ -1,9 +1,7 @@
 import type { DataPoint } from '../api';
 import type { RenderSignal } from './types';
 
-// Shared helpers for daily-trend card data (app-usage, cloudflare-fleet):
-// resolving the day window from config, building a zero-fillable UTC day list,
-// and reading numeric/string values off points and their dimensions.
+// Shared helpers for daily-trend card data (app-usage, cloudflare-fleet).
 
 const DAY_MS = 86_400_000;
 
@@ -32,7 +30,7 @@ export function stringDim(point: DataPoint, key: string): string | null {
   return typeof value === 'string' ? value : null;
 }
 
-export function toFiniteNumber(value: unknown): number {
+function toFiniteNumber(value: unknown): number {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
   if (typeof value === 'string') {
     const parsed = Number(value);

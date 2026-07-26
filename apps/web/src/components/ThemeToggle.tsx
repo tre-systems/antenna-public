@@ -47,7 +47,7 @@ export function ThemeToggle() {
     <div
       role="radiogroup"
       aria-label="Theme"
-      class="inline-flex items-center rounded-full bg-white/60 p-0.5 text-slate-600 ring-1 ring-slate-900/5 shadow-sm backdrop-blur-md dark:bg-white/5 dark:text-slate-300 dark:ring-white/10"
+      class="antenna-control inline-flex items-center rounded-full p-0.5 text-slate-600 backdrop-blur-md dark:text-slate-300"
     >
       {OPTIONS.map((opt) => {
         const active = current === opt.value;
@@ -63,7 +63,7 @@ export function ThemeToggle() {
             }}
             class={
               active
-                ? 'inline-flex items-center justify-center rounded-full bg-white px-2 py-1 text-slate-900 shadow-sm ring-1 ring-slate-900/5 transition dark:bg-slate-800 dark:text-white dark:ring-white/10'
+                ? 'inline-flex items-center justify-center rounded-full bg-emerald-700 px-2 py-1 text-white shadow-sm transition dark:bg-emerald-300 dark:text-emerald-950'
                 : 'inline-flex items-center justify-center rounded-full px-2 py-1 text-slate-500 transition hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
             }
           >

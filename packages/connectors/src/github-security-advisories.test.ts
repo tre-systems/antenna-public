@@ -188,10 +188,10 @@ describe('githubSecurityAdvisories', () => {
     );
     vi.stubGlobal('fetch', fetchSpy);
 
-    await githubSecurityAdvisories({ githubToken: 'test-github-token' });
+    await githubSecurityAdvisories({ githubToken: 'ghp_test' });
 
     const init = fetchSpy.mock.calls[0]?.[1] as RequestInit | undefined;
     const headers = init?.headers as Record<string, string> | undefined;
-    expect(headers?.Authorization).toBe('Bearer test-github-token');
+    expect(headers?.Authorization).toBe('Bearer ghp_test');
   });
 });

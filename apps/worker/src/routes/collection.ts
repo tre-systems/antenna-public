@@ -1,21 +1,15 @@
-import { asc, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
-import {
-  collectionSignalOrderUpdateSchema,
-  collectionUpdateSchema,
-  type CollectionSignalOrderRecord,
-} from '@antenna/shared';
+import { collectionSignalOrderUpdateSchema, collectionUpdateSchema } from '@antenna/shared';
 import { ensureUserCollection } from '../auth';
 import type { AuthVars } from '../auth/middleware';
 import { db, type Env as DbEnv } from '../db/client';
-import { collections, signals } from '../db/schema';
+import { collections } from '../db/schema';
 import { recordCollectionVisit, toCollectionRecord } from './collection-record';
-import { persistCollectionSignalOrder, sameIdSet } from './collections/order';
+import { reorderCollectionSignalRows } from './collections/order';
 import { layoutReferencesCollectionSignals } from './collections/repository';
 import { persistCollectionUpdate, updatedCollectionRow } from './collections/write-handlers';
 import { err, ok } from './http';
-
-export { recordCollectionVisit, toCollectionRecord } from './collection-record';
 
 type Bindings = DbEnv;
 type Client = ReturnType<typeof db>;
@@ -59,23 +53,13 @@ export const collectionRoute = new Hono<{ Bindings: Bindings; Variables: AuthVar
     const row = await loadOrCreateCollection(client, c.env.DB, c.get('user').id);
     if (!row) return err(c, 'no_collection', 404);
 
-    const signalRows = await client
-      .select({ id: signals.id })
-      .from(signals)
-      .where(eq(signals.collectionId, row.id))
-      .orderBy(asc(signals.position))
-      .all();
-    const existingIds = signalRows.map((signal) => signal.id);
-    if (!sameIdSet(existingIds, parsed.data.ordered_signal_ids)) {
-      return err(c, 'invalid_order_signals', 400);
-    }
-
-    await persistCollectionSignalOrder(client, row.id, parsed.data.ordered_signal_ids, new Date());
-
-    return ok(c, {
-      updated: true,
-      ordered_signal_ids: parsed.data.ordered_signal_ids,
-    } satisfies CollectionSignalOrderRecord);
+    const result = await reorderCollectionSignalRows(
+      client,
+      row.id,
+      parsed.data.ordered_signal_ids,
+      c.env.DB,
+    );
+    return result.ok ? ok(c, result.record) : err(c, result.error, 400);
   });
 
 const loadOrCreateCollection = async (

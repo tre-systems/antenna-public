@@ -23,7 +23,7 @@ describe('githubRepo', () => {
         ),
     );
 
-    const result = await githubRepo({ owner: 'example-org', repo: 'collection' });
+    const result = await githubRepo({ owner: 'rgilks', repo: 'collection' });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.points).toHaveLength(3);
@@ -32,7 +32,7 @@ describe('githubRepo', () => {
       'open_issues',
       'forks',
     ]);
-    expect(result.points.every((p) => p.dimensions.repo === 'example-org/collection')).toBe(true);
+    expect(result.points.every((p) => p.dimensions.repo === 'rgilks/collection')).toBe(true);
     expect(result.points[0]?.value).toBe(1234);
   });
 
@@ -43,7 +43,7 @@ describe('githubRepo', () => {
         .fn()
         .mockResolvedValue(new Response('rl', { status: 403, headers: { 'retry-after': '120' } })),
     );
-    const result = await githubRepo({ owner: 'example-org', repo: 'collection' });
+    const result = await githubRepo({ owner: 'rgilks', repo: 'collection' });
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.error.code).toBe('rate_limited');
@@ -80,7 +80,7 @@ describe('githubRepo', () => {
         jsonResponse({ stargazers_count: 1, open_issues_count: 0, forks_count: 0 }),
       );
     vi.stubGlobal('fetch', fetchSpy);
-    await githubRepo({ owner: 'example-org', repo: 'collection' });
+    await githubRepo({ owner: 'rgilks', repo: 'collection' });
     const call = fetchSpy.mock.calls[0];
     const init = call?.[1] as RequestInit | undefined;
     const headers = init?.headers as Record<string, string> | undefined;
@@ -96,14 +96,10 @@ describe('githubRepo', () => {
       );
     vi.stubGlobal('fetch', fetchSpy);
 
-    await githubRepo({
-      owner: 'example-org',
-      repo: 'collection',
-      githubToken: 'test-github-token',
-    });
+    await githubRepo({ owner: 'rgilks', repo: 'collection', githubToken: 'ghp_test' });
 
     const init = fetchSpy.mock.calls[0]?.[1] as RequestInit | undefined;
     const headers = init?.headers as Record<string, string> | undefined;
-    expect(headers?.Authorization).toBe('Bearer test-github-token');
+    expect(headers?.Authorization).toBe('Bearer ghp_test');
   });
 });

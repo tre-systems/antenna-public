@@ -1,11 +1,11 @@
+import { errorMessage } from './error-message';
 import type { Adapter, AdapterError, AdapterResult, DataPoint } from './types';
+import { YAHOO_CHART_REQUEST_INIT, yahooChartUrl, yahooQuotePageUrl } from './yahoo-quote';
 
 type SectorEtf = { readonly ticker: string; readonly sector: string };
 
-// SPDR US sector ETFs. Eleven names that together cover the S&P 500 GICS
-// sectors — each ETF is itself a basket, so a single quote per ticker is a
-// reasonable daily proxy for "how is this sector moving today" without
-// pulling a constituent list.
+// SPDR ETFs covering the S&P 500 GICS sectors: each is already a basket, so one
+// quote per ticker proxies the sector without a constituent list.
 const SECTORS: ReadonlyArray<SectorEtf> = [
   { ticker: 'XLK', sector: 'Technology' },
   { ticker: 'XLC', sector: 'Communication Services' },
@@ -56,9 +56,7 @@ export const sectorMoversYahoo: Adapter = async (): Promise<AdapterResult> => {
     .map((r) => (r.ok ? r.quote : null))
     .filter((q): q is SectorQuote => q !== null);
 
-  // Sort by percent change descending so rank 1 is today's biggest winner
-  // and the last row is the biggest loser. The compact-rows projection then
-  // renders the list in that order.
+  // Descending, so the compact-rows projection renders winners before losers.
   const ranked = quotes
     .map((q) => ({ quote: q, change: percentChange(q) }))
     .sort((a, b) => b.change - a.change);
@@ -75,7 +73,7 @@ export const sectorMoversYahoo: Adapter = async (): Promise<AdapterResult> => {
     value: round2(change),
     unit: '%',
     ts: quote.ts,
-    sourceUrl: quotePageUrl(quote.ticker),
+    sourceUrl: yahooQuotePageUrl(quote.ticker),
   }));
 
   return { ok: true, points, rawPayload: ranked };
@@ -87,24 +85,13 @@ const percentChange = (q: SectorQuote): number =>
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 
 const fetchSector = async (etf: SectorEtf): Promise<SectorFetchResult> => {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(etf.ticker)}?range=5d&interval=1d`;
   let response: Response;
   try {
-    response = await fetch(url, {
-      headers: {
-        accept: 'application/json',
-        'accept-language': 'en-US,en;q=0.9',
-        'user-agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
-      },
-    });
+    response = await fetch(yahooChartUrl(etf.ticker), YAHOO_CHART_REQUEST_INIT);
   } catch (err) {
     return {
       ok: false,
-      error: {
-        code: 'fetch_failed',
-        message: `${etf.ticker}: ${err instanceof Error ? err.message : String(err)}`,
-      },
+      error: { code: 'fetch_failed', message: `${etf.ticker}: ${errorMessage(err)}` },
     };
   }
 
@@ -121,10 +108,7 @@ const fetchSector = async (etf: SectorEtf): Promise<SectorFetchResult> => {
   } catch (err) {
     return {
       ok: false,
-      error: {
-        code: 'parse_failed',
-        message: `${etf.ticker}: ${err instanceof Error ? err.message : String(err)}`,
-      },
+      error: { code: 'parse_failed', message: `${etf.ticker}: ${errorMessage(err)}` },
     };
   }
 
@@ -161,6 +145,3 @@ const fetchSector = async (etf: SectorEtf): Promise<SectorFetchResult> => {
     },
   };
 };
-
-const quotePageUrl = (ticker: string): string =>
-  `https://finance.yahoo.com/quote/${encodeURIComponent(ticker)}/`;

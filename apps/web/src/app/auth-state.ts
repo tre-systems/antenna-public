@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'preact/hooks';
 import { getCurrentUser, signOut, type User } from '../auth';
 import { setSignalSnapshotOwner } from '../signals/signals';
 
-export type AuthState =
+type AuthState =
   | { readonly kind: 'loading' }
   | { readonly kind: 'signed-out' }
   | { readonly kind: 'signed-in'; readonly user: User }

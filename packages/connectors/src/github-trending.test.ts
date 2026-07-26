@@ -116,10 +116,10 @@ describe('githubTrending', () => {
     const fetchSpy = vi.fn().mockResolvedValue(new Response(html, { status: 200 }));
     vi.stubGlobal('fetch', fetchSpy);
 
-    await githubTrending({ limit: 1, githubToken: 'test-github-token' });
+    await githubTrending({ limit: 1, githubToken: 'ghp_test' });
 
     const init = fetchSpy.mock.calls[0]?.[1] as RequestInit | undefined;
     const headers = init?.headers as Record<string, string> | undefined;
-    expect(headers?.Authorization).toBe('Bearer test-github-token');
+    expect(headers?.Authorization).toBe('Bearer ghp_test');
   });
 });

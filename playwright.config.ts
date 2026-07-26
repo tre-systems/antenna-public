@@ -16,7 +16,7 @@ const e2eWorkerVars = [
   '--var BETTER_AUTH_SECRET:e2e-test-secret-000000000000000000000000',
   '--var GOOGLE_CLIENT_ID:e2e-client',
   '--var GOOGLE_CLIENT_SECRET:e2e-secret',
-  '--var ALLOWED_EMAILS:e2e@test.local',
+  '--var ENCRYPTION_KEY:0000000000000000000000000000000000000000000000000000000000000000',
 ].join(' ');
 
 const e2eServerCommand = [
@@ -56,7 +56,14 @@ export default defineConfig({
     ? {
         command: e2eServerCommand,
         url: `${defaultBaseURL}/healthz`,
-        reuseExistingServer: !process.env.CI,
+        // `npm run test:e2e` provisions and migrates a throwaway D1 for the run
+        // and passes it through E2E_WRANGLER_PERSIST_TO. Reusing a server that
+        // is already listening would silently run the suite against whatever
+        // database that process was started with — a leftover dev server
+        // answers /healthz perfectly well and then fails every API call. Refuse
+        // to reuse in that mode so a stray process is an obvious port clash
+        // instead of a wall of confusing test failures.
+        reuseExistingServer: !process.env.CI && !persistTo,
         timeout: 120_000,
       }
     : undefined,

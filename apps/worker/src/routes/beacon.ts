@@ -4,6 +4,7 @@ import { z } from 'zod';
 // Machine-token usage-event ingest for deployed apps that cannot bind the
 // app_usage Analytics Engine dataset directly (anything off-Cloudflare).
 // Mounted before session auth: callers are servers, not signed-in browsers.
+// Contract and instrumentation snippets live in docs/USAGE_RADAR.md.
 
 const SLUG_RX = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 

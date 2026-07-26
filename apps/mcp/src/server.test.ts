@@ -2,6 +2,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { describe, expect, it } from 'vitest';
 import { createAntennaMcpServer, readConfigFromEnv } from './server';
+import { recordingWorkerFetch } from './server-test-fixtures';
 
 describe('createAntennaMcpServer', () => {
   it('registers and serves read-only tools over MCP', async () => {
@@ -10,108 +11,7 @@ describe('createAntennaMcpServer', () => {
     const server = createAntennaMcpServer({
       baseUrl: 'https://collection.example',
       sessionCookie: 'session-value',
-      fetchImpl: (input, init) => {
-        const request = new Request(input, init);
-        const url = request.url;
-        fetches.push(`${request.method} ${url}`);
-        if (request.method === 'POST' && url.endsWith('/api/signals/signal-1/refresh')) {
-          return Promise.resolve(Response.json({ requested: true }));
-        }
-        if (request.method === 'PATCH' && url.endsWith('/api/signals/signal-1')) {
-          return Promise.resolve(
-            Response.json({
-              updated: true,
-              config: { pair: 'GBP-USD' },
-              refresh_seconds: 600,
-              cleared_points: true,
-            }),
-          );
-        }
-        if (request.method === 'DELETE' && url.endsWith('/api/signals/signal-1')) {
-          return Promise.resolve(Response.json({ deleted: true }));
-        }
-        if (
-          request.method === 'PATCH' &&
-          url.endsWith('/api/collections/collection-1/signals/order')
-        ) {
-          return Promise.resolve(
-            Response.json({ updated: true, ordered_signal_ids: ['signal-1', 'signal-2'] }),
-          );
-        }
-        if (request.method === 'GET' && url.endsWith('/api/collections')) {
-          return Promise.resolve(
-            Response.json({
-              collections: [
-                {
-                  id: 'collection-1',
-                  title: 'Antenna',
-                  description: null,
-                  visibility: 'private',
-                  slug: null,
-                  updated_at: 1,
-                  signal_count: 1,
-                },
-              ],
-            }),
-          );
-        }
-        if (request.method === 'POST' && url.endsWith('/api/plan')) {
-          return Promise.resolve(
-            Response.json({
-              id: 'plan-1',
-              collection_id: 'collection-1',
-              prompt: 'track CHF/USD',
-              status: 'proposed',
-              plan: { prompt: 'track CHF/USD', signals: [], unmatched: [] },
-              created_at: 1,
-            }),
-          );
-        }
-        if (request.method === 'POST' && url.endsWith('/api/plan/plan-1/reject')) {
-          return Promise.resolve(Response.json({ ok: true }));
-        }
-        if (request.method === 'POST' && url.endsWith('/api/plan/plan-1/confirm')) {
-          return Promise.resolve(Response.json({ created_signal_ids: ['signal-2'] }));
-        }
-        const body = {
-          id: 'signal-1',
-          template_id: 'github_trending',
-          config: {},
-          refresh_seconds: 300,
-          display: {
-            title: 'GitHub Trending',
-            source_label: 'GitHub',
-            source_url: 'https://github.com/trending',
-          },
-          status: {
-            status: 'live',
-            last_ok_at: 1,
-            last_attempt_at: 1,
-            last_error: null,
-            last_manual_request_at: null,
-          },
-          points: [{ dimensions: null, value: 12, observed_at: 1, fetched_at: 1 }],
-        };
-        if (request.method === 'GET' && url.endsWith('/api/collections/collection-1')) {
-          return Promise.resolve(
-            Response.json({
-              collection: {
-                id: 'collection-1',
-                title: 'Antenna',
-                description: null,
-                visibility: 'private',
-                slug: null,
-                layout: null,
-                updated_at: 1,
-              },
-              signals: [body],
-            }),
-          );
-        }
-        return Promise.resolve(
-          Response.json(url.endsWith('/api/signals/signal-1') ? body : [body]),
-        );
-      },
+      fetchImpl: recordingWorkerFetch(fetches),
     });
     const client = new Client({ name: 'antenna-mcp-test', version: '0.1.0' });
 
@@ -228,15 +128,9 @@ describe('readConfigFromEnv', () => {
     expect(() => readConfigFromEnv({})).toThrow(/ANTENNA_SESSION or ANTENNA_TOKEN/);
   });
 
-  it('requires an explicit deployment base URL', () => {
-    expect(() => readConfigFromEnv({ ANTENNA_TOKEN: 'pbk_test' })).toThrow(/ANTENNA_BASE_URL/);
-    expect(
-      readConfigFromEnv({
-        ANTENNA_BASE_URL: 'https://collection.example',
-        ANTENNA_TOKEN: 'pbk_test',
-      }),
-    ).toEqual({
-      baseUrl: 'https://collection.example',
+  it('uses production as the default base URL', () => {
+    expect(readConfigFromEnv({ ANTENNA_TOKEN: 'pbk_test' })).toEqual({
+      baseUrl: 'https://antenna.example',
       token: 'pbk_test',
       sessionCookie: undefined,
     });

@@ -1,8 +1,9 @@
+import { ACCOUNT_ID_RX, analyticsSqlUrl, SLUG_RX } from './analytics-engine';
+import { errorMessage } from './error-message';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 
-// Reads per-event daily usage counts for one project from a Workers Analytics
-// Engine dataset via the SQL-over-HTTP API. Events are written by the Antenna
-// beacon route or directly by Cloudflare-hosted apps.
+// Events are written by the Antenna beacon route or by Cloudflare-hosted apps
+// directly (docs/USAGE_RADAR.md).
 
 type AppUsageConfig = {
   readonly project: string;
@@ -21,8 +22,6 @@ type SqlRow = {
 const DEFAULT_DAYS = 14;
 const MAX_DAYS = 90;
 const DEFAULT_DATASET = 'app_usage';
-const SLUG_RX = /^[a-z0-9][a-z0-9_-]{0,63}$/;
-const ACCOUNT_ID_RX = /^[0-9a-f]{32}$/;
 
 export const appUsage: Adapter<AppUsageConfig> = async (config): Promise<AdapterResult> => {
   const project = config.project.trim();
@@ -31,8 +30,6 @@ export const appUsage: Adapter<AppUsageConfig> = async (config): Promise<Adapter
   const dataset = (config.dataset ?? DEFAULT_DATASET).trim();
   const days = normaliseDays(config.days);
 
-  // The project and dataset names are interpolated into SQL; the slug shape is
-  // the injection guard, so reject anything outside it outright.
   if (!SLUG_RX.test(project)) {
     return { ok: false, error: { code: 'parse_failed', message: 'invalid project slug' } };
   }
@@ -62,19 +59,13 @@ export const appUsage: Adapter<AppUsageConfig> = async (config): Promise<Adapter
 
   let response: Response;
   try {
-    response = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${accountId}/analytics_engine/sql`,
-      {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${apiToken}` },
-        body: sql,
-      },
-    );
+    response = await fetch(analyticsSqlUrl(accountId), {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiToken}` },
+      body: sql,
+    });
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'fetch_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }
 
   if (response.status === 401 || response.status === 403) {
@@ -84,10 +75,7 @@ export const appUsage: Adapter<AppUsageConfig> = async (config): Promise<Adapter
     };
   }
   if (response.status === 429) {
-    return {
-      ok: false,
-      error: { code: 'rate_limited', message: 'analytics SQL API rate limit' },
-    };
+    return { ok: false, error: { code: 'rate_limited', message: 'analytics SQL API rate limit' } };
   }
   if (!response.ok) {
     return { ok: false, error: { code: 'fetch_failed', message: `HTTP ${response.status}` } };
@@ -97,10 +85,7 @@ export const appUsage: Adapter<AppUsageConfig> = async (config): Promise<Adapter
   try {
     payload = await response.json();
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'parse_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
   }
 
   const rows = readRows(payload);

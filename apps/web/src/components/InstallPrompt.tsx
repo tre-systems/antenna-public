@@ -1,11 +1,5 @@
-// Subtle install affordance. The browser fires `beforeinstallprompt` once it
-// decides Antenna meets the install criteria (HTTPS, manifest, SW, engagement
-// heuristics). We stash that event and surface a small button next to the
-// theme toggle. Clicking calls the saved prompt; dismissing remembers the
-// choice in localStorage so we don't pester the user.
-//
-// iOS/Safari never fires `beforeinstallprompt` — install there is via the
-// Share menu's "Add to Home Screen" — so this component is invisible there.
+// iOS/Safari never fires `beforeinstallprompt` (install is via the Share menu),
+// so this affordance is invisible there.
 
 import { useEffect, useState } from 'preact/hooks';
 
@@ -25,8 +19,7 @@ export function InstallPrompt() {
     try {
       if (localStorage.getItem(DISMISSED_KEY) === '1') return;
     } catch {
-      // localStorage may throw in private mode; ignore — worst case we offer
-      // install once per page load.
+      // localStorage throws in private mode; worst case we offer install again.
     }
     const handler = (raw: Event) => {
       raw.preventDefault();

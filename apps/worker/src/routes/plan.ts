@@ -92,21 +92,21 @@ export const planRoute = new Hono<{ Bindings: Bindings; Variables: AuthVars }>()
     const raw: unknown = (await c.req.json().catch(() => ({}))) ?? {};
     const parsed = planConfirmSchema.safeParse(raw);
     if (!parsed.success) return err(c, 'invalid_body', 400);
-    try {
-      const user = c.get('user');
-      const collectionId = await collectionIdForOwnedPlan(c.env, user.id, c.req.param('id'));
-      if (!collectionId) return err(c, 'not_found', 404);
-      const result = await confirmPlan(c.env, {
-        plan_id: c.req.param('id'),
-        collection_id: collectionId,
-        edited_signals: parsed.data.edited_signals,
-      });
-      return ok(c, result);
-    } catch (caught) {
-      const message = caught instanceof Error ? caught.message : 'unknown_error';
-      const status = message === 'plan not found' ? 404 : 409;
-      return err(c, message, status);
+    const user = c.get('user');
+    const collectionId = await collectionIdForOwnedPlan(c.env, user.id, c.req.param('id'));
+    if (!collectionId) return err(c, 'not_found', 404);
+
+    const result = await confirmPlan(c.env, {
+      plan_id: c.req.param('id'),
+      collection_id: collectionId,
+      edited_signals: parsed.data.edited_signals,
+    });
+    if (!result.ok) {
+      // A vanished plan is the only 404 here; everything else is a conflict
+      // with the current state.
+      return err(c, result.error, result.error === 'plan not found' ? 404 : 409);
     }
+    return ok(c, { created_signal_ids: result.created_signal_ids });
   })
   .post('/:id/reject', async (c) => {
     const user = c.get('user');

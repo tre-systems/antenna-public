@@ -16,7 +16,7 @@ export const cloudflareIncidentsTemplate: ConnectorTemplate = {
     /\b(?:d1|r2|workers?\s+kv)\b.*\b(?:status|incidents?|outage|down|ok)\b/i,
   ],
   paramExtractors: {},
-  rightsStatus: 'needs-review',
+  rightsStatus: 'public',
   defaultRefreshSeconds: 900,
   pointRetentionDays: 90,
   adapter: () => cloudflareIncidents({ lookbackHours: 24, limit: 3 }),

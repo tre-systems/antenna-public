@@ -1,6 +1,6 @@
 import { fetchJson } from './fetch-json';
 import type { Adapter, AdapterResult, DataPoint } from './types';
-import { YAHOO_CHART_REQUEST_INIT } from './yahoo-quote';
+import { YAHOO_CHART_REQUEST_INIT, yahooQuotePageUrl } from './yahoo-quote';
 
 export type YahooMarketHistoryConfig = {
   readonly symbol: string;
@@ -40,7 +40,7 @@ export const yahooMarketHistory: Adapter<YahooMarketHistoryConfig> = async (
   const fetched = await fetchJson(url, YAHOO_CHART_REQUEST_INIT);
   if (!fetched.ok) return fetched;
 
-  const points = parseYahooChart(fetched.body, symbol, quotePageUrl(symbol));
+  const points = parseYahooChart(fetched.body, symbol, yahooQuotePageUrl(symbol));
   if (points.length === 0) {
     return { ok: false, error: { code: 'parse_failed', message: 'no close prices parsed' } };
   }
@@ -78,6 +78,3 @@ const parseYahooChart = (
 
   return points;
 };
-
-const quotePageUrl = (symbol: string): string =>
-  `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}/`;

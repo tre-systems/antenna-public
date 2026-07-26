@@ -6,7 +6,7 @@ import { notifyCollection } from '../notify';
 import { toPointRow } from '../point-row';
 import { evaluateAlertRules } from './alerts';
 import { recordSnapshotState, snapshotDecision } from './data-change';
-import { logDispatch } from './log';
+import { logEvent } from '../log';
 import {
   failSignal,
   markSignalStale,
@@ -157,7 +157,7 @@ const notifySignalUpdated = async (
 };
 
 const logSuccessfulSignal = (ctx: DispatchContext, signal: SignalRow, pointCount: number): void => {
-  logDispatch({
+  logEvent({
     event: 'signal_dispatch_completed',
     run_id: ctx.runId,
     signal_id: signal.id,

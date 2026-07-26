@@ -1,5 +1,3 @@
-// Maps adapter DataPoints into typed `signal_points` rows.
-
 import type { DataPoint } from '@antenna/connectors';
 import type { signalPoints } from '../db/schema';
 

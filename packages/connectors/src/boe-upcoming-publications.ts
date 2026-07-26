@@ -1,5 +1,6 @@
+import { positiveInt, stringValue } from './config-values';
+import { errorMessage } from './error-message';
 import type { Adapter, AdapterResult, DataPoint } from './types';
-import { extractHtmlElements, htmlAttribute, htmlToText } from './html-text';
 
 type BoeUpcomingPublicationsConfig = {
   readonly sourceUrl?: string;
@@ -41,10 +42,7 @@ export const boeUpcomingPublications: Adapter<BoeUpcomingPublicationsConfig> = a
       headers: { Accept: 'text/html,application/xhtml+xml', 'User-Agent': 'antenna' },
     });
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'fetch_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }
 
   if (!response.ok) {
@@ -55,10 +53,7 @@ export const boeUpcomingPublications: Adapter<BoeUpcomingPublicationsConfig> = a
   try {
     html = await response.text();
   } catch (err) {
-    return {
-      ok: false,
-      error: { code: 'parse_failed', message: err instanceof Error ? err.message : String(err) },
-    };
+    return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
   }
 
   const now = Date.now();
@@ -93,18 +88,19 @@ export const parseBoeUpcomingPublications = (html: string, now: number): BoePubl
   const section = sectionAfterHeading(html, 'Upcoming key publications');
   if (!section) return [];
 
-  const anchors = extractHtmlElements(section, 'a').flatMap((anchor) => {
-    const href = htmlAttribute(anchor.openingTag, 'href');
-    const label = htmlToText(anchor.innerHtml);
-    if (!href || !label) return [];
-    const parsed = parsePublicationLabel(label, now);
-    if (!parsed) return [];
-    return [{ ...parsed, url: resolveUrl(href) }];
-  });
+  const anchors = [...section.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)].flatMap(
+    (match) => {
+      const href = match[1];
+      const label = normaliseText(match[2] ?? '');
+      if (!href || !label) return [];
+      const parsed = parsePublicationLabel(label, now);
+      if (!parsed) return [];
+      return [{ ...parsed, url: resolveUrl(href) }];
+    },
+  );
 
-  // The BoE page sometimes lists the same publication twice (once in the
-  // headline strip, once inside the section body), which would duplicate
-  // the row on the card. Dedupe on title + scheduled date.
+  // The BoE page lists some publications twice (headline strip and section
+  // body), so dedupe on title + scheduled date.
   const seen = new Set<string>();
   return anchors
     .sort((a, b) => a.dateMs - b.dateMs || a.title.localeCompare(b.title))
@@ -177,8 +173,16 @@ const resolveUrl = (href: string): string => {
   }
 };
 
-const stringValue = (value: unknown): string | undefined =>
-  typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
+const normaliseText = (html: string): string =>
+  decodeEntities(html.replace(/<[^>]*>/g, ' '))
+    .replace(/\s+/g, ' ')
+    .trim();
 
-const positiveInt = (value: unknown): number | undefined =>
-  typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : undefined;
+const decodeEntities = (value: string): string =>
+  value
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x2F;/g, '/');

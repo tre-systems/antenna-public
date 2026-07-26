@@ -23,7 +23,7 @@ export const aaHighlightsTemplate: ConnectorTemplate<AaHighlightsConfig> = {
   ],
   paramExtractors: {
     category: (prompt: string): string | undefined => {
-      if (/speed|tokens?\s*(?:\/|per)\s*sec/i.test(prompt)) return 'speed';
+      if (/speed|tok.*sec|tokens?\s+per\s+sec/i.test(prompt)) return 'speed';
       if (/price|cost|cheap/i.test(prompt)) return 'price';
       if (/intelligence|benchmark|index|ranking/i.test(prompt)) return 'intelligence';
       return undefined;

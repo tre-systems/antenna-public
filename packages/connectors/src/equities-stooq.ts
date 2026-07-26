@@ -113,9 +113,8 @@ const rowToPoint = (row: string[]): DataPoint | null => {
   };
 };
 
-// Stooq encodes exchange/region in the ticker suffix (`.UK` → London, `.US` →
-// US listings, etc.). Map the common ones to a currency so values aren't
-// rendered as bare numbers. Falls back to '' when the suffix is unknown.
+// Stooq encodes the exchange in the ticker suffix; mapping the common ones
+// keeps values from rendering as bare numbers.
 const TICKER_CURRENCY: Record<string, string> = {
   UK: 'GBP',
   L: 'GBP',

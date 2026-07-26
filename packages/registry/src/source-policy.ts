@@ -15,44 +15,40 @@ export type SourcePolicy = {
 };
 
 const REVIEW_DATE = '2026-05-21';
-const PUBLICATION_REVIEW_DATE = '2026-07-24';
 
-const SOURCE_POLICIES = {
+const SOURCE_POLICIES: Readonly<Record<string, SourcePolicy>> = {
   'fx-pair': {
     sourceId: 'frankfurter-ecb',
     label: 'Frankfurter (ECB)',
-    sourceUrl: 'https://frankfurter.dev/',
-    rightsStatus: 'with-attribution',
+    sourceUrl: 'https://www.frankfurter.app/',
+    rightsStatus: 'public',
     executionMode: 'public_cloud',
     publicDisplayEligible: true,
     attribution: 'Frankfurter, using European Central Bank reference rates',
-    reviewNotes:
-      'Frankfurter documents its public API as free for commercial use; retain Frankfurter and underlying provider attribution.',
-    lastReviewed: PUBLICATION_REVIEW_DATE,
+    reviewNotes: 'Public no-key API for ECB reference rates.',
+    lastReviewed: REVIEW_DATE,
   },
   'crypto-watchlist': {
     sourceId: 'coinbase-public',
     label: 'Coinbase',
     sourceUrl: 'https://www.coinbase.com/price',
-    rightsStatus: 'needs-review',
+    rightsStatus: 'public',
     executionMode: 'public_cloud',
-    publicDisplayEligible: false,
+    publicDisplayEligible: true,
     attribution: 'Coinbase public price endpoints',
-    reviewNotes:
-      'Coinbase market-data terms restrict third-party redistribution and display without written consent.',
-    lastReviewed: PUBLICATION_REVIEW_DATE,
+    reviewNotes: 'Public no-key spot price data; suitable for dogfood collections.',
+    lastReviewed: REVIEW_DATE,
   },
   'crypto-history': {
     sourceId: 'coinbase-public',
     label: 'Coinbase',
     sourceUrl: 'https://www.coinbase.com/price',
-    rightsStatus: 'needs-review',
+    rightsStatus: 'public',
     executionMode: 'public_cloud',
-    publicDisplayEligible: false,
+    publicDisplayEligible: true,
     attribution: 'Coinbase public price endpoints',
-    reviewNotes:
-      'Coinbase market-data terms restrict third-party redistribution and display without written consent.',
-    lastReviewed: PUBLICATION_REVIEW_DATE,
+    reviewNotes: 'Public no-key spot price data; suitable for dogfood collections.',
+    lastReviewed: REVIEW_DATE,
   },
   'market-history': {
     sourceId: 'yahoo-finance-chart',
@@ -62,7 +58,7 @@ const SOURCE_POLICIES = {
     executionMode: 'public_cloud',
     publicDisplayEligible: false,
     attribution: 'Yahoo Finance',
-    reviewNotes: 'Private-only stopgap for yearly charts; replace before public sharing.',
+    reviewNotes: 'Private dogfood stopgap for yearly charts; replace before public sharing.',
     lastReviewed: REVIEW_DATE,
   },
   'market-overview': {
@@ -74,7 +70,7 @@ const SOURCE_POLICIES = {
     publicDisplayEligible: false,
     attribution: 'Stooq with Yahoo Finance fallback',
     reviewNotes:
-      'Private-only market overview; Stooq is primary, Yahoo Finance is a fallback, so replace before public sharing.',
+      'Private dogfood market overview; Stooq is primary, Yahoo Finance is a fallback, so replace before public sharing.',
     lastReviewed: '2026-05-25',
   },
   'macro-market-history': {
@@ -85,7 +81,7 @@ const SOURCE_POLICIES = {
     executionMode: 'public_cloud',
     publicDisplayEligible: false,
     attribution: 'Configured public macro data source per preset',
-    reviewNotes: 'No-key private default; review each preset before public display.',
+    reviewNotes: 'No-key dogfood default; review each preset before public display.',
     lastReviewed: REVIEW_DATE,
   },
   'trading-economics-market': {
@@ -103,25 +99,23 @@ const SOURCE_POLICIES = {
     sourceId: 'open-meteo-weather',
     label: 'Open-Meteo',
     sourceUrl: 'https://open-meteo.com/',
-    rightsStatus: 'with-attribution',
+    rightsStatus: 'public',
     executionMode: 'public_cloud',
     publicDisplayEligible: true,
     attribution: 'Open-Meteo',
-    reviewNotes:
-      'Open-Meteo API data is CC BY 4.0; display must link and credit Open-Meteo. The free hosted endpoint is non-commercial.',
-    lastReviewed: PUBLICATION_REVIEW_DATE,
+    reviewNotes: 'Public no-key weather forecast API.',
+    lastReviewed: REVIEW_DATE,
   },
   airquality: {
     sourceId: 'open-meteo-air-quality',
     label: 'Open-Meteo Air Quality',
     sourceUrl: 'https://open-meteo.com/en/docs/air-quality-api',
-    rightsStatus: 'with-attribution',
+    rightsStatus: 'public',
     executionMode: 'public_cloud',
     publicDisplayEligible: true,
     attribution: 'Open-Meteo Air Quality',
-    reviewNotes:
-      'Open-Meteo API data is CC BY 4.0; display must link and credit Open-Meteo. The free hosted endpoint is non-commercial.',
-    lastReviewed: PUBLICATION_REVIEW_DATE,
+    reviewNotes: 'Public no-key air quality API.',
+    lastReviewed: REVIEW_DATE,
   },
   'equity-watchlist': {
     sourceId: 'stooq-yahoo-market-data',
@@ -132,7 +126,7 @@ const SOURCE_POLICIES = {
     publicDisplayEligible: false,
     attribution: 'Stooq with Yahoo Finance fallback',
     reviewNotes:
-      'Private-only watchlist quotes; Stooq is primary, Yahoo Finance is a fallback, so replace before public sharing.',
+      'Private dogfood watchlist quotes; Stooq is primary, Yahoo Finance is a fallback, so replace before public sharing.',
     lastReviewed: '2026-05-25',
   },
   'sector-movers': {
@@ -144,7 +138,7 @@ const SOURCE_POLICIES = {
     publicDisplayEligible: false,
     attribution: 'Yahoo Finance',
     reviewNotes:
-      'Private-only snapshot of SPDR US sector ETF day-over-day moves; replace before public sharing.',
+      'Private dogfood snapshot of SPDR US sector ETF day-over-day moves; replace before public sharing.',
     lastReviewed: REVIEW_DATE,
   },
   'github-trending': {
@@ -162,25 +156,24 @@ const SOURCE_POLICIES = {
     sourceId: 'github-api-public',
     label: 'GitHub',
     sourceUrl: 'https://github.com/',
-    rightsStatus: 'with-attribution',
+    rightsStatus: 'public',
     executionMode: 'public_cloud',
     publicDisplayEligible: true,
     attribution: 'GitHub API',
-    reviewNotes:
-      'Public repository facts read through the GitHub API; retain a link to the repository and comply with GitHub API terms.',
-    lastReviewed: PUBLICATION_REVIEW_DATE,
+    reviewNotes: 'Public repo API data.',
+    lastReviewed: REVIEW_DATE,
   },
   'github-security-advisories': {
     sourceId: 'github-advisory-api',
     label: 'GitHub Security Advisories',
     sourceUrl: 'https://github.com/advisories',
-    rightsStatus: 'with-attribution',
+    rightsStatus: 'public',
     executionMode: 'public_cloud',
     publicDisplayEligible: true,
     attribution: 'GitHub Advisory Database',
     reviewNotes:
-      'Public GitHub Advisory Database REST API for reviewed security advisories; no key required for low-volume use.',
-    lastReviewed: PUBLICATION_REVIEW_DATE,
+      'Public GitHub Advisory Database REST API for reviewed security advisories; no key required for low-volume dogfood use.',
+    lastReviewed: REVIEW_DATE,
   },
   'karpathy-jobs-snapshot': {
     sourceId: 'karpathy-jobs',
@@ -190,7 +183,7 @@ const SOURCE_POLICIES = {
     executionMode: 'public_cloud',
     publicDisplayEligible: false,
     attribution: 'karpathy.ai/jobs and BLS',
-    reviewNotes: 'Private-only signal; public display needs source-rights review.',
+    reviewNotes: 'Private dogfood signal; public display needs source-rights review.',
     lastReviewed: REVIEW_DATE,
   },
   'cisa-kev-recent': {
@@ -204,41 +197,38 @@ const SOURCE_POLICIES = {
       'Cybersecurity and Infrastructure Security Agency Known Exploited Vulnerabilities Catalog',
     reviewNotes:
       'CISA publishes the KEV catalog as a public machine-readable JSON feed for vulnerability management prioritization.',
-    lastReviewed: PUBLICATION_REVIEW_DATE,
+    lastReviewed: REVIEW_DATE,
   },
   'cloudflare-incidents': {
     sourceId: 'cloudflare-status',
     label: 'Cloudflare Status',
     sourceUrl: 'https://www.cloudflarestatus.com/',
-    rightsStatus: 'needs-review',
+    rightsStatus: 'public',
     executionMode: 'public_cloud',
-    publicDisplayEligible: false,
+    publicDisplayEligible: true,
     attribution: 'Cloudflare Status',
     reviewNotes:
-      'The public Statuspage API is suitable for private monitoring; third-party public display terms need explicit review.',
-    lastReviewed: PUBLICATION_REVIEW_DATE,
+      'Statuspage public JSON feed for current and recent Cloudflare incidents; no key required.',
+    lastReviewed: REVIEW_DATE,
   },
   'uk-economic-calendar': {
     sourceId: 'bank-of-england-upcoming-events',
     label: 'Bank of England',
     sourceUrl: 'https://www.bankofengland.co.uk/events/upcoming-events',
-    rightsStatus: 'needs-review',
+    rightsStatus: 'public',
     executionMode: 'public_cloud',
-    publicDisplayEligible: false,
+    publicDisplayEligible: true,
     attribution: 'Bank of England upcoming events',
     reviewNotes:
-      'Bank of England database data can use the Open Government Licence, but this connector reads the upcoming-events page; public reuse needs a page-specific review.',
-    lastReviewed: PUBLICATION_REVIEW_DATE,
+      'Public Bank of England upcoming events page. Initial connector covers official upcoming key publications; ONS CPI/GDP/employment coverage remains a later source decision.',
+    lastReviewed: REVIEW_DATE,
   },
   'manual-metric': {
     sourceId: 'manual-entry',
     label: 'Manual entry',
     sourceUrl: 'https://antenna.example/',
     rightsStatus: 'public',
-    // The adapter performs no network access: it materialises the value already
-    // stored in the owner's private signal config. Treating that as private
-    // cloud execution lets the normal dispatcher create a point and healthy
-    // status without widening who may read the value.
+    // No network access; private_cloud keeps the owner's own value out of shared reads.
     executionMode: 'private_cloud',
     publicDisplayEligible: false,
     attribution: 'User-provided value',
@@ -257,6 +247,19 @@ const SOURCE_POLICIES = {
     reviewNotes:
       'Private owner-entered operational spend. Manual values are not public-display eligible and contain no billing credentials.',
     lastReviewed: '2026-07-19',
+  },
+  'antenna-users': {
+    sourceId: 'antenna-deployment',
+    label: 'Antenna deployment',
+    sourceUrl: 'https://antenna.example/',
+    rightsStatus: 'requires-auth',
+    // No upstream source; the Worker injects aggregates from its own D1 at dispatch.
+    executionMode: 'private_cloud',
+    publicDisplayEligible: false,
+    attribution: 'Own deployment metrics',
+    reviewNotes:
+      'Deployment-owner adoption counts read from D1. Aggregates only — no user identifiers reach a point — and never public-display eligible.',
+    lastReviewed: '2026-07-25',
   },
   'rest-metric': {
     sourceId: 'generic-rest',
@@ -341,12 +344,22 @@ const SOURCE_POLICIES = {
       'HTML-scraped leaderboard; public data but no JSON API — attribution required and public display needs review.',
     lastReviewed: '2026-05-22',
   },
-} satisfies Record<string, SourcePolicy>;
-
-const SOURCE_POLICY_BY_TEMPLATE: Readonly<Record<string, SourcePolicy>> = SOURCE_POLICIES;
+  'reddit-problems': {
+    sourceId: 'reddit-public-listings',
+    label: 'Reddit',
+    sourceUrl: 'https://www.reddit.com/',
+    rightsStatus: 'with-attribution',
+    executionMode: 'public_cloud',
+    publicDisplayEligible: false,
+    attribution: 'Reddit public subreddit listings',
+    reviewNotes:
+      'Anonymous public listing JSON. Post authors are never normalised or stored. Reddit Data API terms restrict commercial use of free access, so public display needs rights review before any sharing.',
+    lastReviewed: '2026-07-25',
+  },
+};
 
 export const sourcePolicyForTemplate = (templateId: string): SourcePolicy | undefined =>
-  SOURCE_POLICY_BY_TEMPLATE[templateId];
+  SOURCE_POLICIES[templateId];
 
 export const sourceLabelForTemplate = (templateId: string, fallback: string): string =>
   sourcePolicyForTemplate(templateId)?.label ?? fallback;

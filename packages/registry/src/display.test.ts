@@ -18,7 +18,7 @@ describe('resolveTemplateDisplay', () => {
     expect(resolveTemplateDisplay('fx-pair', 'FX pair', { base: 'eur', quote: 'usd' })).toEqual({
       title: 'eur/usd',
       sourceLabel: 'Frankfurter (ECB)',
-      sourceUrl: 'https://frankfurter.dev/?from=EUR&to=USD',
+      sourceUrl: 'https://www.frankfurter.app/?from=EUR&to=USD',
     });
   });
 
@@ -55,13 +55,13 @@ describe('resolveTemplateDisplay', () => {
     });
   });
 
-  it('resolves market history symbols and explicit label overrides', () => {
+  it('resolves market history friendly labels and explicit label overrides', () => {
     expect(
-      resolveTemplateDisplay('market-history', 'Market history', { symbol: 'MSFT' }),
+      resolveTemplateDisplay('market-history', 'Market history', { symbol: '0P000125KV.L' }),
     ).toMatchObject({
-      title: 'MSFT 1Y',
+      title: 'Fidelity Index World P 1Y',
       sourceLabel: 'Yahoo Finance',
-      sourceUrl: 'https://finance.yahoo.com/quote/MSFT/',
+      sourceUrl: 'https://finance.yahoo.com/quote/0P000125KV.L/',
     });
 
     expect(
@@ -74,7 +74,7 @@ describe('resolveTemplateDisplay', () => {
     });
   });
 
-  it('resolves specialised radar titles in the registry', () => {
+  it('resolves specialised dogfood radar titles in the registry', () => {
     expect(resolveTemplateDisplay('sector-movers', 'Fallback', {})).toMatchObject({
       title: 'US sector movers',
       sourceLabel: 'Yahoo Finance',
@@ -95,12 +95,18 @@ describe('resolveTemplateDisplay', () => {
   });
 
   it('names the app in usage titles so multiple usage cards are distinguishable', () => {
-    expect(resolveTemplateDisplay('app-usage', 'App usage', { project: 'example-app' }).title).toBe(
-      'Example-app usage',
+    expect(resolveTemplateDisplay('app-usage', 'App usage', { project: 'comprehendo' }).title).toBe(
+      'Comprehendo usage',
     );
     expect(
-      resolveTemplateDisplay('app-usage', 'App usage', { project: 'sample-service' }).title,
-    ).toBe('Sample-service usage');
+      resolveTemplateDisplay('app-usage', 'App usage', { project: 'swade-toolbox' }).title,
+    ).toBe('Swade-toolbox usage');
+    expect(resolveTemplateDisplay('app-usage', 'App usage', { project: 'rgou' }).title).toBe(
+      'Royal Game of Ur usage',
+    );
+    expect(resolveTemplateDisplay('app-usage', 'App usage', { project: 'talata' }).title).toBe(
+      'Talata usage',
+    );
     // Missing project falls back rather than showing a bare slug.
     expect(resolveTemplateDisplay('app-usage', 'App usage', {}).title).toBe('App usage');
     expect(resolveTemplateDisplay('cloudflare-analytics', 'Fallback', {}).title).toBe(
@@ -129,79 +135,5 @@ describe('resolveTemplateDisplay', () => {
       sourceLabel: 'Terminal Bench',
       sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.0',
     });
-  });
-});
-
-describe('resolvePointDisplay', () => {
-  it('uses rank labels before metric labels for ranked rows', () => {
-    expect(
-      resolvePointDisplay('cisa-kev-recent', {
-        dimensions: { metric: 'recent_vulnerability', rank: 2 },
-      }),
-    ).toEqual({ label: '#2', sourceUrl: null });
-    expect(
-      resolvePointDisplay('github-security-advisories', {
-        dimensions: { metric: 'advisory', rank: '1' },
-      }),
-    ).toEqual({ label: '#1', sourceUrl: null });
-  });
-
-  it('returns compact labels for common metric points', () => {
-    expect(
-      resolvePointDisplay('weather', {
-        dimensions: { metric: 'temperature', location: 'London' },
-      }),
-    ).toEqual({ label: 'Temp', sourceUrl: null });
-    expect(
-      resolvePointDisplay('airquality', {
-        dimensions: { metric: 'aqi', location: 'London' },
-      }),
-    ).toEqual({ label: 'AQI', sourceUrl: null });
-    expect(
-      resolvePointDisplay('karpathy-jobs-snapshot', {
-        dimensions: { metric: 'weighted_ai_exposure' },
-      }),
-    ).toEqual({ label: 'AI exposure', sourceUrl: null });
-  });
-
-  it('links row-level equity and crypto points to their source pages', () => {
-    expect(
-      resolvePointDisplay('equity-watchlist', {
-        dimensions: { ticker: 'VTI.US' },
-      }),
-    ).toEqual({ label: 'VTI', sourceUrl: 'https://stooq.com/q/?s=vti.us' });
-    expect(
-      resolvePointDisplay('crypto-watchlist', {
-        dimensions: { pair: 'BTC-USD' },
-      }),
-    ).toEqual({ label: 'BTC-USD', sourceUrl: 'https://www.coinbase.com/price/btc' });
-  });
-
-  it('extracts GitHub Trending repo links from value text', () => {
-    expect(
-      resolvePointDisplay('github-trending', {
-        dimensions: { rank: '1' },
-        valueText: 'openai/codex · TypeScript · +120 stars today',
-      }),
-    ).toEqual({ label: '#1', sourceUrl: 'https://github.com/openai/codex' });
-  });
-
-  it('uses the market proxy label for market overview rows', () => {
-    expect(
-      resolvePointDisplay('market-overview', {
-        dimensions: { metric: 'market_proxy_change', label: 'US equities', ticker: 'VTI.US' },
-        sourceUrl: 'https://stooq.com/q/?s=vti.us',
-      }),
-    ).toEqual({ label: 'US equities', sourceUrl: 'https://stooq.com/q/?s=vti.us' });
-  });
-
-  it('prefers adapter-provided point source URLs', () => {
-    expect(
-      resolvePointDisplay('github-trending', {
-        dimensions: { rank: '2' },
-        valueText: 'ignored/repo · Go',
-        sourceUrl: 'https://example.test/custom',
-      }),
-    ).toEqual({ label: '#2', sourceUrl: 'https://example.test/custom' });
   });
 });

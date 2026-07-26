@@ -57,6 +57,19 @@ export const listCollectionSignals = (
     .all();
 };
 
+export const listCollectionSignalIds = async (
+  client: Client,
+  collectionId: string,
+): Promise<ReadonlyArray<string>> => {
+  const rows = await client
+    .select({ id: signals.id })
+    .from(signals)
+    .where(eq(signals.collectionId, collectionId))
+    .orderBy(asc(signals.position))
+    .all();
+  return rows.map((row) => row.id);
+};
+
 export const listCollectionSignalsWithStatus = (
   client: Client,
   collectionId: string,
@@ -68,19 +81,6 @@ export const listCollectionSignalsWithStatus = (
     .where(eq(signals.collectionId, collectionId))
     .orderBy(asc(signals.position))
     .all();
-};
-
-export const loadPublicCollectionBySlug = async (
-  client: Client,
-  slug: string,
-): Promise<CollectionRow | undefined> => {
-  const [row] = await client
-    .select()
-    .from(collections)
-    .where(and(eq(collections.slug, slug), eq(collections.visibility, 'public')))
-    .limit(1)
-    .all();
-  return row;
 };
 
 export const loadPublishedCollectionBySlug = async (

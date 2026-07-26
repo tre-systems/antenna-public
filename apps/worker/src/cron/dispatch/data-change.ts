@@ -7,7 +7,7 @@ import type { Client, StatusRow } from './types';
 
 const CHECKPOINT_MS = 24 * 60 * 60 * 1000;
 
-export type SnapshotDecision = {
+type SnapshotDecision = {
   readonly hash: string;
   readonly changed: boolean;
   readonly persist: boolean;
@@ -41,7 +41,9 @@ export const recordSnapshotState = async (
     .run();
 };
 
-export const snapshotHash = async (points: ReadonlyArray<DataPoint>): Promise<string> => {
+// Canonical form — sorted dimension keys, sorted rows — so an unchanged
+// snapshot cannot hash differently just because the source reordered it.
+const snapshotHash = async (points: ReadonlyArray<DataPoint>): Promise<string> => {
   const canonical = points
     .map((point) => ({
       metric: metricKeyFor(point),

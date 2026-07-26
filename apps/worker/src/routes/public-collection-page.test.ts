@@ -126,7 +126,7 @@ const seedSignal = (
       config:
         opts.templateId === 'fx-pair'
           ? (JSON.stringify({ base: 'EUR', quote: 'USD' }) as unknown as schema.SignalConfig)
-          : (JSON.stringify({ symbol: 'AZN.L' }) as unknown as schema.SignalConfig),
+          : (JSON.stringify({ symbol: 'BA.L' }) as unknown as schema.SignalConfig),
       refreshSeconds: 900,
       position: opts.position,
       visibility: opts.visibility,

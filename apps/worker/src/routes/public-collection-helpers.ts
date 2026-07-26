@@ -1,11 +1,27 @@
+import { and, eq } from 'drizzle-orm';
 import { sourcePolicyForTemplate } from '@antenna/registry';
 import type { CollectionRecord, PublicApiSignal, SignalStatus } from '@antenna/shared';
-import type { signals } from '../db/schema';
+import type { Db } from '../db/client';
+import { collections, type signals } from '../db/schema';
 import { canReadSignalWithSourcePolicy } from '../policy/source-access';
 import type { buildSignal } from './signals';
 import { toCollectionRecord } from './collection-record';
 
 type SignalRow = typeof signals.$inferSelect;
+type CollectionRow = typeof collections.$inferSelect;
+
+export const loadPublicCollectionBySlug = async (
+  client: Db,
+  slug: string,
+): Promise<CollectionRow | undefined> => {
+  const [row] = await client
+    .select()
+    .from(collections)
+    .where(and(eq(collections.slug, slug), eq(collections.visibility, 'public')))
+    .limit(1)
+    .all();
+  return row;
+};
 
 export const isPublicReadableSignal = (signal: SignalRow): boolean => {
   const decision = canReadSignalWithSourcePolicy({
@@ -51,7 +67,7 @@ export const toPublicSignal = (signal: ReturnType<typeof buildSignal>): PublicAp
 });
 
 // HMAC the requester's IP + User-Agent so abuse reports can be rate-limited and
-// de-duplicated without storing QQQ. The key matters: a plain SHA-256 of
+// de-duplicated without storing PII. The key matters: a plain SHA-256 of
 // `ip\nUA` is brute-forceable (the IP space plus a handful of common UA strings
 // is small enough to confirm a specific reporter by recomputing the digest).
 // Keying with a server secret makes the hash uncomputable off-server. The HMAC

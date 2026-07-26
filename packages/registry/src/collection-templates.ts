@@ -42,6 +42,42 @@ export const collectionTemplates = [
     ],
   },
   {
+    id: 'problem-radar',
+    label: 'Problem Radar',
+    description:
+      'Problem-shaped posts from subreddits where people describe unmet needs, ranked for follow-up.',
+    summary: 'Business operations, spreadsheet, bookkeeping, and developer tooling pain points.',
+    // Mismatched refresh intervals on purpose: Reddit meters anonymous access per
+    // source IP, so equal intervals would keep these signals in lockstep and the
+    // same two would lose the rate-limit race on every tick.
+    signals: [
+      {
+        templateId: 'reddit-problems',
+        title: 'Small business problems',
+        config: { subreddits: ['smallbusiness'], lookbackHours: 24, limit: 5 },
+        refreshSeconds: 21_600,
+      },
+      {
+        templateId: 'reddit-problems',
+        title: 'Spreadsheet problems',
+        config: { subreddits: ['excel'], lookbackHours: 24, limit: 5 },
+        refreshSeconds: 22_500,
+      },
+      {
+        templateId: 'reddit-problems',
+        title: 'Bookkeeping problems',
+        config: { subreddits: ['bookkeeping'], lookbackHours: 48, limit: 5 },
+        refreshSeconds: 23_700,
+      },
+      {
+        templateId: 'reddit-problems',
+        title: 'Developer tooling problems',
+        config: { subreddits: ['webdev'], lookbackHours: 24, limit: 5 },
+        refreshSeconds: 25_200,
+      },
+    ],
+  },
+  {
     id: 'trader-morning',
     label: 'Trader Morning',
     description:

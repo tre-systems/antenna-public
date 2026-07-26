@@ -1,6 +1,4 @@
-// Human-readable labels for connector config keys. Used in plan-confirmation
-// forms so users see "Calendar ID" instead of the raw `calendarId` key.
-// Falls back to a sentence-cased version when the raw name isn't mapped.
+// Human-readable labels for connector config keys, so plan forms show "Calendar ID", not `calendarId`.
 
 const LABELS: Record<string, string> = {
   base: 'Base currency',

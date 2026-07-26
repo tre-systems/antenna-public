@@ -3,16 +3,10 @@ import { z } from 'zod';
 import { type ConnectorTemplate } from './types';
 
 const URL_RX = /https?:\/\/\S+/i;
-const TRAILING_URL_PUNCTUATION = new Set([')', '.', ',', '!', '?']);
 
 const extractUrl = (prompt: string): string | undefined => {
   const match = URL_RX.exec(prompt);
-  const candidate = match?.[0];
-  if (candidate === undefined) return undefined;
-
-  let end = candidate.length;
-  while (end > 0 && TRAILING_URL_PUNCTUATION.has(candidate[end - 1] ?? '')) end -= 1;
-  return candidate.slice(0, end);
+  return match?.[0]?.replace(/[).,!?]+$/, '');
 };
 
 // The planner has to prompt for jsonPath; there's no reliable way to guess.

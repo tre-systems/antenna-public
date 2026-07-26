@@ -133,7 +133,7 @@ const seedAlert = (
       value: 1.09,
       previousValue: 1.08,
       unit: 'USD',
-      sourceUrl: 'https://frankfurter.dev/',
+      sourceUrl: 'https://www.frankfurter.app/',
     })
     .run();
 };
@@ -185,7 +185,7 @@ describe('GET /api/alerts', () => {
       value: 1.09,
       previous_value: 1.08,
       unit: 'USD',
-      source_url: 'https://frankfurter.dev/',
+      source_url: 'https://www.frankfurter.app/',
     });
 
     expect(filtered.status).toBe(200);

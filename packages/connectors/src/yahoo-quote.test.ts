@@ -62,7 +62,7 @@ describe('fetchYahooLatestQuote', () => {
             chart: {
               result: [
                 {
-                  meta: { symbol: 'AZN.L', currency: 'GBp' },
+                  meta: { symbol: 'BA.L', currency: 'GBp' },
                   timestamp: [1_700_000_000, 1_700_086_400, 1_700_172_800],
                   indicators: { quote: [{ close: [100, null, 103] }] },
                 },
@@ -75,19 +75,19 @@ describe('fetchYahooLatestQuote', () => {
       ),
     );
 
-    const result = await fetchYahooLatestQuote('AZN.L');
+    const result = await fetchYahooLatestQuote('BA.L');
 
     expect(result).toMatchObject({
       ok: true,
       quote: {
-        requestedSymbol: 'AZN.L',
-        symbol: 'AZN.L',
+        requestedSymbol: 'BA.L',
+        symbol: 'BA.L',
         price: 103,
         previousClose: 100,
         changePct: 3,
         ts: 1_700_172_800_000,
         currency: 'GBp',
-        sourceUrl: 'https://finance.yahoo.com/quote/AZN.L/',
+        sourceUrl: 'https://finance.yahoo.com/quote/BA.L/',
       },
     });
   });
@@ -164,9 +164,9 @@ describe('fetchYahooLatestQuote', () => {
     });
   });
 
-  it('maps common Stooq suffixes to Yahoo symbols', () => {
+  it('maps Stooq suffixes to Yahoo symbols for common dogfood tickers', () => {
     expect(yahooSymbolForStooqTicker('VTI.US')).toBe('VTI');
-    expect(yahooSymbolForStooqTicker('AZN.UK')).toBe('AZN.L');
-    expect(yahooSymbolForStooqTicker('SHEL.L')).toBe('SHEL.L');
+    expect(yahooSymbolForStooqTicker('BA.UK')).toBe('BA.L');
+    expect(yahooSymbolForStooqTicker('ANTO.L')).toBe('ANTO.L');
   });
 });

@@ -2,6 +2,7 @@ import { templates } from '@antenna/registry';
 import { and, inArray, lt } from 'drizzle-orm';
 import { db } from '../db/client';
 import { signalPoints, signals } from '../db/schema';
+import { purgeExpiredSnapshots } from './dispatch/snapshot-cache';
 import type { WorkerEnv } from '../env';
 
 const DEFAULT_RETENTION_DAYS = 180;
@@ -38,6 +39,11 @@ export const runPointRetention = async (
       )
       .run();
   }
+
+  // Shared upstream snapshots are a cache, not history. This only clears rows
+  // for configs nobody tracks any more; live ones are overwritten in place.
+  await purgeExpiredSnapshots(client, now);
+
   return { policies: grouped.size };
 };
 

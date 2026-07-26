@@ -7,9 +7,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ASSETS_DIR = resolve(ROOT, 'apps/web/dist/assets');
 
-// Budgets track deliberate feature growth. The Cloudflare fleet card now
-// includes aligned 24-hour comparisons; keep one kilobyte of headroom so the
-// Linux and macOS gzip implementations both enforce the same practical limit.
+// Leave ~1KB of headroom so Linux and macOS gzip enforce the same practical limit.
 const limits = {
   jsGzip: readLimit('ANTENNA_MAX_JS_GZIP_BYTES', 115_000),
   cssGzip: readLimit('ANTENNA_MAX_CSS_GZIP_BYTES', 30_000),

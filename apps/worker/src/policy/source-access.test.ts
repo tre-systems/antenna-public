@@ -31,7 +31,7 @@ const decision = (overrides: Partial<SourceAccessInput> = {}) =>
   });
 
 describe('canReadSignalWithSourcePolicy', () => {
-  it('always permits owner reads so private-only signals remain visible to owners', () => {
+  it('always permits owner reads so private dogfood cards remain visible to owners', () => {
     expect(
       decision({
         collectionVisibility: 'private',
@@ -163,10 +163,10 @@ describe('canReadTemplateWithSourcePolicy', () => {
     ).toEqual({ ok: true });
     expect(
       canReadTemplateWithSourcePolicy({ ...sharedInput, templateId: 'cloudflare-incidents' }),
-    ).toEqual({ ok: false, reason: 'source_not_public_display_eligible' });
+    ).toEqual({ ok: true });
     expect(
       canReadTemplateWithSourcePolicy({ ...sharedInput, templateId: 'uk-economic-calendar' }),
-    ).toEqual({ ok: false, reason: 'source_not_public_display_eligible' });
+    ).toEqual({ ok: true });
   });
 
   it('signals real templates that are private, auth-backed, user-runner, or not public-display eligible', () => {

@@ -13,10 +13,7 @@ export function NotificationPreferencePanel({ preference, saving, error, onChang
   const enabled = preference?.enabled ?? false;
   const frequency = preference?.frequency ?? 'daily';
   return (
-    <section
-      class="rounded-2xl bg-white/70 p-5 ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-white/[0.04] dark:ring-white/10"
-      data-testid="activity-notifications"
-    >
+    <section class="antenna-panel rounded-2xl p-5" data-testid="activity-notifications">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="min-w-0">
           <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Daily brief</h2>
@@ -65,7 +62,7 @@ function DigestToggle({
       onClick={() => {
         void onChange({ enabled: !enabled, frequency });
       }}
-      class={`inline-flex shrink-0 items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium ring-1 transition focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:opacity-60 ${
+      class={`inline-flex shrink-0 items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium ring-1 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-60 ${
         enabled
           ? 'bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100 dark:bg-emerald-400/10 dark:text-emerald-200 dark:ring-emerald-400/20'
           : 'bg-white text-slate-600 ring-slate-900/10 hover:bg-slate-50 dark:bg-white/[0.06] dark:text-slate-200 dark:ring-white/10'
@@ -99,9 +96,9 @@ function FrequencyButtons({
           onClick={() => {
             void onChange({ enabled, frequency: option });
           }}
-          class={`rounded-md px-3 py-1.5 text-xs font-medium ring-1 transition focus:outline-none focus:ring-2 focus:ring-sky-400/40 disabled:opacity-60 ${
+          class={`rounded-md px-3 py-1.5 text-xs font-medium ring-1 transition focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-60 ${
             frequency === option
-              ? 'bg-slate-900 text-white ring-slate-900 dark:bg-white dark:text-slate-900 dark:ring-white'
+              ? 'bg-emerald-700 text-white ring-emerald-700 dark:bg-emerald-300 dark:text-emerald-950 dark:ring-emerald-300'
               : 'bg-white/70 text-slate-600 ring-slate-900/10 hover:bg-white dark:bg-white/[0.04] dark:text-slate-300 dark:ring-white/10'
           }`}
           data-testid={`activity-digest-frequency-${option}`}

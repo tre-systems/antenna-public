@@ -24,6 +24,7 @@ export type { AaFrontierConfig, AaHighlightsConfig } from './aa-highlights';
 export { tbenchLeaderboard } from './tbench-leaderboard';
 export type { TbenchLeaderboardConfig } from './tbench-leaderboard';
 export { manual } from './manual';
+export { antennaUsers, type AntennaUsersConfig } from './antenna-users';
 export { manualCost, type ManualCostConfig } from './manual-cost';
 export { restGeneric } from './rest-generic';
 export { cisaKevRecent, normaliseKev, recentVulnerabilities } from './cisa-kev';
@@ -39,5 +40,16 @@ export {
   recentAdvisories,
 } from './github-security-advisories';
 export { boeUpcomingPublications, parseBoeUpcomingPublications } from './boe-upcoming-publications';
+export {
+  candidateScore,
+  isProblemCandidate,
+  parseRedditFeed,
+  type RedditCandidate,
+} from './reddit-feed';
+export {
+  rateLimitRetrySeconds,
+  redditProblems,
+  type RedditProblemsConfig,
+} from './reddit-problems';
 export { resolveJsonPath } from './json-path';
 export { geocode, type GeocodeHit } from './geocode-openmeteo';

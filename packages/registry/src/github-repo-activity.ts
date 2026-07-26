@@ -30,7 +30,7 @@ export const githubRepoActivityTemplate: ConnectorTemplate<{
     owner: (prompt) => matchRepo(prompt)?.owner,
     repo: (prompt) => matchRepo(prompt)?.repo,
   },
-  rightsStatus: 'with-attribution',
+  rightsStatus: 'public',
   defaultRefreshSeconds: 1800,
   adapter: githubRepo,
 };

@@ -1,6 +1,7 @@
+import { HTML_PAGE_REQUEST_INIT } from './browser-request';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 import { discardResponse } from './discard-response';
-import { htmlToText } from './html-text';
+import { errorMessage } from './error-message';
 
 export type TbenchLeaderboardConfig = {
   readonly version?: string;
@@ -25,22 +26,9 @@ export const tbenchLeaderboard: Adapter<TbenchLeaderboardConfig> = async (
   const url = `${SOURCE_PAGE}${version}`;
   let response: Response;
   try {
-    response = await fetch(url, {
-      headers: {
-        accept: 'text/html,application/xhtml+xml',
-        'accept-language': 'en-US,en;q=0.9',
-        'user-agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
-      },
-    });
+    response = await fetch(url, HTML_PAGE_REQUEST_INIT);
   } catch (err) {
-    return {
-      ok: false,
-      error: {
-        code: 'fetch_failed',
-        message: err instanceof Error ? err.message : String(err),
-      },
-    };
+    return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }
 
   if (!response.ok) {
@@ -55,13 +43,7 @@ export const tbenchLeaderboard: Adapter<TbenchLeaderboardConfig> = async (
   try {
     html = await response.text();
   } catch (err) {
-    return {
-      ok: false,
-      error: {
-        code: 'parse_failed',
-        message: err instanceof Error ? err.message : String(err),
-      },
-    };
+    return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
   }
 
   const entries = parseLeaderboard(html, limit);
@@ -95,6 +77,15 @@ type LeaderboardEntry = {
   readonly verified: boolean;
 };
 
+const stripTags = (html: string): string =>
+  html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim();
+
 const currentEntry = (row: string, cells: readonly string[]): LeaderboardEntry | undefined => {
   if (cells.length < 11 || !row.includes('details in Harbor Hub')) return undefined;
   return parsedEntry(cells[1] ?? '', cells[2] ?? '', cells[6] ?? '', cells[4] ?? '');
@@ -111,17 +102,16 @@ const parsedEntry = (
   agentOrgCell: string,
   accuracyCell: string,
 ): LeaderboardEntry | undefined => {
-  const agent = htmlToText(agentCell);
-  const model = htmlToText(modelCell);
-  const agentOrg = htmlToText(agentOrgCell);
-  const accuracyMatch = /^(\d+(?:\.\d+)?)%/.exec(htmlToText(accuracyCell));
+  const agent = stripTags(agentCell);
+  const model = stripTags(modelCell);
+  const agentOrg = stripTags(agentOrgCell);
+  const accuracyMatch = /^(\d+(?:\.\d+)?)%/.exec(stripTags(accuracyCell));
   const accuracy = Number(accuracyMatch?.[1]);
   if (!agent || !model || !Number.isFinite(accuracy)) return undefined;
   return { agent, model, agentOrg, accuracy, verified: true };
 };
 
 const parseLeaderboard = (html: string, limit: number): ReadonlyArray<LeaderboardEntry> => {
-  // Match all <tr> elements. The page uses consistent SSR HTML.
   const rowMatches = html.match(/<tr[^>]*>[\s\S]*?<\/tr>/g) ?? [];
   const entries: LeaderboardEntry[] = [];
 
