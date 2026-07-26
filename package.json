@@ -16,7 +16,7 @@
     "check:imports": "node scripts/check-import-boundaries.mjs",
     "size:report": "node scripts/report-size.mjs",
     "check:bundle": "npm run build --workspace=apps/web && node scripts/check-bundle-size.mjs",
-    "audit:security": "npm audit --audit-level=moderate",
+    "audit:security": "npm audit --omit=dev --audit-level=high",
     "lint": "eslint \"apps/**/*.{ts,tsx,js,mjs}\" \"packages/**/*.{ts,tsx,js,mjs}\" \"scripts/**/*.mjs\" \"*.config.{ts,js,mjs}\"",
     "lint:fix": "eslint \"apps/**/*.{ts,tsx,js,mjs}\" \"packages/**/*.{ts,tsx,js,mjs}\" \"scripts/**/*.mjs\" \"*.config.{ts,js,mjs}\" --fix",
     "smoke:mcp": "node scripts/smoke-mcp-dist.mjs",
