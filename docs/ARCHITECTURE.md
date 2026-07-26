@@ -56,8 +56,12 @@ Wire types and Zod schemas shared across trusted server code and clients.
 
 1. A user creates or confirms a signal from a registered template.
 2. The Worker validates configuration and stores server-derived metadata.
-3. Cron identifies due signals and injects any declared server secret.
-4. The connector fetches and normalises source data.
+3. Cron selects due signals in SQL, takes a capped slice ordered
+   least-recently-attempted so no collection starves, and injects any declared
+   server secret.
+4. The connector fetches and normalises source data — unless a recent shared
+   snapshot already covers that exact template and configuration, in which case
+   no call is made.
 5. The Worker stores change-aware points and status.
 6. A collection Durable Object fans out a refresh event over SSE.
 7. Read routes serialise an audience-appropriate view.
@@ -99,9 +103,15 @@ enumeration information.
 
 ## Authentication
 
-Better Auth handles Google OAuth and sessions. The Worker rechecks the configured
-email allowlist for authenticated requests. Google provider access and refresh
+Better Auth handles Google OAuth and sessions. Access is two lists:
+`ALLOWED_EMAILS` unset means sign-up is open to any Google account, set means
+only those addresses; `BLOCKED_EMAILS` always refuses and wins over the
+allowlist. Both are rechecked on every authenticated request, so an edit ends
+live sessions and MCP tokens immediately. Google provider access and refresh
 tokens are discarded before account persistence.
+
+A confirmation claims its plan before writing anything, so two confirmations
+racing the same plan cannot both materialise a set of signals.
 
 The test bypass requires `BYPASS_AUTH=1` and a defined non-production
 `NODE_ENV`. Deployment configuration pins `NODE_ENV=production`.
@@ -113,6 +123,9 @@ The test bypass requires `BYPASS_AUTH=1` and a defined non-production
 - R2 may retain selected raw source payloads when registry policy permits it.
 - Analytics Engine stores intentionally anonymous application events.
 - Durable Objects hold transient stream and rate-limit state.
+- `upstream_snapshots` caches public-cloud fetch results so one call serves
+  every signal with the same configuration. It is a cache, not history:
+  deleting it costs one refetch.
 
 The public migration chain begins with a schema-only baseline and contains no
 operator data.
