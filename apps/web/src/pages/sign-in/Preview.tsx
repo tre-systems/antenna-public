@@ -1,19 +1,17 @@
 import { APP_PURPOSE, COMPANY_NAME, PRODUCT_NAME, PRODUCT_TAGLINE } from '../../brand';
 import { AppMark } from '../../components/AppMark';
-import { DemoDashboard } from './DemoDashboard';
 
-export function SignInPreview() {
+export function SignInIntroduction() {
   return (
-    <section aria-label="Antenna preview" class="min-w-0">
+    <section aria-label="Antenna introduction" class="min-w-0 lg:col-start-1 lg:row-start-1">
       <PreviewHeading />
-      <DemoDashboard />
     </section>
   );
 }
 
 function PreviewHeading() {
   return (
-    <div class="mb-6">
+    <div>
       <div class="flex items-start gap-4">
         <AppMark class="h-14 w-14 shrink-0 text-slate-950 dark:text-white" />
         <div class="min-w-0 pt-1">

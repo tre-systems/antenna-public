@@ -24,6 +24,8 @@ describe('securityHeaders', () => {
     expect(response.headers.get('referrer-policy')).toBe('strict-origin-when-cross-origin');
     expect(response.headers.get('cross-origin-opener-policy')).toBe('same-origin-allow-popups');
     expect(response.headers.get('permissions-policy')).toContain('microphone=()');
+    expect(CONTENT_SECURITY_POLICY).toContain('https://static.cloudflareinsights.com');
+    expect(CONTENT_SECURITY_POLICY).toContain('https://cloudflareinsights.com');
   });
 
   it('prevents authenticated and token API responses from being cached', async () => {
