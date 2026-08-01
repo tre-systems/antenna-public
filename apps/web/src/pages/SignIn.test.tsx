@@ -7,13 +7,13 @@ describe('SignIn', () => {
     const html = renderToString(<SignIn />);
 
     expect(html).toContain('Track the signals that matter.');
-    expect(html).toContain('Collects live market, operations, and research signals');
+    expect(html).toContain('Monitor application health, usage, markets, and research');
     expect(html).toContain('data-testid="app-purpose"');
     expect(html).toContain('<h1');
     expect(html).toContain('Open-source project');
-    expect(html).toContain('Morning briefing');
-    expect(html).toContain('BTC/USD');
-    expect(html).toContain('Agent proposal');
+    expect(html).toContain('Daily signals');
+    expect(html).toContain('Browser visits');
+    expect(html).toContain('Built for your agents');
     expect(html).toContain('MCP agents');
     expect(html).toContain('Continue with Google');
     expect(html).not.toContain('dogfood');

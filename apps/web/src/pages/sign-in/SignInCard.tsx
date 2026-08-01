@@ -8,10 +8,10 @@ type Props = {
 
 export function SignInCard({ error, isSubmitting, onSubmit }: Props) {
   return (
-    <div class="antenna-panel w-full rounded-2xl p-8">
+    <div class="antenna-panel w-full rounded-2xl p-8 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
       <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Sign in</h2>
       <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Open your collection with Google.
+        Open or create your private collection with Google.
       </p>
       {error ? <SignInAlert error={error} /> : null}
       <GoogleButton isSubmitting={isSubmitting} onSubmit={onSubmit} />
