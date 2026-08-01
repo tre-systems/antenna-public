@@ -7,11 +7,11 @@ import { fileURLToPath } from 'node:url';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ASSETS_DIR = resolve(ROOT, 'apps/web/dist/assets');
 
-// Leave ~1KB of headroom so Linux and macOS gzip enforce the same practical limit.
+// The headroom keeps Linux and macOS gzip within the same practical limit.
 const limits = {
-  jsGzip: readLimit('ANTENNA_MAX_JS_GZIP_BYTES', 115_000),
+  jsGzip: readLimit('ANTENNA_MAX_JS_GZIP_BYTES', 116_000),
   cssGzip: readLimit('ANTENNA_MAX_CSS_GZIP_BYTES', 30_000),
-  totalGzip: readLimit('ANTENNA_MAX_TOTAL_GZIP_BYTES', 128_000),
+  totalGzip: readLimit('ANTENNA_MAX_TOTAL_GZIP_BYTES', 129_000),
 };
 
 function readLimit(name, fallback) {

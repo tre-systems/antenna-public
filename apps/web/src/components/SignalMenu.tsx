@@ -1,30 +1,18 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import type { ApiSignal } from '../api';
 import { settingsSignalId, startRemoval } from '../signals/signals';
+import { useMenuDismiss } from './collection-switcher/use-menu-dismiss';
 
 type Props = { readonly signal: ApiSignal };
 
-// Signal-corner kebab menu; the slot exists so future actions do not rewire the
-// card chrome.
+// The stable corner slot keeps card chrome independent from its action set.
 export function SignalMenu({ signal }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-    window.addEventListener('mousedown', onDown);
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('mousedown', onDown);
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
+  useMenuDismiss(open, rootRef, () => {
+    setOpen(false);
+  });
 
   const handleRemove = () => {
     setOpen(false);

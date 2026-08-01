@@ -1,8 +1,7 @@
 import { isOffline, lastFetchedAt } from '../signals/signals';
-import { relativeTime } from '../relativeTime';
+import { relativeTime } from '../relative-time';
 
-// The service worker keeps the shell loadable offline; this warns that the
-// numbers under it are cached.
+// The shell works offline, but sourced values may be cached.
 export function OfflineBanner() {
   if (!isOffline.value) return null;
   const lastSeen = lastFetchedAt.value;

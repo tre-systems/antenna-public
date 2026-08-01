@@ -56,8 +56,7 @@ describe('PlanPreview', () => {
     currentPlan.value = makePlan([RESOLVED_BLOCK]);
     const html = renderToString(<PlanPreview onConfirmed={vi.fn()} />);
     expect(html).toContain('data-testid="plan-preview-confirm"');
-    // Preact emits a bare `disabled` attribute when the button is disabled;
-    // Tailwind utilities like `disabled:opacity-50` are inside the class attr.
+    // Match the button tag so disabled Tailwind classes cannot satisfy the assertion.
     expect(confirmButton(html)).not.toMatch(/\sdisabled(\s|>)/);
   });
 
@@ -90,8 +89,7 @@ describe('PlanPreview', () => {
     expect(html).toContain('Public source');
     expect(html).toContain('Public · attribution');
     expect(html).toContain('Requires sign-in');
-    // Dev-enum values should still appear as data-rights for testability /
-    // future styling, but never as the visible label.
+    // Keep enum values machine-readable without exposing them as copy.
     expect(html).toContain('data-rights="public"');
     expect(html).toContain('data-rights="with-attribution"');
     expect(html).toContain('data-rights="requires-auth"');

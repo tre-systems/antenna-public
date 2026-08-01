@@ -1,5 +1,4 @@
-// Gates the JSON API behind a Better Auth session, an MCP token, or — outside
-// production, with BYPASS_AUTH set — a synthetic user for the Playwright suite.
+// Accept Better Auth sessions, MCP bearers, and non-production Playwright bypass users.
 
 import type { Context, MiddlewareHandler } from 'hono';
 import { db } from '../db/client';
@@ -51,8 +50,7 @@ export const requireUser =
 
     const bearerToken = extractBearerToken(c.req.raw.headers.get('authorization'));
     if (bearerToken !== null) {
-      // `pbk_` → long-lived MCP token; any other bearer → OAuth access token
-      // (mcp plugin), validated with expiry. Both resolve to an owner-scoped user.
+      // Both long-lived and OAuth MCP bearers resolve to owner-scoped users.
       const result = await authenticateBearer(db(c.env), bearerToken);
       if (result === null || !permitted(c.env, result.user.email)) return unauthorized(c);
       c.set('user', result.user);
@@ -74,8 +72,7 @@ export const requireUser =
     c.set('user', {
       id: u.id,
       email: u.email,
-      // BA's User.name is `string` but can be empty for some providers — fall
-      // back to email so the UI never shows a blank greeting.
+      // Fall back to email when the provider name is empty.
       name: u.name.length > 0 ? u.name : u.email,
       image: normalizeImage(u.image),
     });
@@ -89,10 +86,7 @@ const normalizeImage = (value: unknown): string | null => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
-// Checked on every browser-session and bearer-token request, so adding an
-// Checked on every browser-session and bearer-token request, so adding an
-// address to BLOCKED_EMAILS, or removing one from a configured ALLOWED_EMAILS,
-// cuts off live sessions and MCP tokens immediately rather than at next sign-in.
+// Re-check email policy on every request so access-list changes apply immediately.
 const permitted = (env: MiddlewareEnv, email: string): boolean =>
   emailPermitted(accessRules(env), email);
 

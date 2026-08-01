@@ -9,9 +9,7 @@ const normaliseDimensions = (
   return out;
 };
 
-// metric_key disambiguates points sharing a (signal, ts). For multi-dimension
-// adapters (crypto watchlist) we use a stable dimension hash; single-point
-// adapters land under "value".
+// Use metric_key to distinguish points sharing a signal and timestamp.
 export const metricKeyFor = (point: DataPoint): string => {
   const keys = Object.keys(point.dimensions).sort();
   if (keys.length === 0) return 'value';
@@ -24,8 +22,7 @@ export const toPointRow = (
   fetchedAt: number,
   rawPayloadId: string | null,
 ): typeof signalPoints.$inferInsert => {
-  // `dimensions` is a JSON-text column; `$type` is compile-time only, so we
-  // stringify here. The cast threads through Drizzle's typed insert.
+  // Stringify dimensions because Drizzle's $type does not serialize text columns.
   const dimensions = JSON.stringify(normaliseDimensions(point.dimensions)) as unknown as Readonly<
     Record<string, string>
   >;

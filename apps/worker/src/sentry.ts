@@ -9,8 +9,7 @@ type BeforeBreadcrumb = NonNullable<CloudflareOptions['beforeBreadcrumb']>;
 
 const PRODUCTION_TRACE_SAMPLE_RATE = 0.002;
 const NON_PRODUCTION_TRACE_SAMPLE_RATE = 0;
-// Every dispatch tick writes these tables, so their auto-instrumented root
-// transactions would dominate the trace quota without telling us anything.
+// Exclude routine dispatch writes that would dominate the trace quota.
 const LOW_VALUE_D1_TRANSACTION_TABLES = new Set(['signal_points', 'signal_status']);
 
 const SQL_TABLE_PATTERNS = [

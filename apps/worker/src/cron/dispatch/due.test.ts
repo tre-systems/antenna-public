@@ -1,6 +1,4 @@
-// The dispatch queue decides which signals a single tick touches. With many
-// users the selection has to happen in SQL, stay bounded, and rotate fairly —
-// these assertions pin all three.
+// Keep dispatch selection SQL-backed, bounded, and fair.
 
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -135,8 +133,7 @@ describe('loadDueDispatchRows', () => {
   });
 
   it('rotates a permanently failing signal to the back instead of starving others', async () => {
-    // A signal that only ever errors keeps last_ok_at null, so ordering on it
-    // would pin the failure at the front of every tick forever.
+    // Do not let null last_ok_at pin a failing signal to the queue front.
     addSignal('always-failing', 'collection-1');
     addStatus('always-failing', { updatedAt: NOW - 1_000, nextAttemptAt: NOW - 500 });
     addSignal('healthy', 'collection-1');

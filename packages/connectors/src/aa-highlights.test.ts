@@ -92,8 +92,7 @@ describe('aaHighlights', () => {
   });
 
   it('reads intelligence under the new artificialAnalysisIntelligenceIndex key', async () => {
-    // AA renamed the field on the live site in late May 2026. The connector
-    // should prefer the new key when present.
+    // AA renamed this live field in May 2026; prefer the current key.
     const renamedItems = [
       {
         label: 'GPT-5.5 (xhigh)',

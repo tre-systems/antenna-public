@@ -1,5 +1,4 @@
-// Lightweight render-only tests. Editing flow (click, input, save) requires
-// a real DOM and is exercised in e2e instead.
+// Editing interactions require a real DOM and remain e2e coverage.
 import { describe, expect, it } from 'vitest';
 import renderToString from 'preact-render-to-string';
 import { CollectionHeader } from './CollectionHeader';

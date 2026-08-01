@@ -23,11 +23,15 @@ export interface ConnectorTemplate<C extends SignalConfig = SignalConfig> {
   matchHints: RegExp[];
   paramExtractors: Record<string, (prompt: string) => string | undefined>;
   plannerEnabled?: boolean;
+  // Allows an authenticated exact-template proposal without enabling prompt matching or catalogue UI.
+  directProposalEnabled?: boolean;
   rightsStatus: SourceRightsStatus;
   defaultRefreshSeconds: number;
   // Omitted templates fall back to the Worker's conservative 180-day default.
   pointRetentionDays?: number;
   retainRawPayload?: boolean;
+  // Bump when a public-cloud adapter's cached point projection changes.
+  snapshotVersion?: number;
   serverSecret?: {
     readonly env: string;
     readonly configKey: string;

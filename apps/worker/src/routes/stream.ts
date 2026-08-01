@@ -1,5 +1,4 @@
-// SSE entry point: looks up the caller's collection, opens a stream against the
-// collection's Durable Object and pipes its body straight back to the browser.
+// Proxy an owner's collection stream from its Durable Object.
 
 import { and, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
@@ -31,8 +30,7 @@ export const streamRoute = new Hono<{ Bindings: Bindings; Variables: AuthVars }>
 
     const id = channels.idFromName(row.id);
     const stub = channels.get(id);
-    // The DO's Response is a streaming text/event-stream; returning it
-    // verbatim keeps the connection open for the lifetime of the request.
+    // Return the Durable Object response verbatim to preserve streaming.
     return stub.fetch(collectionSubscriptionRequest(c.req.raw));
   },
 );

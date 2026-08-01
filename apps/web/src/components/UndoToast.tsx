@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { signalTitle } from '../signalFormat';
+import { signalTitle } from '../signal-format';
 import { pendingRemoval, undoRemoval, UNDO_WINDOW_MS } from '../signals/signals';
 
 export function UndoToast() {

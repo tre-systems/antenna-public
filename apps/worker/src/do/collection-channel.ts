@@ -1,14 +1,10 @@
-// Durable Object that fans out SSE events to every browser tab currently
-// watching a single collection. One DO instance per collection, identified by
-// `idFromName(collectionId)`. Writers live only in memory — once all browsers
-// close their EventSource the DO can be evicted.
+// One in-memory SSE fan-out per collection, addressed with idFromName(collectionId).
 
 const KEEPALIVE_MS = 20_000;
 const SSE_HEADERS = {
   'content-type': 'text/event-stream',
   'cache-control': 'no-cache, no-transform',
-  // Long-lived connection; tell intermediaries (especially Cloudflare) not to
-  // buffer the response body so chunks reach the browser as they're written.
+  // Prevent intermediaries from buffering long-lived SSE chunks.
   'x-accel-buffering': 'no',
   connection: 'keep-alive',
 } as const;
@@ -17,8 +13,7 @@ const encoder = new TextEncoder();
 
 export type SseEvent = Readonly<Record<string, unknown>>;
 
-// Exported for direct unit testing: the DO API is awkward to mock, but the byte
-// format is the load-bearing piece.
+// Exported because the SSE byte format is easier to test outside the DO API.
 export const encodeSseChunk = (event: SseEvent): Uint8Array =>
   encoder.encode(`data: ${JSON.stringify(event)}\n\n`);
 
@@ -30,8 +25,6 @@ type Writer = {
   closed: boolean;
 };
 
-// The DO platform calls `new CollectionChannel(state, env)`; we don't need
-// either argument because channel membership is fully in-memory.
 export class CollectionChannel implements DurableObject {
   private readonly writers = new Set<Writer>();
 
@@ -44,7 +37,8 @@ export class CollectionChannel implements DurableObject {
       return this.subscribe();
     }
     if (request.method === 'POST' && url.pathname === '/notify') {
-      const event = (await request.json().catch(() => ({}))) as SseEvent;
+      const event: unknown = await request.json().catch(() => null);
+      if (!isRecord(event)) return new Response('invalid_event', { status: 400 });
       this.fanout(event);
       return new Response('ok');
     }
@@ -108,3 +102,6 @@ export class CollectionChannel implements DurableObject {
     this.writers.delete(writer);
   }
 }
+
+const isRecord = (value: unknown): value is SseEvent =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);

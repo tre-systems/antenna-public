@@ -2,9 +2,7 @@ import { gte, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { collections, signals, user, userCollectionVisits } from '../db/schema';
 
-// Aggregate adoption counts for this deployment, for the `antenna-users`
-// signal. Counts only — no identifiers — so nothing here can leak one user's
-// activity to another.
+// Return aggregate adoption counts without user identifiers.
 type DeploymentStats = {
   readonly total_users: number;
   readonly new_users_24h: number;

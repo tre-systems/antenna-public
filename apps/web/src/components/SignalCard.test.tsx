@@ -5,12 +5,11 @@ import { SignalCard } from './SignalCard';
 import { makeSignal, NOW } from './signal-card-test-fixtures';
 
 describe('SignalCard', () => {
-  it('renders the derived title, source label, and formatted point value', () => {
+  it('renders the server-resolved title, source label, and formatted point value', () => {
     const html = renderToString(<SignalCard signal={makeSignal()} />);
     expect(html).toContain('EUR/USD');
     expect(html).toContain('Frankfurter (ECB)');
-    // formatValue caps fractional values at 2 decimals so FX rates match the
-    // rest of the collection's column formatting.
+    // FX precision follows the shared card value formatter.
     expect(html).toContain('1.09');
     expect(html).not.toContain('1.0876');
     expect(html).toContain('data-status="live"');
@@ -95,10 +94,15 @@ describe('SignalCard', () => {
     expect(html).not.toContain('gbp-usd');
   });
 
-  it('renders a crypto watchlist title from config.pairs (array or comma-string)', () => {
+  it('renders server-resolved crypto watchlist titles for supported config shapes', () => {
     const fromArray = makeSignal({
       template_id: 'crypto-watchlist',
       config: { pairs: ['BTC-USD', 'ETH-USD'] },
+      display: {
+        title: 'Crypto: BTC, ETH',
+        source_label: 'Coinbase',
+        source_url: 'https://www.coinbase.com/',
+      },
       points: [
         { dimensions: { pair: 'BTC-USD' }, value: 65432.1, ts: NOW },
         { dimensions: { pair: 'ETH-USD' }, value: 3210.5, ts: NOW },
@@ -110,6 +114,11 @@ describe('SignalCard', () => {
     const fromString = makeSignal({
       template_id: 'crypto-watchlist',
       config: { pairs: 'BTC-USD,ETH-USD' },
+      display: {
+        title: 'Crypto: BTC, ETH',
+        source_label: 'Coinbase',
+        source_url: 'https://www.coinbase.com/',
+      },
       points: [{ dimensions: { pair: 'BTC-USD' }, value: 65432.1, ts: NOW }],
     });
     const html = renderToString(<SignalCard signal={fromString} />);
@@ -121,6 +130,11 @@ describe('SignalCard', () => {
     const signal = makeSignal({
       template_id: 'crypto-watchlist',
       config: { pairs: 'BTC-USD,ETH-USD,SOL-USD,ADA-USD,DOGE-USD' },
+      display: {
+        title: 'Crypto: BTC, ETH, SOL +2 more',
+        source_label: 'Coinbase',
+        source_url: 'https://www.coinbase.com/',
+      },
       points: [],
     });
     expect(renderToString(<SignalCard signal={signal} />)).toContain(
@@ -132,6 +146,11 @@ describe('SignalCard', () => {
     const signal = makeSignal({
       template_id: 'equity-watchlist',
       config: { tickers: 'BA.UK,VTI.US,ANTO.L,PII.L' },
+      display: {
+        title: 'Stocks: BA, VTI, ANTO +1 more',
+        source_label: 'Stooq',
+        source_url: 'https://stooq.com/',
+      },
       points: [],
     });
     const html = renderToString(<SignalCard signal={signal} />);

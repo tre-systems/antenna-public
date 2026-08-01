@@ -1,10 +1,8 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { err, errWith } from './http';
 
-// Machine-token usage-event ingest for deployed apps that cannot bind the
-// app_usage Analytics Engine dataset directly (anything off-Cloudflare).
-// Mounted before session auth: callers are servers, not signed-in browsers.
-// Contract and instrumentation snippets live in docs/USAGE_RADAR.md.
+// Accept machine-authenticated usage events from apps outside Cloudflare.
 
 const SLUG_RX = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 
@@ -22,15 +20,13 @@ export type BeaconEnv = {
   readonly BEACON_INGEST_TOKEN?: string;
 };
 
-// Constant-time comparison so the shared ingest token cannot be recovered
-// byte-by-byte from response timing.
-const timingSafeEqual = (a: string, b: string): boolean => {
+// Compare ingest tokens without leaking matching-prefix timing.
+const timingSafeEqual = (input: string, expected: string): boolean => {
   const encoder = new TextEncoder();
-  const left = encoder.encode(a);
-  const right = encoder.encode(b);
-  if (left.length !== right.length) return false;
-  let diff = 0;
-  for (let i = 0; i < left.length; i += 1) diff |= (left[i] ?? 0) ^ (right[i] ?? 0);
+  const left = encoder.encode(input);
+  const right = encoder.encode(expected);
+  let diff = left.length ^ right.length;
+  for (let i = 0; i < right.length; i += 1) diff |= (left[i] ?? 0) ^ (right[i] ?? 0);
   return diff === 0;
 };
 
@@ -38,25 +34,24 @@ export const beaconRoute = new Hono<{ Bindings: BeaconEnv }>().post('/', async (
   const token = c.env.BEACON_INGEST_TOKEN;
   const dataset = c.env.APP_USAGE;
   if (typeof token !== 'string' || token.trim().length === 0 || dataset === undefined) {
-    return c.json({ error: 'beacon_not_configured' }, 503);
+    return err(c, 'beacon_not_configured', 503);
   }
 
-  const header = c.req.header('authorization') ?? '';
-  const bearer = header.startsWith('Bearer ') ? header.slice('Bearer '.length) : '';
+  const bearer = /^Bearer\s+(.+)$/i.exec(c.req.header('authorization') ?? '')?.[1]?.trim() ?? '';
   if (bearer.length === 0 || !timingSafeEqual(bearer, token)) {
-    return c.json({ error: 'unauthorized' }, 401);
+    return err(c, 'unauthorized', 401);
   }
 
   let body: unknown;
   try {
     body = await c.req.json();
   } catch {
-    return c.json({ error: 'invalid_json' }, 400);
+    return err(c, 'invalid_json', 400);
   }
 
   const parsed = eventSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: 'invalid_event', issues: parsed.error.issues }, 400);
+    return errWith(c, 'invalid_event', { issues: parsed.error.issues }, 400);
   }
 
   const { project, event, value, meta } = parsed.data;

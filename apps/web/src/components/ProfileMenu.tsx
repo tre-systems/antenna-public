@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import type { User } from '../auth';
 import { firstName, greetingFor } from '../auth';
 import { refreshInstalledApp } from '../pwa-update';
 import { ThemeToggle } from './ThemeToggle';
+import { useMenuDismiss } from './collection-switcher/use-menu-dismiss';
 
 type Props = {
   readonly user: User;
@@ -16,22 +17,10 @@ export function ProfileMenu({ user, signingOut, onSignOut }: Props) {
   const [updatingApp, setUpdatingApp] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
-  // Outside-click and Escape close the menu.  Same pattern as CollectionSwitcher.
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-    window.addEventListener('mousedown', onDown);
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('mousedown', onDown);
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
+  const close = useCallback(() => {
+    setOpen(false);
+  }, []);
+  useMenuDismiss(open, rootRef, close);
 
   const initials = getInitials(user);
   const greeting = `${greetingFor()}, ${firstName(user)}`;
@@ -105,14 +94,6 @@ export function ProfileMenu({ user, signingOut, onSignOut }: Props) {
             <ThemeToggle />
           </div>
           <div class="py-1">
-            <a
-              href="/settings/activity"
-              role="menuitem"
-              class="block px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-900/[0.04] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:text-slate-200 dark:hover:bg-white/5"
-              data-testid="profile-menu-activity"
-            >
-              Activity &amp; diagnostics
-            </a>
             <a
               href="/settings/tokens"
               role="menuitem"

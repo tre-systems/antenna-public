@@ -11,7 +11,7 @@ import {
   type CloudflareFleetCardData,
   type CompactRow,
   type GithubTrendingRow,
-} from '../../signalFormat';
+} from '../../signal-format';
 import { SignalSparkline } from '../SignalSparkline';
 import { AppUsageBars } from './AppUsageBars';
 import { CostHero } from './CostHero';
@@ -40,7 +40,12 @@ export function SignalCardSummary({ signal, cardStatus, points, editableSignal }
   }
   const rowData = compactRowsCardData(signal);
   if (rowData && rowData.rows.length > 0) {
-    return <RowsSummary summary={rowData.summary} rows={rowData.rows.slice(0, 2)} />;
+    return (
+      <RowsSummary
+        summary={rowData.summary}
+        rows={rowData.rows.slice(0, compactRowSummaryLimit(signal.template_id))}
+      />
+    );
   }
   if (points.length === 0) return <EmptySummary cardStatus={cardStatus} />;
   return <PointSummary point={points[0]} editableSignal={editableSignal} />;
@@ -144,17 +149,27 @@ function RowsSummary({
   readonly rows: ReadonlyArray<CompactRow>;
 }) {
   return (
-    <div class="mt-2">
+    <div class="mt-2" data-testid="compact-rows-summary" data-visible-rows={rows.length}>
       {summary ? (
         <p class="truncate text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {summary}
         </p>
       ) : null}
-      <ul class="mt-2 space-y-1.5">
+      <ul class="mt-2 space-y-2">
         {rows.map((row) => (
-          <li key={row.rank} class="flex min-w-0 items-center justify-between gap-2">
-            <span class="min-w-0 truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-              {row.title}
+          <li key={row.rank} class="flex min-w-0 items-start gap-2">
+            <span class="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-900/[0.06] text-[10px] font-semibold tabular-nums text-slate-500 dark:bg-white/10 dark:text-slate-300">
+              {row.rank}
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-sm font-medium leading-tight text-slate-800 dark:text-slate-100">
+                {row.title}
+              </span>
+              {row.subtitle ? (
+                <span class="mt-0.5 block truncate text-[10px] leading-tight text-slate-500 dark:text-slate-400">
+                  {row.subtitle}
+                </span>
+              ) : null}
             </span>
             {row.chip ? (
               <span class="shrink-0 rounded-full bg-slate-900/[0.04] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-slate-500 ring-1 ring-inset ring-slate-900/10 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10">
@@ -167,6 +182,13 @@ function RowsSummary({
     </div>
   );
 }
+
+const compactRowSummaryLimit = (templateId: string): number =>
+  templateId === 'aa-highlights' ||
+  templateId === 'aa-frontier' ||
+  templateId === 'tbench-leaderboard'
+    ? 3
+    : 2;
 
 function EmptySummary({ cardStatus }: { readonly cardStatus: CardStatus }) {
   const copy = emptySummaryCopy(cardStatus);

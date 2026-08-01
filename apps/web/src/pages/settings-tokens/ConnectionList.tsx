@@ -1,4 +1,4 @@
-import { relativeTime } from '../../relativeTime';
+import { relativeTime } from '../../relative-time';
 import type { ConnectionListState } from './types';
 
 type Props = {
@@ -55,7 +55,7 @@ export function ConnectionList({ state, disconnecting, onDisconnect }: Props) {
             onClick={() => {
               onDisconnect(connection.client_id);
             }}
-            disabled={disconnecting === connection.client_id}
+            disabled={disconnecting !== null}
             class="shrink-0 rounded-md px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-400/40 disabled:opacity-60 dark:text-rose-300 dark:hover:bg-rose-500/10"
             data-testid={`settings-connections-disconnect-${connection.client_id}`}
           >

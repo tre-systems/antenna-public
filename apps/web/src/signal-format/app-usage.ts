@@ -21,9 +21,7 @@ export type AppUsageCardData = {
 const DEFAULT_WINDOW_DAYS = 14;
 const MAX_WINDOW_DAYS = 90;
 const TOP_EVENT_LIMIT = 4;
-// The connector emits this synthetic event (count 0) when a project has no
-// activity, purely to keep the signal `live`. It must not appear as a real
-// event or inflate any total.
+// A zero-count synthetic total keeps quiet projects live but is not usage.
 const SYNTHETIC_EVENT = 'total';
 
 export function appUsageCardData(signal: RenderSignal): AppUsageCardData | null {
@@ -42,8 +40,7 @@ export function appUsageCardData(signal: RenderSignal): AppUsageCardData | null 
     const count = numericValue(point);
     if (count <= 0) continue;
 
-    // Gate everything on the day being inside the window so the window total,
-    // the bar series, and the top-event counts always reconcile.
+    // Applying one window gate keeps totals, bars, and event counts consistent.
     const day = stringDim(point, 'day');
     if (day === null) continue;
     const index = dayIndex.get(day);

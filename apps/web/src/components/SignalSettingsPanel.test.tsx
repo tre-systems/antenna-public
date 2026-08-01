@@ -1,5 +1,4 @@
-// Render-only tests via preact-render-to-string. The save flow needs a real
-// DOM (select onChange + click) and is exercised in e2e.
+// Save interactions require DOM coverage.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import renderToString from 'preact-render-to-string';
 import { SignalSettingsPanel } from './SignalSettingsPanel';
@@ -9,6 +8,11 @@ import type { ApiSignal } from '../api';
 const signal = (overrides: Partial<ApiSignal> = {}): ApiSignal => ({
   id: 'b1',
   template_id: 'fx-pair',
+  display: {
+    title: 'EUR/USD',
+    source_label: 'Frankfurter (ECB)',
+    source_url: 'https://www.frankfurter.app/',
+  },
   visibility: 'private',
   config: { base: 'EUR', quote: 'USD' },
   refresh_seconds: 900,
@@ -45,9 +49,7 @@ describe('SignalSettingsPanel', () => {
     expect(html).toContain('data-testid="signal-settings-panel"');
     expect(html).toContain('aria-modal="true"');
     expect(html).toContain('EUR/USD');
-    // The 1h preset matches an option, so the dropdown shows it selected.
-    // Attribute order varies (`selected` may render before `value`), so
-    // assert the value attribute and label separately on the same tag.
+    // Attribute order varies, so match the selected option tag.
     expect(html).toMatch(/<option[^>]*selected[^>]*value="3600"/);
     expect(html).toContain('Every hour</option>');
   });
@@ -71,8 +73,7 @@ describe('SignalSettingsPanel', () => {
     settingsSignalId.value = 'b1';
     const html = renderToString(<SignalSettingsPanel />);
     expect(html).toContain('data-testid="signal-settings-visibility"');
-    // Attribute order varies — `checked` may render before `data-testid` —
-    // so match each radio's tag and assert the pairing both ways round.
+    // Match complete input tags because attribute order varies.
     expect(html).toMatch(/<input[^>]*checked[^>]*data-testid="signal-visibility-private"/);
     expect(html).not.toMatch(/<input[^>]*checked[^>]*data-testid="signal-visibility-shared"/);
     expect(html).not.toContain('data-testid="signal-visibility-public"');

@@ -1,4 +1,6 @@
 import { ACCOUNT_ID_RX, analyticsSqlUrl, SLUG_RX } from './analytics-engine';
+import { boundedInt, commaSeparatedValues } from './config-values';
+import { discardResponse } from './discard-response';
 import { errorMessage } from './error-message';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 
@@ -19,17 +21,16 @@ type SqlRow = {
 
 const DEFAULT_DATASET = 'app_usage';
 const DEFAULT_DAYS = 7;
+const MAX_DAYS = 30;
+const LOOKBACK_DAYS = 90;
 
 export const projectPortfolio: Adapter<ProjectPortfolioConfig> = async (
   config,
 ): Promise<AdapterResult> => {
-  const projects = config.projects
-    .split(',')
-    .map((project) => project.trim())
-    .filter(Boolean);
+  const projects = commaSeparatedValues(config.projects);
   const accountId = config.accountId.trim();
   const dataset = (config.dataset ?? DEFAULT_DATASET).trim();
-  const days = Math.min(30, Math.max(1, Math.trunc(config.days ?? DEFAULT_DAYS)));
+  const days = boundedInt(config.days, DEFAULT_DAYS, 1, MAX_DAYS);
   if (projects.length === 0 || projects.some((project) => !SLUG_RX.test(project))) {
     return { ok: false, error: { code: 'parse_failed', message: 'invalid project list' } };
   }
@@ -45,7 +46,7 @@ export const projectPortfolio: Adapter<ProjectPortfolioConfig> = async (
     `toStartOfInterval(timestamp, INTERVAL '1' DAY) AS day,`,
     `blob1 AS event, SUM(_sample_interval * double1) AS count`,
     `FROM ${dataset}`,
-    `WHERE timestamp > NOW() - INTERVAL '${String(days * 2)}' DAY`,
+    `WHERE timestamp > NOW() - INTERVAL '${String(LOOKBACK_DAYS)}' DAY`,
     `GROUP BY project, day, event`,
     `ORDER BY day DESC, count DESC FORMAT JSON`,
   ].join(' ');
@@ -78,12 +79,15 @@ const fetchPortfolio = async (
     return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }
   if (response.status === 401 || response.status === 403) {
+    await discardResponse(response);
     return { ok: false, error: { code: 'unauthorized', message: `HTTP ${response.status}` } };
   }
   if (response.status === 429) {
+    await discardResponse(response);
     return { ok: false, error: { code: 'rate_limited', message: 'analytics API rate limit' } };
   }
   if (!response.ok) {
+    await discardResponse(response);
     return { ok: false, error: { code: 'fetch_failed', message: `HTTP ${response.status}` } };
   }
   try {
@@ -116,19 +120,23 @@ const portfolioPoints = (
 ): DataPoint[] => {
   const now = Date.now();
   const recentCutoff = now - days * 86_400_000;
+  const previousCutoff = now - days * 2 * 86_400_000;
   return projects.map((project, rank) => {
     let recent = 0;
     let previous = 0;
     const events = new Map<string, number>();
+    let lastEventAt = '';
     for (const row of rows) {
       if (row.project !== project) continue;
       const count = Number(row.count);
       const observedAt = Date.parse(`${row.day.slice(0, 10)}T00:00:00Z`);
       if (!Number.isFinite(count) || !Number.isFinite(observedAt)) continue;
+      const day = row.day.slice(0, 10);
+      lastEventAt = day > lastEventAt ? day : lastEventAt;
       if (observedAt >= recentCutoff) {
         recent += count;
         events.set(row.event, (events.get(row.event) ?? 0) + count);
-      } else {
+      } else if (observedAt >= previousCutoff) {
         previous += count;
       }
     }
@@ -142,6 +150,8 @@ const portfolioPoints = (
         previous: Math.round(previous),
         change: Math.round(change),
         top_event: topEvent,
+        last_event_at: lastEventAt,
+        telemetry_state: recent > 0 ? 'active' : lastEventAt ? 'quiet' : 'unseen',
         days,
       },
       value: Math.round(recent),

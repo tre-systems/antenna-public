@@ -1,11 +1,11 @@
 import { errorMessage } from './error-message';
 import type { Adapter, AdapterError, AdapterResult, DataPoint } from './types';
 import { YAHOO_CHART_REQUEST_INIT, yahooChartUrl, yahooQuotePageUrl } from './yahoo-quote';
+import { discardResponse } from './discard-response';
 
 type SectorEtf = { readonly ticker: string; readonly sector: string };
 
-// SPDR ETFs covering the S&P 500 GICS sectors: each is already a basket, so one
-// quote per ticker proxies the sector without a constituent list.
+// SPDR sector ETFs proxy GICS sectors without maintaining constituent lists.
 const SECTORS: ReadonlyArray<SectorEtf> = [
   { ticker: 'XLK', sector: 'Technology' },
   { ticker: 'XLC', sector: 'Communication Services' },
@@ -96,6 +96,7 @@ const fetchSector = async (etf: SectorEtf): Promise<SectorFetchResult> => {
   }
 
   if (!response.ok) {
+    await discardResponse(response);
     return {
       ok: false,
       error: { code: 'fetch_failed', message: `${etf.ticker}: HTTP ${String(response.status)}` },

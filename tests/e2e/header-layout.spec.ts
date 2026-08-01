@@ -14,7 +14,6 @@ test('collection header controls do not overlap at narrow tablet width', async (
   const title = page.getByTestId('collection-title');
   const switcher = page.getByTestId('collection-switcher-trigger');
   const share = page.getByTestId('share-open');
-  const addSignal = page.getByTestId('signal-composer-open');
   const present = page.getByTestId('header-present');
   const profile = page.getByTestId('profile-menu-trigger');
 
@@ -22,16 +21,13 @@ test('collection header controls do not overlap at narrow tablet width', async (
   await expect(title).toBeVisible();
   await expect(switcher).toBeVisible();
 
-  const [titleBox, switcherBox, shareBox, addSignalBox, presentBox, profileBox] = await Promise.all(
-    [
-      boxFor(title),
-      boxFor(switcher),
-      boxFor(share),
-      boxFor(addSignal),
-      boxFor(present),
-      boxFor(profile),
-    ],
-  );
+  const [titleBox, switcherBox, shareBox, presentBox, profileBox] = await Promise.all([
+    boxFor(title),
+    boxFor(switcher),
+    boxFor(share),
+    boxFor(present),
+    boxFor(profile),
+  ]);
   const viewport = page.viewportSize();
   expect(viewport).not.toBeNull();
   if (viewport === null) throw new Error('missing viewport');
@@ -40,7 +36,6 @@ test('collection header controls do not overlap at narrow tablet width', async (
   expect(titleBox.x + titleBox.width).toBeLessThanOrEqual(switcherBox.x - 4);
   expect(switcherBox.width).toBeLessThan(70);
   expect(shareBox.width).toBeLessThan(50);
-  expect(addSignalBox.width).toBeLessThan(50);
   expect(presentBox.width).toBeLessThan(50);
   expect(profileBox.x + profileBox.width).toBeLessThanOrEqual(viewport.width);
   expect(Math.abs(titleBox.y - switcherBox.y)).toBeLessThan(12);
@@ -53,16 +48,14 @@ test('collection header uses labels once they fit', async ({ page }) => {
 
   const switcher = page.getByTestId('collection-switcher-trigger');
   const share = page.getByTestId('share-open');
-  const addSignal = page.getByTestId('signal-composer-open');
   const present = page.getByTestId('header-present');
   const profile = page.getByTestId('profile-menu-trigger');
 
   await expect(profile).toBeVisible({ timeout: 10_000 });
 
-  const [switcherBox, shareBox, addSignalBox, presentBox, profileBox] = await Promise.all([
+  const [switcherBox, shareBox, presentBox, profileBox] = await Promise.all([
     boxFor(switcher),
     boxFor(share),
-    boxFor(addSignal),
     boxFor(present),
     boxFor(profile),
   ]);
@@ -72,7 +65,6 @@ test('collection header uses labels once they fit', async ({ page }) => {
 
   expect(switcherBox.width).toBeGreaterThan(90);
   expect(shareBox.width).toBeGreaterThan(55);
-  expect(addSignalBox.width).toBeGreaterThan(80);
   expect(presentBox.width).toBeGreaterThan(70);
   expect(profileBox.x + profileBox.width).toBeLessThanOrEqual(viewport.width);
   await expect(share).toContainText('Share');
@@ -86,7 +78,6 @@ test('collection header keeps controls on one row at phone width', async ({ page
   const titleText = title.locator('span');
   const switcher = page.getByTestId('collection-switcher-trigger');
   const share = page.getByTestId('share-open');
-  const addSignal = page.getByTestId('signal-composer-open');
   const profile = page.getByTestId('profile-menu-trigger');
 
   await expect(profile).toBeVisible({ timeout: 10_000 });
@@ -94,11 +85,10 @@ test('collection header keeps controls on one row at phone width', async ({ page
   await expect(titleText).toBeVisible();
   await expect(switcher).toBeVisible();
 
-  const [titleBox, switcherBox, shareBox, addSignalBox, profileBox] = await Promise.all([
+  const [titleBox, switcherBox, shareBox, profileBox] = await Promise.all([
     boxFor(title),
     boxFor(switcher),
     boxFor(share),
-    boxFor(addSignal),
     boxFor(profile),
   ]);
   const viewport = page.viewportSize();
@@ -108,7 +98,6 @@ test('collection header keeps controls on one row at phone width', async ({ page
   expect(titleBox.x + titleBox.width).toBeLessThanOrEqual(switcherBox.x - 4);
   expect(switcherBox.width).toBeLessThan(70);
   expect(shareBox.width).toBeLessThan(50);
-  expect(addSignalBox.width).toBeLessThan(50);
   expect(profileBox.x + profileBox.width).toBeLessThanOrEqual(viewport.width);
   expect(Math.abs(titleBox.y - switcherBox.y)).toBeLessThan(12);
   expect(Math.abs(titleBox.y - profileBox.y)).toBeLessThan(12);

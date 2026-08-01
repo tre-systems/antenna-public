@@ -1,31 +1,38 @@
 # Antenna
 
-A source-aware personal signal layer for people and agents.
+A developer-owned personal signal layer for people and agents.
 
-Antenna collects live signals into private collections, preserves provenance and
-freshness, and exposes the same governed context through a web application and
-the Model Context Protocol (MCP). A Cloudflare Worker remains the authority for
-authentication, source policy, persistence, planning, and connector dispatch.
+Antenna collects reviewed sources into owner-scoped collections. An installable
+Preact app presents, arranges, and plays them as a slideshow; MCP lets an agent
+inspect the same governed data and propose approved changes. A Cloudflare Worker
+remains authoritative for auth, source policy, persistence, planning, and
+connector dispatch.
 
 ![System overview](docs/diagrams/system-overview.png)
 
 ## Why Antenna?
 
 Agents are more useful when they can read current, trustworthy context without
-copy-and-paste. Antenna makes that context inspectable:
+copy-and-paste. Antenna is aimed at developers who are comfortable asking an
+agent to configure a signal or implement and deploy a missing connector:
 
 - every value includes its source and freshness
 - private, shared-link, and public reads are enforced server-side
 - connectors are pure adapters with explicit configuration schemas
 - unsupported requests become setup requests instead of unsafe arbitrary fetches
 - MCP clients use the same ownership and policy boundaries as the browser
+- the PWA retains saved card arrangement, slideshow, offline presentation, and
+  source/status detail
+
+MCP is the primary signal-authoring surface. The browser composer is a small
+fresh-account fallback, not a no-code connector marketplace.
 
 ## Status
 
 Antenna is an early open-source release intended for self-hosting and
 experimentation. Private collections and owner-scoped MCP access are the primary
 surfaces. Review the [security model](docs/SECURITY_PRIVACY.md) and
-[source-policy contract](docs/SPEC.md#source-policy) before operating a public
+[source-policy contract](docs/SPEC.md#source-and-sharing-policy) before operating a public
 instance.
 
 ## Stack
@@ -69,7 +76,7 @@ deployment target. Before deploying:
 2. Replace the placeholder resource identifiers in
    `apps/worker/wrangler.toml`.
 3. Set the Worker URL and optional custom route.
-4. configure Google OAuth and the secrets documented in
+4. Configure Google OAuth and the secrets documented in
    [docs/SECRETS.md](docs/SECRETS.md).
 5. Apply D1 migrations, build the web and MCP packages, then deploy.
 

@@ -1,5 +1,4 @@
-// Shared scaffolding for plan.test.ts, execute.test.ts, and confirm-signals.test.ts.
-// Not a test file (no .test.ts suffix) so vitest ignores it.
+// Provide shared in-memory scaffolding for planner tests.
 
 import Database from 'better-sqlite3';
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
@@ -70,8 +69,7 @@ const SCHEMA_DDL = `
   );
 `;
 
-// The `db` binding is the in-memory sqlite handle the `../db/client` mock in each
-// test file unwraps, so planner code under test talks to this database.
+// Expose the SQLite handle through the mocked D1 binding.
 export const setupPlannerDb = (): { db: Drizzle; env: { DB: D1Database } } => {
   const sqlite = new Database(':memory:');
   sqlite.exec(SCHEMA_DDL);

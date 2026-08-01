@@ -2,121 +2,78 @@ digraph SourcePolicyGate {
   graph [
     rankdir=TB,
     bgcolor="#ffffff",
-    pad="0.55",
-    nodesep="0.55",
-    ranksep="0.76",
+    pad="0.45",
+    nodesep="0.62",
+    ranksep="0.68",
     splines=polyline,
     outputorder=edgesfirst,
     newrank=true,
-    forcelabels=true,
     fontname="Avenir",
     label=<
       <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
-        <TR><TD><FONT POINT-SIZE="34"><B>Source Policy and Sharing Gate</B></FONT></TD></TR>
-        <TR><TD><FONT POINT-SIZE="14" COLOR="#5b6b80">The Worker decides what a viewer can see; the browser only renders the result.</FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="34"><B>Signal Read Authority</B></FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="14" COLOR="#5b6b80">Owner access and external visibility are deliberately different contracts.</FONT></TD></TR>
       </TABLE>
     >,
-    labelloc=t,
-    labeljust=c
+    labelloc=t
   ];
 
   node [
     shape=box,
     style="rounded,filled",
-    margin="0.24,0.14",
-    width=3.25,
-    height=0.78,
-    fixedsize=false,
+    margin="0.25,0.15",
+    width=3.2,
     fontname="Avenir",
-    fontsize=18,
-    penwidth=2.4,
+    fontsize=17,
+    penwidth=2.2,
     fontcolor="#14213d",
     color="#2264c7",
-    fillcolor="#eaf3ff:#ffffff",
-    gradientangle=270
+    fillcolor="#eaf3ff"
   ];
 
   edge [
     color="#263a59",
     fontname="Avenir",
-    fontsize=13,
+    fontsize=12,
     fontcolor="#3d4a5c",
-    penwidth=2.2,
-    arrowsize=0.78
+    penwidth=2.0,
+    arrowsize=0.75
   ];
 
-  REQUEST [
-    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Signal read request</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">owner, shared link, or anonymous public viewer</FONT></TD></TR></TABLE>>,
-    fillcolor="#edf7ff:#ffffff",
-    color="#2f80ed"
-  ];
+  REQUEST [label=<<B>Signal read request</B><BR/><FONT POINT-SIZE="13">authenticated API, shared capability, or public route</FONT>>];
+  AUDIENCE [label=<<B>Audience?</B>>, shape=diamond, width=2.5, height=1.0, color="#1f2f46", fillcolor="#ffffff"];
 
-  RESOLVE [
-    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Resolve viewer + collection + signal</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">auth/session, collection visibility, signal visibility</FONT></TD></TR></TABLE>>,
-    fillcolor="#eaf8ef:#ffffff",
-    color="#22865a"
-  ];
+  OWNER_SCOPE [label=<<B>Join through owned collection</B><BR/><FONT POINT-SIZE="13">another tenant's ids look absent</FONT>>, color="#22865a", fillcolor="#eaf8ef"];
+  OWNER_FOUND [label=<<B>Owned signal found?</B>>, shape=diamond, width=2.8, height=1.0, color="#1f2f46", fillcolor="#ffffff"];
+  OWNER [label=<<B>Return owner signal</B><BR/><FONT POINT-SIZE="13">config and cadence included; credentials and secrets never returned</FONT>>, color="#15803d", fillcolor="#d8f5de", penwidth=3.0];
 
-  META [
-    label=<
-      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-        <TR><TD><B>Load server-owned source metadata</B></TD></TR>
-        <TR><TD><FONT POINT-SIZE="14">source policy, execution mode, attribution, review notes</FONT></TD></TR>
-      </TABLE>
-    >,
-    fillcolor="#f5f3ff:#ffffff",
-    color="#7c3aed"
-  ];
+  CAPABILITY [label=<<B>Resolve external collection</B><BR/><FONT POINT-SIZE="13">valid slug plus shared/public route contract</FONT>>, color="#22865a", fillcolor="#eaf8ef"];
+  VISIBILITY [label=<<B>Collection and signal visible?</B>>, shape=diamond, width=3.5, height=1.0, color="#1f2f46", fillcolor="#ffffff"];
+  POLICY [label=<
+    <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1">
+      <TR><TD><B>Server source policy permits display?</B></TD></TR>
+      <TR><TD><FONT POINT-SIZE="13">policy exists · public-display eligible · public-cloud execution</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="13">rights are public or with-attribution</FONT></TD></TR>
+    </TABLE>
+  >, shape=diamond, width=4.8, height=1.25, color="#1f2f46", fillcolor="#ffffff"];
+  EXTERNAL [label=<<B>Return public-safe projection</B><BR/><FONT POINT-SIZE="13">owner config/cadence omitted; source attribution retained</FONT>>, color="#15803d", fillcolor="#d8f5de", penwidth=3.0];
 
-  VIEWER_OK [
-    label=<<B>Viewer allowed?</B>>,
-    shape=diamond,
-    style=filled,
-    width=2.8,
-    height=1.05,
-    fillcolor="#ffffff",
-    color="#1f2f46",
-    penwidth=2.4
-  ];
+  NOT_FOUND [label=<<B>404 Not Found</B><BR/><FONT POINT-SIZE="13">do not confirm private, blocked, or cross-owner existence</FONT>>, color="#c53030", fillcolor="#fde2e1", penwidth=3.0];
 
-  SOURCE_OK [
-    label=<<B>Source allowed for this context?</B>>,
-    shape=diamond,
-    style=filled,
-    width=4.2,
-    height=1.05,
-    fillcolor="#ffffff",
-    color="#1f2f46",
-    penwidth=2.4
-  ];
+  REQUEST -> AUDIENCE;
+  AUDIENCE -> OWNER_SCOPE [label="owner"];
+  AUDIENCE -> CAPABILITY [label="shared / public"];
 
-  PRIVATE [
-    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Render full private signal</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">owner view; credentials never exposed</FONT></TD></TR></TABLE>>,
-    fillcolor="#d8f5de:#effcf2",
-    color="#15803d",
-    penwidth=3.0
-  ];
+  OWNER_SCOPE -> OWNER_FOUND;
+  OWNER_FOUND -> OWNER [label="yes"];
+  OWNER_FOUND -> NOT_FOUND [label="no"];
 
-  PUBLIC [
-    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Render public-safe signal</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">source link and attribution included</FONT></TD></TR></TABLE>>,
-    fillcolor="#d8f5de:#effcf2",
-    color="#15803d",
-    penwidth=3.0
-  ];
+  CAPABILITY -> VISIBILITY;
+  VISIBILITY -> POLICY [label="yes"];
+  VISIBILITY -> NOT_FOUND [label="no"];
+  POLICY -> EXTERNAL [label="yes"];
+  POLICY -> NOT_FOUND [label="no"];
 
-  HIDE [
-    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Hide or show blocked state</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">private-only, unreviewed, unsupported, or no access</FONT></TD></TR></TABLE>>,
-    fillcolor="#fde2e1:#fff5f5",
-    color="#c53030",
-    penwidth=3.0
-  ];
-
-  REQUEST -> RESOLVE -> META -> VIEWER_OK;
-  VIEWER_OK -> SOURCE_OK [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">Yes</FONT></TD></TR></TABLE>>];
-  VIEWER_OK -> HIDE [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">No</FONT></TD></TR></TABLE>>];
-  SOURCE_OK -> PRIVATE [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">Private owner</FONT></TD></TR></TABLE>>];
-  SOURCE_OK -> PUBLIC [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">Public-safe</FONT></TD></TR></TABLE>>];
-  SOURCE_OK -> HIDE [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">No</FONT></TD></TR></TABLE>>];
-
-  { rank=same; PRIVATE; PUBLIC; HIDE; }
+  { rank=same; OWNER_SCOPE; CAPABILITY; }
+  { rank=same; OWNER; EXTERNAL; NOT_FOUND; }
 }

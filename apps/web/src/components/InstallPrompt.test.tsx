@@ -1,6 +1,4 @@
-// Renders via preact-render-to-string — same lightweight pattern as the
-// other component tests. We can't simulate `beforeinstallprompt` in a
-// non-DOM environment, so this just verifies the default null render.
+// The non-DOM test can only verify the pre-prompt render.
 
 import { describe, expect, it } from 'vitest';
 import renderToString from 'preact-render-to-string';

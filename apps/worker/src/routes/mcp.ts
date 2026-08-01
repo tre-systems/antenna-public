@@ -11,10 +11,7 @@ type Bindings = MiddlewareEnv;
 
 type McpRouteOptions = {
   readonly fetchImpl?: FetchLike;
-  // In-process dispatch back into the Worker's own Hono app. /api/mcp self-proxies
-  // to /api/*, and doing that over the network (a fetch to our own hostname) fails
-  // on Cloudflare with a 522 self-loop, so when a dispatcher is provided we route
-  // those calls in-process (a direct function call) instead.
+  // Dispatch self-proxy calls in-process to avoid Cloudflare hostname loops.
   readonly dispatch?: (request: Request, env: Bindings, ctx: ExecutionContext) => Promise<Response>;
 };
 
@@ -25,11 +22,7 @@ export function createMcpRoute(options: McpRouteOptions = {}) {
     const bearerToken = extractBearerToken(c.req.raw.headers.get('authorization'));
     const sessionCookie = nonEmptyHeader(c.req.raw.headers.get('cookie'));
 
-    // A `pbk_` token or a browser session passes straight through — the
-    // self-proxied /api/* calls re-validate it. Any other bearer is an OAuth
-    // access token: validate it here (with expiry) so a missing or invalid
-    // credential is answered with the discovery challenge. MCP clients rely on
-    // the 401 + WWW-Authenticate header to bootstrap the OAuth flow.
+    // Validate OAuth bearers here so failures include the MCP discovery challenge.
     const isLegacyBearer = bearerToken !== null && bearerToken.startsWith(TOKEN_PREFIX);
     if (!isLegacyBearer && sessionCookie === undefined) {
       const oauthUser =
@@ -41,17 +34,14 @@ export function createMcpRoute(options: McpRouteOptions = {}) {
       }
     }
 
-    // Stateless MCP handles requests synchronously over POST. Letting the SDK
-    // open a standalone GET SSE stream leaves Cloudflare with an idle response
-    // that is eventually cancelled as a hung Worker request.
+    // Reject standalone SSE because stateless MCP handles requests over POST.
     if (c.req.method === 'GET') {
       c.header('Allow', 'POST');
       c.header('Cache-Control', 'no-store');
       return err(c, 'mcp_get_stream_unsupported', 405);
     }
 
-    // Self-proxy transport: prefer the in-process dispatcher (avoids the 522
-    // self-loop on Cloudflare); fall back to options.fetchImpl (used by tests).
+    // Prefer in-process dispatch and retain fetchImpl for tests.
     const dispatch = options.dispatch;
     const fetchImpl: FetchLike | undefined = dispatch
       ? (input, init) =>

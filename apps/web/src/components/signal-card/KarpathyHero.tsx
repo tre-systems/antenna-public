@@ -1,4 +1,4 @@
-import type { KarpathyCardData } from '../../signalFormat';
+import type { KarpathyCardData } from '../../signal-format';
 
 export function KarpathyHero({ data }: { readonly data: KarpathyCardData }) {
   return (

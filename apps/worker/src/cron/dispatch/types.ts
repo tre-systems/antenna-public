@@ -14,6 +14,7 @@ export type DispatchEnv = DbEnv &
     readonly ARTIFICIAL_ANALYSIS_API_KEY?: string;
     readonly GITHUB_TOKEN?: string;
     readonly CF_ANALYTICS_API_TOKEN?: string;
+    readonly APP_HEALTH_MANIFEST?: string;
     readonly ADMIN_EMAILS?: string;
   };
 
@@ -25,9 +26,7 @@ export type DispatchSummary = {
 
 export type DispatchContext = {
   readonly runId: string;
-  // Upstream calls running right now, keyed by what they are fetching, so
-  // concurrent lanes asking for the same thing await one call instead of
-  // issuing their own. Scoped to a single tick.
+  // Collapse duplicate upstream calls within one tick.
   readonly inFlight: Map<string, Promise<AdapterResult>>;
 };
 

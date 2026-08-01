@@ -6,8 +6,7 @@ import { validateTemplateConfig } from '../registry/config';
 
 type Template = (typeof templates)[number];
 
-// Split on conjunctions and commas. "plus" / "and" / "then" all act as fragment
-// boundaries; leading/trailing whitespace gets trimmed downstream.
+// Split prompt fragments on commas and common conjunctions.
 const FRAGMENT_SPLIT_RX = /\s*(?:,|\band\b|\bplus\b|\bthen\b)\s*/i;
 
 const fragmentsOf = (prompt: string): ReadonlyArray<string> =>
@@ -100,6 +99,15 @@ const buildSignal = (template: Template, fragment: string): ProposedSignal => {
     rights_status: template.rightsStatus,
     source_label: sourceLabelForTemplate(template.id, template.displayName),
   };
+};
+
+export const planTemplate = (templateId: string): CollectionPlan | undefined => {
+  const template = templateById(templateId);
+  if (!template || (template.plannerEnabled === false && template.directProposalEnabled !== true)) {
+    return undefined;
+  }
+  const prompt = `Add ${template.displayName}`;
+  return { prompt, signals: [buildSignal(template, '')], unmatched: [] };
 };
 
 export const matchPrompt = (prompt: string): CollectionPlan => {

@@ -1,5 +1,4 @@
-// Gates that must refuse before an adapter runs: source policy for externally
-// visible signals, and the admin-only deployment adoption signal.
+// Access gates must refuse before an adapter runs.
 
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -117,8 +116,7 @@ describe('runDispatch access gates', () => {
     expect(await runDispatch(env)).toEqual({ ran: 1, ok: 1, failed: 0 });
   });
 
-  // The deployment adoption signal reads D1 rather than an upstream source, so
-  // the gate that keeps it to admins is dispatch-level, not route-level.
+  // Gate the D1-backed deployment signal during dispatch.
   describe('antenna-users', () => {
     const seedUser = (email: string): void => {
       db.insert(schema.user)

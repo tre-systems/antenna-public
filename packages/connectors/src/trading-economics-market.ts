@@ -1,6 +1,7 @@
 import { errorMessage } from './error-message';
 import type { Adapter, AdapterError, AdapterResult, DataPoint } from './types';
 import { retryAfterSecondsFromHeaders } from './http-retry-after';
+import { discardResponse } from './discard-response';
 
 export type TradingEconomicsMarketConfig = {
   readonly symbol: string;
@@ -70,8 +71,7 @@ const fetchHistorical = async (
   days: number,
 ): Promise<{ ok: true; body: unknown } | { ok: false; error: AdapterError }> => {
   const { d1, d2 } = dateRange(days);
-  // TE has no header auth, so `url` carries the key: never log, persist, or
-  // return it — hence the coarse, key-free messages on every error path below.
+  // TE puts credentials in the URL, so every returned error must remain key-free.
   const params = new URLSearchParams({ c: apiKey, d1, d2, f: 'json' });
   const url = `https://api.tradingeconomics.com/markets/historical/${encodeURIComponent(symbol)}?${params.toString()}`;
 
@@ -83,12 +83,14 @@ const fetchHistorical = async (
   }
 
   if (response.status === 401 || response.status === 403 || response.status === 410) {
+    await discardResponse(response);
     return {
       ok: false,
       error: { code: 'unauthorized', message: `Trading Economics rejected credentials` },
     };
   }
   if (response.status === 429) {
+    await discardResponse(response);
     return {
       ok: false,
       error: {
@@ -99,6 +101,7 @@ const fetchHistorical = async (
     };
   }
   if (!response.ok) {
+    await discardResponse(response);
     return { ok: false, error: { code: 'fetch_failed', message: `HTTP ${response.status}` } };
   }
 

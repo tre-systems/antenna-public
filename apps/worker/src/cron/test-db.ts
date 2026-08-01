@@ -1,8 +1,4 @@
-// Swaps the Worker's D1-backed `db()` for an in-memory better-sqlite3 client.
-// Not a test file (no .test.ts suffix) so vitest ignores it.
-//
-// Used from a test file as:
-//   vi.mock('../db/client', async () => (await import('./test-db')).inMemoryDbClient());
+// Substitute an in-memory SQLite client for D1 in cron tests.
 
 import type Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';

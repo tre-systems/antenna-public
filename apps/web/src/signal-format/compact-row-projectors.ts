@@ -11,6 +11,7 @@ import {
   severityTone,
   stripSeverityPrefix,
 } from './compact-row-format';
+import { appHealthRow, portfolioRow, webAnalyticsRow } from './compact-row-operations-projectors';
 import type { CompactRow } from './compact-row-types';
 import { safeExternalUrl } from './display';
 import type { RenderSignal } from './types';
@@ -20,6 +21,8 @@ export const projectRow = (signal: RenderSignal, p: DataPoint, rank: number): Co
   if (signal.template_id === 'aa-highlights') return aaHighlightRow(p, rank, href);
   if (signal.template_id === 'aa-frontier') return aaFrontierRow(p, rank, href);
   if (signal.template_id === 'project-portfolio') return portfolioRow(p, rank);
+  if (signal.template_id === 'app-health') return appHealthRow(p, rank, href);
+  if (signal.template_id === 'cloudflare-web-analytics') return webAnalyticsRow(p, rank, href);
   if (signal.template_id === 'tbench-leaderboard') return tbenchRow(p, rank, href);
   if (signal.template_id === 'sector-movers') return sectorMoverRow(p, rank, href);
   if (signal.template_id === 'market-overview') return marketOverviewRow(p, rank, href);
@@ -32,48 +35,6 @@ export const projectRow = (signal: RenderSignal, p: DataPoint, rank: number): Co
   if (signal.template_id === 'cisa-kev-recent') return cisaRow(p, rank, text, href);
   if (signal.template_id === 'uk-economic-calendar') return ukCalendarRow(p, rank, text, href);
   return null;
-};
-
-const portfolioRow = (p: DataPoint, rank: number): CompactRow | null => {
-  const project = strOf(p.dimensions?.project);
-  const events = typeof p.value === 'number' ? p.value : Number(p.value);
-  if (!project || !Number.isFinite(events)) return null;
-  const change = numOf(p.dimensions?.change);
-  const topEvent = strOf(p.dimensions?.top_event);
-  const prior = numOf(p.dimensions?.previous);
-  const comparison =
-    Number.isFinite(prior) && prior > 0
-      ? `${change >= 0 ? '+' : ''}${Math.round(change)}% vs prior`
-      : events > 0
-        ? 'new activity'
-        : 'quiet';
-  return {
-    rank,
-    title: projectLabel(project),
-    subtitle: topEvent ? `${comparison} · ${topEvent.replaceAll('_', ' ')}` : comparison,
-    chip: `${Math.round(events).toLocaleString('en-GB')} events`,
-    chipTone: events > 0 ? 'ok' : 'muted',
-    href: null,
-  };
-};
-
-const projectLabel = (project: string): string => {
-  const known: Readonly<Record<string, string>> = {
-    rgou: 'Royal Game of Ur',
-    uwp: 'UWP',
-    'tre-website': 'TRE Website',
-    'swade-toolbox': 'SWADE Toolbox',
-    'geno-2': 'Geno 2',
-    'gamma-station': 'Gamma Station',
-    talata: 'Talata',
-  };
-  return (
-    known[project] ??
-    project
-      .split(/[-_]/)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(' ')
-  );
 };
 
 const hrefOf = (point: DataPoint): string | null => safeExternalUrl(point.source_url);

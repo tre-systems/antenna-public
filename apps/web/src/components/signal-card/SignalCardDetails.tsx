@@ -1,5 +1,5 @@
 import type { ApiSignal } from '../../api';
-import { relativeTime } from '../../relativeTime';
+import { relativeTime } from '../../relative-time';
 import type { CardStatus, RenderSignal } from './types';
 
 type Props = {

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { createAntennaReadClient } from './client';
+import { createAntennaClient } from './client';
 import { jsonFetch, jsonFetchBody, signal } from './client-test-fixtures';
 import { getSignalHistoryTool, listSignalsTool } from './tools';
 
-describe('createAntennaReadClient reads', () => {
+describe('createAntennaClient reads', () => {
   it('sends session-cookie auth and lists signals', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       sessionCookie: 'session-value',
       fetchImpl: jsonFetch(requests, [signal({ id: 'one', template_id: 'github_trending' })]),
@@ -21,7 +21,7 @@ describe('createAntennaReadClient reads', () => {
 
   it('preserves full cookie headers and bearer auth', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example/',
       sessionCookie: 'better-auth.session_token=abc; other=value',
       token: 'api-token',
@@ -36,7 +36,7 @@ describe('createAntennaReadClient reads', () => {
 
   it('passes a collection id filter to the signal list endpoint', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       fetchImpl: jsonFetch(requests, [signal({ id: 'one', template_id: 'github_trending' })]),
     });
@@ -49,7 +49,7 @@ describe('createAntennaReadClient reads', () => {
   });
 
   it('filters signals by template and status for MCP list_signals', async () => {
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       fetchImpl: jsonFetchBody([
         signal({ id: 'one', template_id: 'github_trending', status: 'live' }),
@@ -67,7 +67,7 @@ describe('createAntennaReadClient reads', () => {
   });
 
   it('treats never-attempted null-status signals as loading in list filters', async () => {
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       fetchImpl: jsonFetchBody([
         signal({
@@ -88,7 +88,7 @@ describe('createAntennaReadClient reads', () => {
 
   it('loads one signal by id through the owner-scoped signal endpoint', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       fetchImpl: jsonFetch(requests, signal({ id: 'two', template_id: 'market_history' })),
     });
@@ -98,7 +98,7 @@ describe('createAntennaReadClient reads', () => {
   });
 
   it('returns null for unknown signal ids', async () => {
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       fetchImpl: () => Promise.resolve(Response.json({ error: 'not_found' }, { status: 404 })),
     });
@@ -108,7 +108,7 @@ describe('createAntennaReadClient reads', () => {
 
   it('fetches signal history with the requested range', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       fetchImpl: jsonFetch(requests, {
         points: [
@@ -128,7 +128,7 @@ describe('createAntennaReadClient reads', () => {
 
   it('lists collections and fetches one collection detail by id', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       sessionCookie: 'session-value',
       fetchImpl: (input, init) => {
@@ -191,7 +191,7 @@ describe('createAntennaReadClient reads', () => {
   });
 
   it('throws a typed API error with status and response body', async () => {
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       fetchImpl: () =>
         Promise.resolve(new Response('not signed in', { status: 401, statusText: 'Unauthorized' })),

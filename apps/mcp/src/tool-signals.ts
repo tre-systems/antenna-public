@@ -18,6 +18,12 @@ export type RefreshSignalInput = {
 
 export type ProposeSignalInput = {
   readonly prompt: string;
+  readonly collectionId?: string;
+};
+
+export type ProposeTemplateSignalInput = {
+  readonly templateId: string;
+  readonly collectionId?: string;
 };
 
 export type RejectPlanInput = {
@@ -66,6 +72,8 @@ export type McpSignalSummary = {
   readonly source_policy: ApiSignal['source_policy'];
   readonly status: ApiSignal['status'];
   readonly latest_point: DataPoint | null;
+  readonly current_points: readonly DataPoint[];
+  readonly point_count: number;
 };
 
 export type McpSignalHistory = {
@@ -91,5 +99,7 @@ export function summarizeSignal(signal: ApiSignal): McpSignalSummary {
     source_policy: signal.source_policy,
     status: signal.status,
     latest_point: signal.points[0] ?? null,
+    current_points: signal.points,
+    point_count: signal.points.length,
   };
 }

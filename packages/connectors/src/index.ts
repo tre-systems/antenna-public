@@ -16,9 +16,13 @@ export { appUsage } from './app-usage';
 export { cloudflareAnalytics } from './cloudflare-analytics';
 export { projectPortfolio } from './project-portfolio';
 export type { ProjectPortfolioConfig } from './project-portfolio';
+export { appHealth } from './app-health';
+export type { AppHealthConfig } from './app-health';
+export { cloudflareWebAnalytics } from './cloudflare-web-analytics';
+export type { CloudflareWebAnalyticsConfig } from './cloudflare-web-analytics';
 export { githubRepo } from './github-repo';
-export { githubTrending, parseGithubTrending, type GithubTrendingRepo } from './github-trending';
-export { karpathyJobs, normaliseJobs, summariseJobs } from './karpathy-jobs';
+export { githubTrending } from './github-trending';
+export { karpathyJobs } from './karpathy-jobs';
 export { aaFrontier, aaHighlights } from './aa-highlights';
 export type { AaFrontierConfig, AaHighlightsConfig } from './aa-highlights';
 export { tbenchLeaderboard } from './tbench-leaderboard';
@@ -27,29 +31,8 @@ export { manual } from './manual';
 export { antennaUsers, type AntennaUsersConfig } from './antenna-users';
 export { manualCost, type ManualCostConfig } from './manual-cost';
 export { restGeneric } from './rest-generic';
-export { cisaKevRecent, normaliseKev, recentVulnerabilities } from './cisa-kev';
-export {
-  activeIncidents,
-  cloudflareIncidents,
-  normaliseCloudflareIncidents,
-  recentIncidents,
-} from './cloudflare-incidents';
-export {
-  githubSecurityAdvisories,
-  normaliseGithubSecurityAdvisories,
-  recentAdvisories,
-} from './github-security-advisories';
-export { boeUpcomingPublications, parseBoeUpcomingPublications } from './boe-upcoming-publications';
-export {
-  candidateScore,
-  isProblemCandidate,
-  parseRedditFeed,
-  type RedditCandidate,
-} from './reddit-feed';
-export {
-  rateLimitRetrySeconds,
-  redditProblems,
-  type RedditProblemsConfig,
-} from './reddit-problems';
-export { resolveJsonPath } from './json-path';
-export { geocode, type GeocodeHit } from './geocode-openmeteo';
+export { cisaKevRecent } from './cisa-kev';
+export { cloudflareIncidents } from './cloudflare-incidents';
+export { githubSecurityAdvisories } from './github-security-advisories';
+export { boeUpcomingPublications } from './boe-upcoming-publications';
+export { geocode } from './geocode-openmeteo';

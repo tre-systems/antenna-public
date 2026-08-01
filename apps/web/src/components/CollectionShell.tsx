@@ -7,13 +7,13 @@ import {
   showNotice,
   signals,
 } from '../signals/signals';
-import { SignalComposer } from './SignalComposer';
 import { SignalSettingsPanel } from './SignalSettingsPanel';
 import { OfflineBanner } from './OfflineBanner';
 import { NoticeToast } from './NoticeToast';
 import { UndoToast } from './UndoToast';
-import { connectCollectionStream } from './collectionStream';
+import { connectCollectionStream } from './collection-stream';
 import { SignalGrid } from './collection-shell/SignalGrid';
+import { SignalComposer } from './SignalComposer';
 
 type Props = {
   readonly collectionId: string | null;
@@ -24,8 +24,7 @@ type Props = {
 };
 
 function handleConfirmed(createdSignalIds: readonly string[]): void {
-  // Capture emptiness before the new signals load so the first signal in a
-  // collection gets a warmer confirmation than later additions.
+  // Capture emptiness before loading so the first-signal confirmation remains distinct.
   const wasFirst = (signals.value?.length ?? 0) === 0;
   void loadSignalsById(createdSignalIds);
   const count = createdSignalIds.length;

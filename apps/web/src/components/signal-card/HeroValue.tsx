@@ -1,5 +1,5 @@
 import type { DataPoint } from '../../api';
-import { pointValueText } from '../../signalFormat';
+import { pointValueText } from '../../signal-format';
 
 type HeroValueProps = {
   readonly point: DataPoint;

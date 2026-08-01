@@ -1,3 +1,4 @@
+import { isFiniteNumber } from './config-values';
 import type { DataPoint } from './types';
 
 export type WeatherConfig = { lat: number; lon: number; location?: string };
@@ -71,7 +72,7 @@ const pushCurrentNumber = (
   unit: string | undefined,
   ts: number,
 ): void => {
-  if (typeof value !== 'number') return;
+  if (!isFiniteNumber(value)) return;
   points.push({
     dimensions: { location, metric },
     value,
@@ -126,7 +127,7 @@ const pushHourlyNumber = (
   unit: string | undefined,
   ts: number,
 ): void => {
-  if (typeof value !== 'number') return;
+  if (!isFiniteNumber(value)) return;
   points.push({
     dimensions: { location, metric, hour },
     value,
@@ -140,7 +141,7 @@ const stringArray = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
 
 const numberArray = (value: unknown): number[] =>
-  Array.isArray(value) ? value.filter((item): item is number => typeof item === 'number') : [];
+  Array.isArray(value) ? value.filter(isFiniteNumber) : [];
 
 const parseTs = (time: string | undefined): number => {
   if (typeof time !== 'string') return Date.now();

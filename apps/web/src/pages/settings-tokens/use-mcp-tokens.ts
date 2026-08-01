@@ -20,6 +20,7 @@ export function useMcpTokens() {
   }, [refresh]);
 
   const revokeToken = async (id: string) => {
+    if (revoking !== null) return;
     setRevoking(id);
     try {
       await revokeMcpToken(id);

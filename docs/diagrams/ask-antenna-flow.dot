@@ -1,64 +1,60 @@
-digraph AskAntennaFlow {
+digraph SignalAuthoring {
   graph [
     rankdir=TB,
     bgcolor="#ffffff",
-    pad="0.55",
-    nodesep="0.48",
-    ranksep="0.72",
+    pad="0.45",
+    nodesep="0.52",
+    ranksep="0.66",
     splines=polyline,
     outputorder=edgesfirst,
     compound=true,
     newrank=true,
-    forcelabels=true,
     fontname="Avenir",
     label=<
       <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
-        <TR><TD><FONT POINT-SIZE="34"><B>Ask Antenna: Prompt to Live Signal</B></FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="34"><B>Agent-First Signal Authoring</B></FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="14" COLOR="#5b6b80">Proposal and confirmation stay separate; only the Worker grants authority.</FONT></TD></TR>
       </TABLE>
     >,
-    labelloc=t,
-    labeljust=c
+    labelloc=t
   ];
 
   node [
     shape=box,
     style="rounded,filled",
-    margin="0.21,0.13",
-    width=2.80,
-    height=0.74,
-    fixedsize=false,
+    margin="0.24,0.14",
+    width=3.0,
     fontname="Avenir",
-    fontsize=18,
-    penwidth=2.4,
+    fontsize=17,
+    penwidth=2.2,
     fontcolor="#14213d",
     color="#2264c7",
-    fillcolor="#eaf3ff:#ffffff",
-    gradientangle=270
+    fillcolor="#eaf3ff"
   ];
 
   edge [
     color="#263a59",
     fontname="Avenir",
-    fontsize=13,
+    fontsize=12,
     fontcolor="#3d4a5c",
-    penwidth=2.2,
-    arrowsize=0.78
+    penwidth=2.0,
+    arrowsize=0.75
   ];
 
-  // ---- User ----
-  U1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Ask Antenna input</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">user types "weather in Madrid"</FONT></TD></TR></TABLE>>];
+  AGENT [label=<<B>Codex via Antenna MCP</B><BR/><FONT POINT-SIZE="13">primary authoring path</FONT>>];
+  BROWSER [label=<<B>Onboarding composer</B><BR/><FONT POINT-SIZE="13">first-signal browser fallback</FONT>>];
+  { rank=same; AGENT; BROWSER; }
 
-  // ---- Planner ----
-  subgraph cluster_planner {
+  REQUEST [label=<<B>Proposal request</B><BR/><FONT POINT-SIZE="13">natural-language prompt or exact template id</FONT>>, color="#22865a", fillcolor="#eaf8ef"];
+
+  subgraph cluster_plan {
     graph [
       label=<
         <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#1e6b43"><B>PLANNER (DETERMINISTIC)</B></FONT></TD></TR>
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#4e7a61">Keyword / regex matching; source posture derived server-side.</FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#1e6b43"><B>WORKER: PLAN ONLY</B></FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#4e7a61">No signal or upstream fetch exists yet.</FONT></TD></TR>
         </TABLE>
       >,
-      labelloc=t,
-      labeljust=l,
       color="#b8e5c8",
       fillcolor="#f4fbf6",
       style="rounded,filled",
@@ -66,99 +62,40 @@ digraph AskAntennaFlow {
       margin=22
     ];
 
-    P1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>POST /api/plan</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">Hono route</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
-    P2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>match.ts</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">matchHints + paramExtractors</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
-    P3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Build CollectionPlan</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">signals, missing params, rights posture</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
-    P4 [
-      label=<<B>Any match?</B>>,
-      shape=diamond,
-      style=filled,
-      width=2.7,
-      height=1.05,
-      fillcolor="#ffffff",
-      color="#1f2f46",
-      penwidth=2.4
-    ];
+    TARGET [label=<<B>Resolve owned collection</B><BR/><FONT POINT-SIZE="13">unknown and cross-owner ids look absent</FONT>>, color="#22865a", fillcolor="#eaf8ef"];
+    KIND [label=<<B>Proposal kind?</B>>, shape=diamond, width=2.8, height=1.0, color="#1f2f46", fillcolor="#ffffff"];
+    MATCHER [label=<<B>Run deterministic matcher</B><BR/><FONT POINT-SIZE="13">produce matched signals plus unmatched fragments</FONT>>, color="#7c3aed", fillcolor="#f5f3ff"];
+    EXACT [label=<<B>Resolve exact registry template</B><BR/><FONT POINT-SIZE="13">must permit direct proposals</FONT>>, color="#7c3aed", fillcolor="#f5f3ff"];
+    EXACT_OK [label=<<B>Valid exact id?</B>>, shape=diamond, width=2.7, height=1.0, color="#1f2f46", fillcolor="#ffffff"];
+    PLAN [label=<<B>Persist CollectionPlan</B><BR/><FONT POINT-SIZE="13">intent, missing fields, source and rights metadata</FONT>>, color="#22865a", fillcolor="#eaf8ef"];
+    REQUEST_ROW [label=<<B>Persist connector request</B><BR/><FONT POINT-SIZE="13">unmatched prompt only; unknown exact ids are rejected</FONT>>, color="#d39a00", fillcolor="#fff4d1"];
+    UNKNOWN [label=<<B>unknown_template</B><BR/><FONT POINT-SIZE="13">no plan and no setup request</FONT>>, color="#c53030", fillcolor="#fde2e1"];
+    HAS_SIGNAL [label=<<B>Any proposed signal?</B>>, shape=diamond, width=3.0, height=1.0, color="#1f2f46", fillcolor="#ffffff"];
 
-    P1 -> P2 -> P4;
-    P4 -> P3 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">Yes</FONT></TD></TR></TABLE>>];
+    TARGET -> KIND;
+    KIND -> MATCHER [label="prompt"];
+    KIND -> EXACT [label="exact id"];
+    EXACT -> EXACT_OK;
+    EXACT_OK -> PLAN [label="yes"];
+    EXACT_OK -> UNKNOWN [label="no"];
+    MATCHER -> PLAN;
+    PLAN -> REQUEST_ROW [label="for unmatched fragments", style=dashed, color="#6b7280"];
+    PLAN -> HAS_SIGNAL;
   }
 
-  // ---- Registry ----
-  subgraph cluster_registry {
-    graph [
-      label=<
-        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#5f3b8a"><B>REGISTRY (TS CODE)</B></FONT></TD></TR>
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#6d4d8d">Static modules include match hints, adapters, and rightsStatus.</FONT></TD></TR>
-        </TABLE>
-      >,
-      labelloc=t,
-      labeljust=l,
-      color="#d6c6ee",
-      fillcolor="#fbf8ff",
-      style="rounded,filled",
-      penwidth=1.8,
-      margin=22
-    ];
+  REVIEW [label=<<B>Codex or onboarding UI presents proposal</B><BR/><FONT POINT-SIZE="13">owner sees target, params, cadence, source, and blockers</FONT>>];
+  SETUP [label=<<B>Agent reports a setup request</B><BR/><FONT POINT-SIZE="13">the owner can add the missing connector or configuration</FONT>>, color="#d39a00", fillcolor="#fff4d1"];
+  APPROVE [label=<<B>Owner approves?</B>>, shape=diamond, width=2.6, height=1.0, color="#1f2f46", fillcolor="#ffffff"];
+  REJECT [label=<<B>Reject plan</B><BR/><FONT POINT-SIZE="13">no signal created</FONT>>, color="#c53030", fillcolor="#fde2e1"];
 
-    REG [
-      label=<
-        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-          <TR><TD><B>Connector templates</B></TD></TR>
-          <TR><TD><FONT POINT-SIZE="15">weather, FX, crypto, market history,<BR/>GitHub, Calendar, manual, more</FONT></TD></TR>
-        </TABLE>
-      >,
-      fillcolor="#f5f3ff:#ffffff",
-      color="#7c3aed",
-      width=3.7
-    ];
-  }
-
-  // ---- Confirmation ----
   subgraph cluster_confirm {
     graph [
       label=<
         <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#1f5fbf"><B>USER CONFIRMATION</B></FONT></TD></TR>
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#496f9f">Plan is shown; user can fill missing params or reject.</FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#0f766e"><B>WORKER: CONFIRMATION</B></FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#357a74">The confirmation payload is a patch, never a signal definition.</FONT></TD></TR>
         </TABLE>
       >,
-      labelloc=t,
-      labeljust=l,
-      color="#b9d8ff",
-      fillcolor="#f5faff",
-      style="rounded,filled",
-      penwidth=1.8,
-      margin=22
-    ];
-
-    C1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>PlanPreview UI</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">template, params, rights, missing, auth</FONT></TD></TR></TABLE>>, fillcolor="#edf7ff:#ffffff", color="#2f80ed"];
-    C2 [
-      label=<<B>Confirm?</B>>,
-      shape=diamond,
-      style=filled,
-      width=2.4,
-      height=1.0,
-      fillcolor="#ffffff",
-      color="#1f2f46",
-      penwidth=2.4
-    ];
-
-    C1 -> C2;
-  }
-
-  // ---- Execution ----
-  subgraph cluster_exec {
-    graph [
-      label=<
-        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#0f766e"><B>EXECUTION</B></FONT></TD></TR>
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#357a74">Target boundary: owner-scoped plan, server registry, validated config.</FONT></TD></TR>
-        </TABLE>
-      >,
-      labelloc=t,
-      labeljust=l,
       color="#99d5cf",
       fillcolor="#f0fdfa",
       style="rounded,filled",
@@ -166,33 +103,27 @@ digraph AskAntennaFlow {
       margin=22
     ];
 
-    X1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>POST /api/plan/:id/confirm</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">Hono route</FONT></TD></TR></TABLE>>, fillcolor="#e6fffb:#ffffff", color="#0f766e"];
-    X0 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Owner-scoped plan lookup</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">implemented guardrail</FONT></TD></TR></TABLE>>, fillcolor="#e6fffb:#ffffff", color="#0f766e"];
-    X2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Patch missing params only</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">ignore client source / rights / template claims</FONT></TD></TR></TABLE>>, fillcolor="#ffffff", color="#6b7280", style="rounded,filled,dashed"];
-    X5 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Registry re-resolve</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">policy + config schema</FONT></TD></TR></TABLE>>, fillcolor="#e6fffb:#ffffff", color="#0f766e"];
-    X3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>INSERT signals</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">D1 row with template_id + config</FONT></TD></TR></TABLE>>, fillcolor="#e6fffb:#ffffff", color="#0f766e"];
-    X4 [
-      label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Signal renders</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">live values within ~1 min</FONT></TD></TR></TABLE>>,
-      fillcolor="#d8f5de:#effcf2",
-      color="#15803d",
-      penwidth=3.0
-    ];
+    CONFIRM [label=<<B>Confirm stored plan</B><BR/><FONT POINT-SIZE="13">MCP tool or HTTP route; missing-parameter patches only</FONT>>, color="#0f766e", fillcolor="#e6fffb"];
+    GUARDS [label=<<B>Re-check all authority</B><BR/><FONT POINT-SIZE="13">owner scope · proposed state · quota · registry · config</FONT>>, color="#0f766e", fillcolor="#e6fffb"];
+    WRITE [label=<<B>Transactional D1 batch</B><BR/><FONT POINT-SIZE="13">unique claim · signals · loading statuses · confirmed plan</FONT>>, color="#0f766e", fillcolor="#e6fffb"];
+    CREATED [label=<<B>Signals created</B><BR/><FONT POINT-SIZE="13">private unless source policy permits collection visibility</FONT>>, color="#15803d", fillcolor="#d8f5de", penwidth=3.0];
 
-    X1 -> X0 -> X2 -> X5 -> X3 -> X4;
+    CONFIRM -> GUARDS -> WRITE -> CREATED;
   }
 
-  // ---- Fallback ----
-  CR1 [
-    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>connector_requests row</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">shown in Setup requests</FONT></TD></TR></TABLE>>,
-    fillcolor="#fff4d1:#fffaf0",
-    color="#d39a00"
-  ];
+  CRON [label=<<B>Next bounded cron tick</B><BR/><FONT POINT-SIZE="13">adapter fetches asynchronously; UI/MCP later reads values</FONT>>, color="#d39a00", fillcolor="#fff4d1"];
 
-  // ---- Edges ----
-  U1 -> P1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">prompt</FONT></TD></TR></TABLE>>];
-  P2 -> REG [ltail=cluster_planner, lhead=cluster_registry, label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#dfe3e9" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#6b7280">search hints</FONT></TD></TR></TABLE>>, style=dashed, color="#6b7280", fontcolor="#6b7280"];
-  P4 -> CR1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">No</FONT></TD></TR></TABLE>>];
-  P3 -> C1 [ltail=cluster_planner, lhead=cluster_confirm, label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">CollectionPlan</FONT></TD></TR></TABLE>>];
-  C2 -> X1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">Yes</FONT></TD></TR></TABLE>>, lhead=cluster_exec];
-  C2 -> CR1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">Save as request</FONT></TD></TR></TABLE>>];
+  AGENT -> REQUEST [label="propose_signal / propose_template_signal"];
+  BROWSER -> REQUEST [label="POST /api/plan"];
+  REQUEST -> TARGET [lhead=cluster_plan];
+  HAS_SIGNAL -> REVIEW [label="yes", ltail=cluster_plan];
+  HAS_SIGNAL -> SETUP [label="no · setup only", ltail=cluster_plan];
+  REQUEST_ROW -> SETUP [label="available via MCP", ltail=cluster_plan, style=dashed, color="#6b7280"];
+  REVIEW -> APPROVE;
+  APPROVE -> CONFIRM [label="yes", lhead=cluster_confirm];
+  APPROVE -> REJECT [label="no"];
+  CREATED -> CRON [ltail=cluster_confirm];
+
+  { rank=same; REVIEW; SETUP; }
+  { rank=same; REJECT; CONFIRM; }
 }

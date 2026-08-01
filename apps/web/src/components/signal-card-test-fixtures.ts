@@ -6,6 +6,11 @@ export function makeSignal(overrides: Partial<ApiSignal> = {}): ApiSignal {
   return {
     id: 'b-fx-1',
     template_id: 'fx-pair',
+    display: {
+      title: 'EUR/USD',
+      source_label: 'Frankfurter (ECB)',
+      source_url: 'https://www.frankfurter.app/',
+    },
     config: { pair: 'EUR/USD' },
     refresh_seconds: 60,
     status: {

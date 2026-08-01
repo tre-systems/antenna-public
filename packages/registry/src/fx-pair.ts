@@ -2,8 +2,7 @@ import { fxFrankfurter } from '@antenna/connectors';
 import { z } from 'zod';
 import { type ConnectorTemplate } from './types';
 
-// ISO 4217 codes are always 3 uppercase letters; we only need a permissive
-// scan over common phrasings ("EUR/USD", "USD to JPY", "GBP-CHF").
+// Scan common pair phrasings while retaining the ISO three-letter shape.
 const PAIR_SEPARATORS = /([A-Z]{3})\s*(?:\/|-|\bto\b|\bvs\.?\b|\bagainst\b|\bin\b)\s*([A-Z]{3})/i;
 
 const extractPair = (prompt: string): { base: string; quote: string } | undefined => {

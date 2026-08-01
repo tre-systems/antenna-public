@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { CollectionListItem } from '../api';
 import { deleteCollection } from '../api';
+import { useEscapeDismiss } from './dialog/use-escape-dismiss';
 
 type Props = {
   readonly collection: CollectionListItem;
@@ -29,18 +30,10 @@ export function CollectionDeleteDialog({ collection, onClose, onDeleted }: Props
     inputRef.current?.focus();
   }, []);
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !deleting) onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [deleting, onClose]);
+  useEscapeDismiss(!deleting, onClose);
 
   const submit = async () => {
-    if (!confirmed) return;
+    if (!confirmed || deleting) return;
     setDeleting(true);
     setError(null);
     try {

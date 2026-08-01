@@ -4,19 +4,31 @@ import { collectionPlanSchema } from '@antenna/shared';
 import { db, type Env as DbEnv } from '../db/client';
 import { connectorRequests, collectionPlans, type ProposedPlan } from '../db/schema';
 import type { CollectionPlan, PlanRecord, PlanStatus, ProposedSignal } from '@antenna/shared';
-import { matchPrompt } from './match';
+import { matchPrompt, planTemplate } from './match';
 
 type Client = ReturnType<typeof db>;
 
-type CreatePlanArgs = {
+type CreatePlanBaseArgs = {
   readonly collection_id: string;
-  readonly prompt: string;
   readonly requested_by: string;
 };
 
-export const createPlan = async (env: DbEnv, args: CreatePlanArgs): Promise<PlanRecord> => {
+type CreatePromptPlanArgs = CreatePlanBaseArgs & { readonly prompt: string };
+type CreateTemplatePlanArgs = CreatePlanBaseArgs & { readonly template_id: string };
+
+export function createPlan(env: DbEnv, args: CreatePromptPlanArgs): Promise<PlanRecord>;
+export function createPlan(
+  env: DbEnv,
+  args: CreateTemplatePlanArgs,
+): Promise<PlanRecord | undefined>;
+export async function createPlan(
+  env: DbEnv,
+  args: CreatePromptPlanArgs | CreateTemplatePlanArgs,
+): Promise<PlanRecord | undefined> {
   const client = db(env);
-  const initial = matchPrompt(args.prompt);
+  const initial = 'template_id' in args ? planTemplate(args.template_id) : matchPrompt(args.prompt);
+  if (!initial) return undefined;
+  const prompt = initial.prompt;
   const plan = await resolveLocations(initial);
   const id = crypto.randomUUID();
   const now = new Date();
@@ -26,31 +38,29 @@ export const createPlan = async (env: DbEnv, args: CreatePlanArgs): Promise<Plan
     .values({
       id,
       collectionId: args.collection_id,
-      prompt: args.prompt,
-      // `proposed` is a plain TEXT column; Drizzle's `.$type` is a view, not a
-      // serialiser, so we stringify before the insert.
+      prompt,
+      // Stringify proposed because Drizzle's $type does not serialize TEXT.
       proposed: JSON.stringify(plan) as unknown as ProposedPlan,
       status: 'proposed',
       createdAt: now,
     })
     .run();
 
-  await insertConnectorRequests(client, args, plan);
+  await insertConnectorRequests(client, { ...args, prompt }, plan);
 
   return {
     id,
     collection_id: args.collection_id,
-    prompt: args.prompt,
+    prompt,
     status: 'proposed',
     plan,
     created_at: now.getTime(),
   };
-};
+}
 
 const NEEDS_GEOCODE = new Set(['weather', 'airquality']);
 
-// Lives here rather than in a template because `paramExtractors` are sync. On a
-// geocoder miss the signal is untouched, so the manual lat/lon fallback works.
+// Resolve locations here because template parameter extractors are synchronous.
 const resolveLocations = async (plan: CollectionPlan): Promise<CollectionPlan> => {
   const signals = await Promise.all(plan.signals.map(maybeGeocodeSignal));
   return { ...plan, signals };
@@ -81,7 +91,7 @@ const maybeGeocodeSignal = async (signal: ProposedSignal): Promise<ProposedSigna
 
 const insertConnectorRequests = async (
   client: Client,
-  args: CreatePlanArgs,
+  args: CreatePlanBaseArgs & { readonly prompt: string },
   plan: CollectionPlan,
 ): Promise<void> => {
   if (plan.unmatched.length === 0) return;
@@ -150,9 +160,7 @@ const findPlanForCollection = async (
   return row;
 };
 
-// `proposed` is stored as JSON text. Older rows (v0 prototype shape) won't
-// have `signals`/`unmatched` — coerce to an empty plan in that case so the
-// route doesn't 500 on legacy data.
+// Coerce prototype plan rows to an empty plan rather than failing legacy reads.
 export const parsePlan = (raw: unknown, prompt: string): CollectionPlan => {
   let obj: unknown;
   try {

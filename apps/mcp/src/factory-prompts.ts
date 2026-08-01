@@ -27,4 +27,34 @@ export function registerPrompts(server: McpServer): void {
       ],
     }),
   );
+  server.registerPrompt(
+    'app_brief',
+    {
+      title: 'App brief',
+      description:
+        'Check production health, Worker errors, browser visits, and meaningful product actions across the app fleet.',
+    },
+    () => ({
+      description:
+        'Create an evidence-based app fleet brief from the signed-in Antenna collection.',
+      messages: [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: [
+              'Create a concise Antenna app brief.',
+              '',
+              'Use list_collections first when collection choice is ambiguous, then list_signals for the selected collection.',
+              'Find app-health, cloudflare-analytics, cloudflare-web-analytics, project-portfolio, and app-usage signals. Report freshness and source status before interpreting values.',
+              'Lead with down, degraded, or unconfigured health probes and any Worker errors. Then summarise real-browser visits and meaningful product actions, highlighting large changes.',
+              'Treat traffic, browser visits, and product actions as different evidence. Call quiet telemetry quiet; call telemetry_state "unseen" an instrumentation gap, not zero usage.',
+              'Worker requests include APIs, bots, health checks, development clients, and failed automation. When requests are high but browser visits and successful product actions are quiet or unseen, describe the mismatch as likely non-human or infrastructure traffic and recommend investigation; never report it as user growth.',
+              'Include source links when available. Do not infer health from traffic and do not invent missing data.',
+            ].join('\n'),
+          },
+        },
+      ],
+    }),
+  );
 }

@@ -8,7 +8,6 @@ import {
   createMcpRegisterRateLimit,
   createPlanCreateRateLimit,
   createPublicReadRateLimit,
-  createPublicReportRateLimit,
 } from './public-read-rate-limit';
 
 const buildApp = (opts: Parameters<typeof createPublicReadRateLimit>[0]): Hono => {
@@ -18,9 +17,7 @@ const buildApp = (opts: Parameters<typeof createPublicReadRateLimit>[0]): Hono =
   return app;
 };
 
-// Minimal in-process DurableObjectNamespace: maps each id name to a single
-// RateLimiter instance, so two "isolates" sharing this namespace funnel a key's
-// requests through one authoritative counter — what the real DO does globally.
+// Map each key to one in-process Durable Object instance.
 const fakeRateLimiterNamespace = (): DurableObjectNamespace => {
   const instances = new Map<string, RateLimiter>();
   const instanceFor = (name: string): RateLimiter => {
@@ -80,8 +77,7 @@ describe('createPublicReadRateLimit', () => {
   it('enforces a shared limit across isolates when a Durable Object namespace is bound', async () => {
     let now = 1_000;
     const env = { RATE_LIMITER: fakeRateLimiterNamespace() };
-    // Two independent middlewares = two isolates, each with its own in-memory
-    // Map, but both pointed at the same DO namespace.
+    // Independent middleware instances share the Durable Object namespace.
     const isolateA = buildApp({ maxRequests: 2, now: () => now });
     const isolateB = buildApp({ maxRequests: 2, now: () => now });
     const headers = { 'CF-Connecting-IP': '203.0.113.10' };
@@ -92,8 +88,7 @@ describe('createPublicReadRateLimit', () => {
 
     expect(a1.status).toBe(200);
     expect(a1.headers.get('X-RateLimit-Remaining')).toBe('1');
-    // Second hit lands on the *other* isolate yet still decrements the shared
-    // budget — a per-isolate Map would have reported '1' here.
+    // The other isolate still decrements the shared budget.
     expect(b1.status).toBe(200);
     expect(b1.headers.get('X-RateLimit-Remaining')).toBe('0');
     expect(a2.status).toBe(429);
@@ -155,42 +150,6 @@ describe('createPublicReadRateLimit', () => {
 
     expect(first.status).toBe(200);
     expect(second.status).toBe(429);
-  });
-
-  it('can split public reads from public report submissions', async () => {
-    const app = new Hono();
-    const isReport = (c: { readonly req: { readonly method: string; readonly path: string } }) =>
-      c.req.method === 'POST' && c.req.path.endsWith('/report');
-    app.use(
-      '*',
-      createPublicReportRateLimit({ maxRequests: 1, now: () => 10_000, shouldLimit: isReport }),
-    );
-    app.use(
-      '*',
-      createPublicReadRateLimit({
-        maxRequests: 1,
-        now: () => 10_000,
-        shouldLimit: (c) => !isReport(c),
-      }),
-    );
-    app.get('/api/public/collections/example', (c) => c.json({ ok: true }));
-    app.post('/api/public/collections/example/report', (c) => c.json({ ok: true }));
-
-    const headers = { 'CF-Connecting-IP': '203.0.113.10' };
-    const read = await app.request('/api/public/collections/example', { headers });
-    const firstReport = await app.request('/api/public/collections/example/report', {
-      method: 'POST',
-      headers,
-    });
-    const secondReport = await app.request('/api/public/collections/example/report', {
-      method: 'POST',
-      headers,
-    });
-
-    expect(read.status).toBe(200);
-    expect(firstReport.status).toBe(200);
-    expect(secondReport.status).toBe(429);
-    expect(secondReport.headers.get('X-RateLimit-Limit')).toBe('1');
   });
 
   it('can split OAuth starts and callbacks while leaving other auth routes alone', async () => {

@@ -1,11 +1,10 @@
 import { fetchJson } from './fetch-json';
+import { isFiniteNumber } from './config-values';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 
 type FxConfig = { base: string; quote: string };
 
-// Points are timestamped with the ECB reference date, not the call time. Every
-// tick re-fetches the whole range; the dispatcher's onConflictDoNothing on
-// (signal, date) means only the newest day inserts.
+// ECB reference dates let dispatch deduplicate the repeatedly fetched range.
 
 type FrankfurterLatest = {
   amount: number;
@@ -63,7 +62,7 @@ const parseFrankfurterRange = (body: unknown, config: FxConfig): DataPoint[] => 
     for (const [date, perDate] of Object.entries(rangeRates)) {
       if (!perDate || typeof perDate !== 'object') continue;
       const rate = (perDate as Record<string, unknown>)[config.quote];
-      if (typeof rate !== 'number') continue;
+      if (!isFiniteNumber(rate)) continue;
       const ts = Date.parse(date);
       if (!Number.isFinite(ts)) continue;
       points.push({
@@ -80,7 +79,7 @@ const parseFrankfurterRange = (body: unknown, config: FxConfig): DataPoint[] => 
   if (rangeRates && typeof rangeRates === 'object') {
     const flat = rangeRates as Record<string, unknown>;
     const rate = flat[config.quote];
-    if (typeof rate === 'number' && typeof candidate.date === 'string') {
+    if (isFiniteNumber(rate) && typeof candidate.date === 'string') {
       const ts = Date.parse(candidate.date);
       if (Number.isFinite(ts)) {
         return [

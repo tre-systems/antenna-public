@@ -52,7 +52,114 @@ const safeStorage = (): Storage | null => {
 };
 
 const isSignalSnapshot = (value: unknown): value is SignalSnapshot => {
-  if (value === null || typeof value !== 'object') return false;
-  const maybe = value as SignalSnapshot;
-  return Array.isArray(maybe.signals) && typeof maybe.fetchedAt === 'number';
+  if (!isRecord(value)) return false;
+  return (
+    Array.isArray(value.signals) &&
+    value.signals.every(isApiSignal) &&
+    isFiniteNumber(value.fetchedAt)
+  );
 };
+
+const isApiSignal = (value: unknown): value is ApiSignal => {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === 'string' &&
+    typeof value.template_id === 'string' &&
+    optionalString(value.title) &&
+    isVisibility(value.visibility) &&
+    isRecord(value.config) &&
+    isFiniteNumber(value.refresh_seconds) &&
+    isStatus(value.status) &&
+    Array.isArray(value.points) &&
+    value.points.every(isPoint) &&
+    optionalSignalDisplay(value.display) &&
+    optionalSourcePolicy(value.source_policy)
+  );
+};
+
+const isStatus = (value: unknown): boolean => {
+  if (!isRecord(value)) return false;
+  return (
+    isSignalStatus(value.status) &&
+    nullableNumber(value.last_ok_at) &&
+    nullableNumber(value.last_attempt_at) &&
+    (value.last_error === null || typeof value.last_error === 'string') &&
+    nullableNumber(value.last_manual_request_at)
+  );
+};
+
+const isPoint = (value: unknown): boolean => {
+  if (!isRecord(value)) return false;
+  const dimensions = value.dimensions;
+  const pointValue = value.value;
+  return (
+    (dimensions === null ||
+      (isRecord(dimensions) && Object.values(dimensions).every(isDimension))) &&
+    (pointValue === null || isFiniteNumber(pointValue) || typeof pointValue === 'string') &&
+    optionalNullableString(value.value_text) &&
+    optionalNullableString(value.unit) &&
+    optionalNullableString(value.source_url) &&
+    optionalFiniteNumber(value.ts) &&
+    optionalFiniteNumber(value.observed_at) &&
+    optionalFiniteNumber(value.fetched_at) &&
+    optionalPointDisplay(value.display)
+  );
+};
+
+const optionalSignalDisplay = (value: unknown): boolean =>
+  value === undefined ||
+  (isRecord(value) &&
+    typeof value.title === 'string' &&
+    typeof value.source_label === 'string' &&
+    (value.source_url === null || typeof value.source_url === 'string'));
+
+const optionalPointDisplay = (value: unknown): boolean =>
+  value === undefined ||
+  (isRecord(value) &&
+    typeof value.label === 'string' &&
+    (value.source_url === null || typeof value.source_url === 'string'));
+
+const optionalSourcePolicy = (value: unknown): boolean =>
+  value === undefined ||
+  value === null ||
+  (isRecord(value) &&
+    typeof value.source_id === 'string' &&
+    typeof value.label === 'string' &&
+    typeof value.source_url === 'string' &&
+    isRightsStatus(value.rights_status) &&
+    isExecutionMode(value.execution_mode) &&
+    typeof value.public_display_eligible === 'boolean' &&
+    (value.public_display_blocker === null || typeof value.public_display_blocker === 'string') &&
+    typeof value.attribution === 'string' &&
+    typeof value.last_reviewed === 'string');
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
+
+const nullableNumber = (value: unknown): boolean => value === null || isFiniteNumber(value);
+const optionalString = (value: unknown): boolean =>
+  value === undefined || typeof value === 'string';
+const optionalNullableString = (value: unknown): boolean =>
+  value === undefined || value === null || typeof value === 'string';
+const optionalFiniteNumber = (value: unknown): boolean =>
+  value === undefined || isFiniteNumber(value);
+const isDimension = (value: unknown): boolean =>
+  typeof value === 'string' || (typeof value === 'number' && Number.isFinite(value));
+const isVisibility = (value: unknown): boolean =>
+  value === 'private' || value === 'shared' || value === 'public';
+const isSignalStatus = (value: unknown): boolean =>
+  value === null ||
+  value === 'live' ||
+  value === 'stale' ||
+  value === 'error' ||
+  value === 'loading';
+const isRightsStatus = (value: unknown): boolean =>
+  value === 'public' ||
+  value === 'with-attribution' ||
+  value === 'requires-auth' ||
+  value === 'needs-review';
+const isExecutionMode = (value: unknown): boolean =>
+  value === 'public_cloud' || value === 'private_cloud' || value === 'user_side_runner';

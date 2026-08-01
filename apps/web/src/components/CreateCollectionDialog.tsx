@@ -6,6 +6,7 @@ import { CollectionDetailsFields } from './create-collection/CollectionDetailsFi
 import { DialogHeader } from './create-collection/DialogHeader';
 import { TemplatePicker } from './create-collection/TemplatePicker';
 import type { TemplateState } from './create-collection/types';
+import { useEscapeDismiss } from './dialog/use-escape-dismiss';
 
 type Props = {
   readonly onClose: () => void;
@@ -17,8 +18,7 @@ export { templateSignalSummary } from './create-collection/template-summary';
 const collectionErrorMessage = (err: unknown, fallback: string): string =>
   err instanceof Error ? err.message : fallback;
 
-// On success we land the browser on the new collection via a query-param
-// URL so the SPA refetches its signals via getCollectionById(<newId>).
+// Navigation makes the SPA reload the new collection through its owner-scoped route.
 const navigateToCreated = (record: CollectionRecord): void => {
   if (typeof window === 'undefined') return;
   window.location.assign(`/?collection=${encodeURIComponent(record.id)}`);
@@ -45,15 +45,7 @@ export function CreateCollectionDialog({ onClose, onCreated }: Props) {
     };
   }, []);
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !saving) onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [onClose, saving]);
+  useEscapeDismiss(!saving, onClose);
 
   const applyTemplate = (template: CollectionTemplateRecord | null): void => {
     setSelectedTemplateId(template?.id ?? null);
@@ -62,6 +54,7 @@ export function CreateCollectionDialog({ onClose, onCreated }: Props) {
   };
 
   const submit = async (): Promise<void> => {
+    if (saving) return;
     const trimmedTitle = title.trim();
     if (trimmedTitle.length === 0) {
       setError('Title is required.');
@@ -94,6 +87,7 @@ export function CreateCollectionDialog({ onClose, onCreated }: Props) {
         type="button"
         aria-label="Close create collection"
         onClick={onClose}
+        disabled={saving}
         class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity dark:bg-black/60"
       />
       <div
@@ -102,7 +96,7 @@ export function CreateCollectionDialog({ onClose, onCreated }: Props) {
         aria-labelledby="create-collection-title"
         class="antenna-menu relative m-0 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl p-5 sm:m-4 sm:rounded-2xl"
       >
-        <DialogHeader onClose={onClose} />
+        <DialogHeader saving={saving} onClose={onClose} />
         <div class="mt-5 space-y-4">
           <CollectionDetailsFields
             title={title}

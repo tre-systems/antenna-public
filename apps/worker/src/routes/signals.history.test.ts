@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { eq } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { buildApp, OWNER_1, seedBaseline, seedOtherTenant, setup } from './signals-test-fixtures';
 
@@ -128,6 +129,35 @@ describe('GET /api/signals/:id/history', () => {
     expect(body.points.map((p) => p.value)).toEqual([1.01, 1.09]);
   });
 
+  it('keeps the latest quote per ticker per day for equity watchlists', async () => {
+    const { db, env } = setup();
+    seedBaseline(db);
+    db.update(schema.signals)
+      .set({ templateId: 'equity-watchlist' })
+      .where(eq(schema.signals.id, 'b1'))
+      .run();
+    const day = Date.UTC(2026, 6, 20);
+    db.insert(schema.signalPoints)
+      .values([
+        quoteRow('VTI', day + 10_000, 360),
+        quoteRow('VTI', day + 20_000, 361),
+        quoteRow('BA', day + 20_000, 20),
+        quoteRow('VTI', day + 86_400_000 + 10_000, 365),
+      ])
+      .run();
+
+    const app = buildApp();
+    const res = await app.request('/api/signals/b1/history?range=all', undefined, env);
+    const body: { points: Array<{ value: number; dimensions: { ticker: string } }> } =
+      await res.json();
+
+    expect(body.points.map((point) => [point.dimensions.ticker, point.value])).toEqual([
+      ['BA', 20],
+      ['VTI', 361],
+      ['VTI', 365],
+    ]);
+  });
+
   it('rejects unsupported history ranges', async () => {
     const { db, env } = setup();
     seedBaseline(db);
@@ -150,4 +180,14 @@ describe('GET /api/signals/:id/history', () => {
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ error: 'not_found' });
   });
+});
+
+const quoteRow = (ticker: string, observedAt: number, value: number) => ({
+  signalId: 'b1',
+  fetchedAt: new Date(observedAt),
+  observedAt: new Date(observedAt),
+  metricKey: `ticker=${ticker}`,
+  dimensions: JSON.stringify({ ticker }) as unknown as schema.DataPointDimensions,
+  value,
+  unit: 'USD',
 });

@@ -1,4 +1,5 @@
 import { browserRequestInit } from './browser-request';
+import { discardResponse } from './discard-response';
 import { errorMessage } from './error-message';
 import type { AdapterError } from './types';
 
@@ -60,6 +61,7 @@ export const fetchYahooLatestQuote = async (symbol: string): Promise<YahooQuoteR
   }
 
   if (!response.ok) {
+    await discardResponse(response);
     return { ok: false, error: { code: 'fetch_failed', message: `HTTP ${response.status}` } };
   }
 

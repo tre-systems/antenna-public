@@ -14,10 +14,33 @@ export const summaryFor = (signal: RenderSignal, rowCount: number): string | nul
   if (signal.template_id === 'aa-highlights') return aaHighlightsSummary(signal, rowCount);
   if (signal.template_id === 'aa-frontier') return `Top ${String(rowCount)} · score, speed & price`;
   if (signal.template_id === 'project-portfolio') return projectPortfolioSummary(signal.points);
+  if (signal.template_id === 'app-health') return appHealthSummary(signal.points);
+  if (signal.template_id === 'cloudflare-web-analytics') return webAnalyticsSummary(signal.points);
   if (signal.template_id === 'karpathy-jobs-snapshot')
     return `Top ${String(rowCount)} most exposed`;
   if (signal.template_id === 'market-overview') return marketOverviewSummary(signal.points);
   return null;
+};
+
+const appHealthSummary = (points: ReadonlyArray<DataPoint>): string => {
+  const rows = points.filter((point) => point.dimensions?.metric === 'app_health');
+  const healthy = rows.filter((point) => point.dimensions?.state === 'healthy').length;
+  const degraded = rows.filter((point) => point.dimensions?.state === 'degraded').length;
+  const down = rows.filter((point) => point.dimensions?.state === 'down').length;
+  if (down) return `${String(down)} down${degraded ? ` · ${String(degraded)} degraded` : ''}`;
+  return degraded
+    ? `${String(degraded)} degraded`
+    : `${String(healthy)}/${String(rows.length)} healthy`;
+};
+
+const webAnalyticsSummary = (points: ReadonlyArray<DataPoint>): string => {
+  const rows = points.filter((point) => point.dimensions?.metric === 'host_traffic');
+  const visits = rows.reduce((sum, point) => sum + Math.max(0, Number(point.value) || 0), 0);
+  const active = rows.filter((point) => Number(point.value) > 0).length;
+  const unseen = rows.filter((point) => point.dimensions?.telemetry_state === 'unseen').length;
+  return `${visits.toLocaleString('en-GB')} visits · ${String(active)}/${String(rows.length)} active${
+    unseen ? ` · ${String(unseen)} unseen` : ''
+  }`;
 };
 
 const projectPortfolioSummary = (points: ReadonlyArray<DataPoint>): string => {

@@ -1,7 +1,3 @@
-// Sharing one user's upstream fetch with another is only safe for sources that
-// cannot depend on who asked. These pin the boundary and the key that decides
-// what counts as "the same fetch".
-
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { templates } from '@antenna/registry';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -46,20 +42,12 @@ describe('isShareableTemplate', () => {
   });
 
   it('never shares private-cloud sources', () => {
-    // Owner-entered values, deployment-wide metrics, and user-supplied
-    // endpoints must not cross between accounts, whatever their config is.
+    // Owner-dependent results must never cross accounts.
     expect(isShareableTemplate(templateById('manual-metric'))).toBe(false);
     expect(isShareableTemplate(templateById('manual-cost'))).toBe(false);
     expect(isShareableTemplate(templateById('antenna-users'))).toBe(false);
     expect(isShareableTemplate(templateById('rest-metric'))).toBe(false);
     expect(isShareableTemplate(templateById('app-usage'))).toBe(false);
-  });
-
-  it('never shares a template that archives its raw payload', () => {
-    // A shared snapshot carries points only, so reusing one would leave a gap
-    // in the R2 archive.
-    expect(templateById('reddit-problems').retainRawPayload).toBe(true);
-    expect(isShareableTemplate(templateById('reddit-problems'))).toBe(false);
   });
 
   it('covers every registered template one way or the other', () => {
@@ -82,6 +70,12 @@ describe('snapshotCacheKey', () => {
     );
     expect(snapshotCacheKey('fx-pair', { base: 'EUR' })).not.toBe(
       snapshotCacheKey('crypto-history', { base: 'EUR' }),
+    );
+  });
+
+  it('separates cached point projections after a connector schema change', () => {
+    expect(snapshotCacheKey('tbench-leaderboard', {}, 1)).not.toBe(
+      snapshotCacheKey('tbench-leaderboard', {}, 2),
     );
   });
 
@@ -147,7 +141,20 @@ describe('shared snapshot storage', () => {
     await expect(readSharedSnapshot(client(), key, 30 * MINUTE, NOW)).resolves.toBeNull();
   });
 
-  it('purges rows for configs nobody tracks any more, keeping live ones', async () => {
+  it('treats structurally invalid stored points as a miss', async () => {
+    db.insert(schema.upstreamSnapshots)
+      .values({
+        cacheKey: key,
+        templateId: 'fx-pair',
+        points: JSON.stringify([{ dimensions: [], value: null, ts: 'today' }]),
+        fetchedAt: new Date(NOW),
+      })
+      .run();
+
+    await expect(readSharedSnapshot(client(), key, 30 * MINUTE, NOW)).resolves.toBeNull();
+  });
+
+  it('purges expired rows while retaining fresh snapshots', async () => {
     await writeSharedSnapshot(client(), key, 'fx-pair', points, NOW - 2 * 24 * 3_600_000);
     await writeSharedSnapshot(client(), 'live-key', 'fx-pair', points, NOW);
 

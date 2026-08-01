@@ -40,6 +40,17 @@ describe('POST /api/plan/:id/confirm', () => {
     expect(signals[0]?.collectionId).toBe('collection-1');
   });
 
+  it('returns a stable code when a plan is confirmed twice', async () => {
+    const planRes = await post(app, '/api/plan', { prompt: 'track CHF/USD' }, env);
+    const plan = await readJson<PlanRecord>(planRes);
+    expect((await post(app, `/api/plan/${plan.id}/confirm`, {}, env)).status).toBe(200);
+
+    const repeated = await post(app, `/api/plan/${plan.id}/confirm`, {}, env);
+
+    expect(repeated.status).toBe(409);
+    expect(await repeated.json()).toEqual({ error: 'plan_already_resolved' });
+  });
+
   it('materialises selected-collection plans on that collection', async () => {
     insertCollection(db, { id: 'collection-2', title: 'Second' });
     const planRes = await post(

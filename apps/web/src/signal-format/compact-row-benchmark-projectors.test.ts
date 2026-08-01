@@ -135,6 +135,7 @@ describe('compactRowsCardData benchmark rows', () => {
             agent: 'Codex CLI',
             model: 'GPT-5.5',
             agent_org: 'OpenAI',
+            cost_usd: 2059.19,
           },
           value: 83.4,
           unit: '%',
@@ -172,7 +173,7 @@ describe('compactRowsCardData benchmark rows', () => {
 
     const first = out?.rows[0];
     expect(first?.title).toBe('Codex CLI');
-    expect(first?.subtitle).toBe('GPT-5.5');
+    expect(first?.subtitle).toBe('GPT-5.5 · $2,059 eval');
     expect(first?.chip).toBe('83.4%');
     expect(first?.chipTone).toBe('ok');
     expect(first?.href).toBe('https://www.tbench.ai/leaderboard/terminal-bench/2.1');

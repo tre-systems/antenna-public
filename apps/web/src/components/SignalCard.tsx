@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
-import { deriveStatus } from '../signalStatus';
-import { signalSourceLabel, displayPoints } from '../signalFormat';
+import { deriveStatus } from '../signal-status';
+import { signalSourceLabel, displayPoints } from '../signal-format';
 import { SignalSparkline } from './SignalSparkline';
 import { WatchlistAppend } from './WatchlistAppend';
 import { ownerSignal } from './signal-card/signal';
@@ -13,8 +13,7 @@ import { CARD_CHROME, PRESENTATION_CARD_CHROME } from './signal-card/styles';
 import { presentationStatus } from './signal-card/status';
 import type { SignalCardProps } from './signal-card/types';
 
-// Presentation/body-only mode caps list-style heroes to this many rows so a
-// slide stays glanceable from across a room.
+// Presentation mode caps list heroes for across-the-room readability.
 const PRESENTATION_MAX_ROWS = 3;
 
 export function SignalCard({
@@ -88,10 +87,7 @@ export function SignalCard({
       <div class={compact ? 'hidden' : ''}>
         <SignalCardBody signal={signal} cardStatus={cardStatus} points={points} />
 
-        {/* Only mount the detail chart once expanded. While compact the body is
-            CSS-hidden but still in the tree, and SignalCardSummary already mounts
-            a summary sparkline — mounting this one too fires a second identical
-            getSignalHistory request per card on load. */}
+        {/* Avoid a duplicate history request while the summary sparkline is mounted. */}
         {compact || editableSignal === null ? null : <SignalSparkline signal={editableSignal} />}
 
         {readOnly || editableSignal === null ? null : <WatchlistAppend signal={editableSignal} />}

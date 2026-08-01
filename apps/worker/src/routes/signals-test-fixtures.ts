@@ -1,5 +1,4 @@
-// Shared scaffolding for the signals.*.test.ts files.
-// Not a test file (no .test.ts suffix) so vitest ignores it.
+// Provide shared scaffolding for signal route tests.
 
 import { Hono } from 'hono';
 import * as schema from '../db/schema';

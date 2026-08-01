@@ -97,8 +97,6 @@
   }
 }
 
-/* Antenna has its own calmer workspace identity while inheriting TRE's
-   disciplined green accent, precise borders, and technical-label voice. */
 .antenna-panel {
   border: 1px solid var(--antenna-line);
   background: var(--antenna-surface);

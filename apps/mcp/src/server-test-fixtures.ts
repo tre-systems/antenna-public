@@ -2,7 +2,7 @@ import type { FetchLike } from './client';
 
 const SIGNAL = {
   id: 'signal-1',
-  template_id: 'github_trending',
+  template_id: 'github-trending',
   config: {},
   refresh_seconds: 300,
   display: {
@@ -17,7 +17,10 @@ const SIGNAL = {
     last_error: null,
     last_manual_request_at: null,
   },
-  points: [{ dimensions: null, value: 12, observed_at: 1, fetched_at: 1 }],
+  points: [
+    { dimensions: { row: 'first' }, value: 12, observed_at: 1, fetched_at: 1 },
+    { dimensions: { row: 'second' }, value: 8, observed_at: 1, fetched_at: 1 },
+  ],
 };
 
 const COLLECTION = {
@@ -61,7 +64,6 @@ const ROUTES: ReadonlyArray<readonly [string, unknown]> = [
   ['GET /api/signals/signal-1', SIGNAL],
 ];
 
-/** Stubs every Worker route the MCP server calls, appending "METHOD url" to `fetches`. */
 export function recordingWorkerFetch(fetches: string[]): FetchLike {
   return (input, init) => {
     const request = new Request(input, init);

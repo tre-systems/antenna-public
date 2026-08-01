@@ -130,8 +130,7 @@ const toPoint = (repo: GithubTrendingRepo, ts: number): DataPoint => {
   if (repo.language) parts.push(repo.language);
   if (repo.starsToday !== undefined)
     parts.push(`+${repo.starsToday.toLocaleString('en-US')} stars today`);
-  // No per-point sourceUrl: display.ts derives it, and the first non-empty one
-  // would also become the card's signal-level source URL.
+  // Omitting point URLs keeps the card-level source on the trending list.
   return {
     dimensions: { source: 'github-trending', rank: repo.rank },
     value: parts.join(' · '),
@@ -150,8 +149,7 @@ const normaliseLimit = (value: unknown): number => {
 
 const matchFirst = (input: string, rx: RegExp): string | undefined => rx.exec(input)?.[1];
 
-// A trending row links to `/owner/repo`; anything else on the page is not a
-// repository, so the shape is checked rather than pattern-matched out of markup.
+// Only `/owner/repo` links qualify as trending rows.
 const repositoryName = (article: string): string | undefined => {
   const heading = extractHtmlElements(article, 'h2')[0];
   const anchor = heading ? extractHtmlElements(heading.innerHtml, 'a')[0] : undefined;

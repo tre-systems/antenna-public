@@ -1,5 +1,4 @@
-// Render-only tests via preact-render-to-string. The popover open/select and
-// clipboard flow need a real DOM and are exercised in e2e (share-menu.spec.ts).
+// Popover and clipboard interactions remain e2e coverage.
 import { describe, expect, it } from 'vitest';
 import renderToString from 'preact-render-to-string';
 import { ShareMenu } from './ShareMenu';
@@ -12,8 +11,7 @@ describe('ShareMenu', () => {
     expect(html).toContain('data-testid="share-open"');
     expect(html).toContain('aria-label="Share collection"');
     expect(html).toContain('aria-haspopup="dialog"');
-    // Visibility options and the link live inside the closed popover, so they
-    // must not leak into the toolbar markup.
+    // Closed popover content must not leak into toolbar markup.
     expect(html).not.toContain('data-testid="share-menu"');
     expect(html).not.toContain('data-testid="visibility-private"');
     expect(html).not.toContain('data-testid="share-url"');

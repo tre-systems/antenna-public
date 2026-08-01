@@ -1,5 +1,5 @@
 import type { DataPoint } from '../../api';
-import { pointLabel, pointSourceUrl, pointValueText } from '../../signalFormat';
+import { pointLabel, pointSourceUrl, pointValueText } from '../../signal-format';
 import type { RenderSignal } from './types';
 
 type Props = {

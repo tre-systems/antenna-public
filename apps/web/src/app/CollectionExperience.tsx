@@ -51,9 +51,6 @@ export function CollectionExperience({
         collection={collection}
         selectedCollectionId={selectedCollectionId}
         signingOut={signingOut}
-        onAddSignal={() => {
-          setSignalComposerOpen(true);
-        }}
         onCreateCollection={() => {
           setCreateCollectionOpen(true);
         }}

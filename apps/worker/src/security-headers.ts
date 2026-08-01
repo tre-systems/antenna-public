@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from 'hono';
 
-const THEME_SCRIPT_HASH = "'sha256-s1YGqkXITgNMbsthUh0teYtdHJ6aWVw/xHfGxU9NNRM='";
+const THEME_SCRIPT_HASH = "'sha256-w1IF3VLR0lhf6cKOHpd51s5ay7mvEKh64A/pn5pQ5vI='";
 
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
@@ -9,7 +9,7 @@ export const CONTENT_SECURITY_POLICY = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https://lh3.googleusercontent.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.ingest.de.sentry.io",
+  "connect-src 'self' https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io",
   "manifest-src 'self'",
   "worker-src 'self'",
   "object-src 'none'",

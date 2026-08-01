@@ -51,6 +51,34 @@ describe('POST /api/plan', () => {
     expect(body.collection_id).toBe('collection-2');
   });
 
+  it('creates a server-resolved plan from a catalogue template', async () => {
+    const res = await post(app, '/api/plan', { template_id: 'fx-pair' }, env);
+
+    expect(res.status).toBe(200);
+    const body = await readJson<PlanRecord>(res);
+    expect(body.prompt).toBe('Add FX pair');
+    expect(body.plan.signals[0]).toMatchObject({
+      template_id: 'fx-pair',
+      missing: ['base', 'quote'],
+    });
+  });
+
+  it('allows reviewed direct proposals but rejects unknown or blocked templates', async () => {
+    const unknown = await post(app, '/api/plan', { template_id: 'missing' }, env);
+    const direct = await post(app, '/api/plan', { template_id: 'app-health' }, env);
+    const blocked = await post(app, '/api/plan', { template_id: 'rest-metric' }, env);
+
+    expect(unknown.status).toBe(404);
+    expect(await unknown.json()).toEqual({ error: 'unknown_template' });
+    expect(direct.status).toBe(200);
+    const directPlan = await readJson<PlanRecord>(direct);
+    expect(directPlan.plan.signals[0]).toMatchObject({
+      template_id: 'app-health',
+      missing: ['projects'],
+    });
+    expect(blocked.status).toBe(404);
+  });
+
   it('rejects explicit collections not owned by the caller', async () => {
     insertCollection(db, { id: 'someone-elses-dash', ownerId: 'someone-else' });
 
@@ -66,10 +94,7 @@ describe('POST /api/plan', () => {
   });
 
   it('lazy-creates a collection for callers who have none', async () => {
-    // The BA auth hook normally provisions a collection on first sign-in, but
-    // the BYPASS_AUTH e2e path skips the hook entirely. The route guarantees
-    // a collection exists by calling ensureUserCollection on demand instead of
-    // returning 409 — that way new users + test paths both succeed.
+    // The bypass-auth path must provision a collection on demand.
     const s = setup({ id: 'seed-collection', ownerId: 'other-user' });
 
     const res = await post(s.app, '/api/plan', { prompt: 'track CHF/USD' }, s.env);
@@ -87,8 +112,7 @@ describe('POST /api/plan', () => {
   });
 
   it('writes to the caller collection, not to another tenant', async () => {
-    // Seed a second collection owned by a different user. The route must pick
-    // the caller's collection, not "any" collection.
+    // Select the caller's collection rather than another owner's.
     const s = setup();
     insertOtherTenantCollection(s.db);
 
@@ -101,5 +125,18 @@ describe('POST /api/plan', () => {
   it('rejects an empty prompt with 400', async () => {
     const res = await post(app, '/api/plan', { prompt: '' }, env);
     expect(res.status).toBe(400);
+  });
+
+  it('requires exactly one planning input', async () => {
+    const neither = await post(app, '/api/plan', {}, env);
+    const both = await post(
+      app,
+      '/api/plan',
+      { prompt: 'track CHF/USD', template_id: 'fx-pair' },
+      env,
+    );
+
+    expect(neither.status).toBe(400);
+    expect(both.status).toBe(400);
   });
 });

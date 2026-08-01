@@ -6,7 +6,7 @@ import type {
 } from '@antenna/shared';
 import type {
   ConfirmPlanResult,
-  AntennaReadClient,
+  AntennaClient,
   RefreshSignalResult,
   RemoveSignalResult,
   ReorderSignalsResult,
@@ -25,6 +25,7 @@ import {
   type McpSignalSummary,
   type McpCollectionDetail,
   type ProposeSignalInput,
+  type ProposeTemplateSignalInput,
   type RefreshSignalInput,
   type RejectPlanInput,
   type RemoveSignalInput,
@@ -35,7 +36,7 @@ import {
 export type * from './tool-signals.js';
 
 export async function listSignalsTool(
-  client: AntennaReadClient,
+  client: AntennaClient,
   input: ListSignalsInput = {},
 ): Promise<McpSignalSummary[]> {
   const signals = await client.listSignals(input);
@@ -43,7 +44,7 @@ export async function listSignalsTool(
 }
 
 export async function getSignalHistoryTool(
-  client: AntennaReadClient,
+  client: AntennaClient,
   input: GetSignalHistoryInput,
 ): Promise<McpSignalHistory> {
   const range = input.range ?? '1y';
@@ -56,7 +57,7 @@ export async function getSignalHistoryTool(
 }
 
 export async function getSignalTool(
-  client: AntennaReadClient,
+  client: AntennaClient,
   input: GetSignalInput,
 ): Promise<McpSignalDetail | null> {
   const signal = await client.getSignal(input.signalId);
@@ -64,23 +65,21 @@ export async function getSignalTool(
 }
 
 export function listConnectorRequestsTool(
-  client: AntennaReadClient,
+  client: AntennaClient,
 ): Promise<ConnectorRequestRecord[]> {
   return client.listConnectorRequests();
 }
 
-export function listTemplatesTool(client: AntennaReadClient): Promise<TemplateRecord[]> {
+export function listTemplatesTool(client: AntennaClient): Promise<TemplateRecord[]> {
   return client.listTemplates();
 }
 
-export function listCollectionsTool(
-  client: AntennaReadClient,
-): Promise<readonly CollectionListItem[]> {
+export function listCollectionsTool(client: AntennaClient): Promise<readonly CollectionListItem[]> {
   return client.listCollections();
 }
 
 export async function getCollectionTool(
-  client: AntennaReadClient,
+  client: AntennaClient,
   input: GetCollectionInput,
 ): Promise<McpCollectionDetail> {
   const detail = await client.getCollection(input.collectionId);
@@ -91,14 +90,14 @@ export async function getCollectionTool(
 }
 
 export function refreshSignalTool(
-  client: AntennaReadClient,
+  client: AntennaClient,
   input: RefreshSignalInput,
 ): Promise<RefreshSignalResult> {
   return client.refreshSignal(input.signalId);
 }
 
 export function updateSignalTool(
-  client: AntennaReadClient,
+  client: AntennaClient,
   input: UpdateSignalInput,
 ): Promise<UpdateSignalResult> {
   return client.updateSignal(input.signalId, {
@@ -109,35 +108,42 @@ export function updateSignalTool(
 }
 
 export function removeSignalTool(
-  client: AntennaReadClient,
+  client: AntennaClient,
   input: RemoveSignalInput,
 ): Promise<RemoveSignalResult> {
   return client.removeSignal(input.signalId);
 }
 
 export function reorderSignalsTool(
-  client: AntennaReadClient,
+  client: AntennaClient,
   input: ReorderSignalsInput,
 ): Promise<ReorderSignalsResult> {
   return client.reorderSignals(input.orderedSignalIds, input.collectionId);
 }
 
 export function proposeSignalTool(
-  client: AntennaReadClient,
+  client: AntennaClient,
   input: ProposeSignalInput,
 ): Promise<PlanRecord> {
-  return client.proposeSignal(input.prompt);
+  return client.proposeSignal(input.prompt, input.collectionId);
+}
+
+export function proposeTemplateSignalTool(
+  client: AntennaClient,
+  input: ProposeTemplateSignalInput,
+): Promise<PlanRecord> {
+  return client.proposeTemplateSignal(input.templateId, input.collectionId);
 }
 
 export function rejectPlanTool(
-  client: AntennaReadClient,
+  client: AntennaClient,
   input: RejectPlanInput,
 ): Promise<RejectPlanResult> {
   return client.rejectPlan(input.planId);
 }
 
 export function confirmPlanTool(
-  client: AntennaReadClient,
+  client: AntennaClient,
   input: ConfirmPlanInput,
 ): Promise<ConfirmPlanResult> {
   return client.confirmPlan(input.planId, { edited_signals: input.editedSignals });

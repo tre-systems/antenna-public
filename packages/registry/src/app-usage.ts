@@ -1,12 +1,10 @@
 import { appUsage } from '@antenna/connectors';
 import { z } from 'zod';
 import { numberField, stringField } from './config-fields';
+import { ACCOUNT_ID_PATTERN, SLUG_PATTERN } from './config-patterns';
 import { type ConnectorTemplate } from './types';
 
 // Deployment-owner telemetry from the shared app_usage dataset (docs/USAGE_RADAR.md).
-
-const SLUG_RX = /^[a-z0-9][a-z0-9_-]{0,63}$/;
-const ACCOUNT_ID_RX = /^[0-9a-f]{32}$/;
 
 const extractProject = (prompt: string): string | undefined => {
   const match = /(?:usage|events|activity)\s+(?:for|of|on)\s+([a-z0-9][a-z0-9_-]{1,63})/i.exec(
@@ -19,8 +17,8 @@ export const appUsageTemplate: ConnectorTemplate = {
   id: 'app-usage',
   displayName: 'App usage',
   configSchema: z.object({
-    project: z.string().regex(SLUG_RX),
-    account_id: z.string().regex(ACCOUNT_ID_RX),
+    project: z.string().regex(SLUG_PATTERN),
+    account_id: z.string().regex(ACCOUNT_ID_PATTERN),
     days: z.number().int().min(1).max(90).optional(),
     apiToken: z.string().optional(),
   }),

@@ -79,8 +79,7 @@ export const marketOverviewStooq: Adapter = async (): Promise<AdapterResult> => 
   return { ok: true, points, rawPayload: { assessment, csv: raw, failures } };
 };
 
-// Substring matching on a URL would also accept `finance.yahoo.com.evil.test`;
-// the fallback quote page is always exactly this host.
+// Exact host matching prevents lookalike Yahoo domains.
 const urlHasHostname = (value: string, hostname: string): boolean => {
   try {
     return new URL(value).hostname === hostname;

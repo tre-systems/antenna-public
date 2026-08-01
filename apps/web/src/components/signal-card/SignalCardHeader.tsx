@@ -1,5 +1,5 @@
-import { signalSourceLabel, signalSourceUrl, signalTitle } from '../../signalFormat';
-import { relativeTime } from '../../relativeTime';
+import { signalSourceLabel, signalSourceUrl, signalTitle } from '../../signal-format';
+import { relativeTime } from '../../relative-time';
 import { sourcePosture } from './source-posture';
 import { SignalActions } from './SignalActions';
 import type { ApiSignal } from '../../api';

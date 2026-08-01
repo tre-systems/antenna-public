@@ -34,11 +34,11 @@ describe('matchPrompt', () => {
   });
 
   it('matches github repo activity with owner/repo from path', () => {
-    const plan = matchPrompt('my GitHub PRs for tre-systems/antenna');
+    const plan = matchPrompt('my GitHub PRs for example/antenna');
     expect(plan.signals).toHaveLength(1);
     const signal = plan.signals[0];
     expect(signal?.template_id).toBe('github-repo-activity');
-    expect(signal?.config).toEqual({ owner: 'tre-systems', repo: 'antenna' });
+    expect(signal?.config).toEqual({ owner: 'example', repo: 'antenna' });
     expect(signal?.missing).toEqual([]);
   });
 

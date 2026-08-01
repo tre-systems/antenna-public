@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useCallback, useRef, useState } from 'preact/hooks';
 import type { CollectionRecord } from '@antenna/shared';
 import { ShareDisplayMatrix } from './ShareDisplayMatrix';
 import { LinkIcon } from './share-menu/icons';
 import { LinkRow } from './share-menu/LinkRow';
 import { VISIBILITY_OPTIONS, VisibilityOption } from './share-menu/VisibilityOption';
+import { useMenuDismiss } from './collection-switcher/use-menu-dismiss';
 
 type Visibility = CollectionRecord['visibility'];
 
@@ -13,8 +14,7 @@ type Props = {
   readonly onChange: (next: Visibility) => Promise<void>;
 };
 
-// Sharing is a secondary, policy-gated action in a private-first product, so it
-// lives behind this single toolbar button rather than an always-on toggle.
+// Keep policy-gated sharing behind one secondary action in the private-first workspace.
 export function ShareMenu({ visibility, slug, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<Visibility | null>(null);
@@ -22,22 +22,10 @@ export function ShareMenu({ visibility, slug, onChange }: Props) {
   const [copied, setCopied] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
-  // Outside-click and Escape close the popover. Same pattern as ProfileMenu.
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-    window.addEventListener('mousedown', onDown);
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('mousedown', onDown);
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
+  const close = useCallback(() => {
+    setOpen(false);
+  }, []);
+  useMenuDismiss(open, rootRef, close);
 
   const isShared = visibility !== 'private';
   const shareUrl = isShared && slug ? `${origin()}/c/${slug}` : null;

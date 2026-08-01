@@ -1,5 +1,4 @@
-// When a signal is due: intervals, manual refresh, on-demand collections, and
-// the backoff that follows a failure.
+// Cover scheduled, manual, on-demand, and backoff due states.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as schema from '../db/schema';

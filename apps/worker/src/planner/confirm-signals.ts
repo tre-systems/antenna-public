@@ -2,37 +2,85 @@ import { sourceLabelForTemplate, sourcePolicyForTemplate, templates } from '@ant
 import type { ProposedSignal, Visibility, planConfirmSignalPatchSchema } from '@antenna/shared';
 import type { z } from 'zod';
 import { canReadSignalWithSourcePolicy } from '../policy/source-access';
-import { validateTemplateConfig } from '../registry/config';
+import { InvalidTemplateConfigError, validateTemplateConfig } from '../registry/config';
 
 export type PlanConfirmSignalPatch = z.infer<typeof planConfirmSignalPatchSchema>;
+
+export type MaterializeSignalsResult =
+  | { readonly ok: true; readonly signals: ProposedSignal[] }
+  | {
+      readonly ok: false;
+      readonly error: 'invalid_config' | 'unknown_template';
+      readonly detail: string;
+    };
 
 export const materializeSignals = (
   proposedSignals: ReadonlyArray<ProposedSignal>,
   editedSignals: ReadonlyArray<PlanConfirmSignalPatch> | undefined,
-): ProposedSignal[] =>
-  proposedSignals.map((proposed, index) => sanitizeSignal(proposed, editedSignals?.[index]));
+): MaterializeSignalsResult => {
+  const signals: ProposedSignal[] = [];
+  for (const [index, proposed] of proposedSignals.entries()) {
+    const result = sanitizeSignal(proposed, editedSignals?.[index]);
+    if (!result.ok) return result;
+    signals.push(result.signal);
+  }
+  return { ok: true, signals };
+};
 
-// Client edits only fill blanks: template identity, refresh cadence, rights, and
-// source label are re-resolved from the registry regardless of what was sent.
+// Treat client edits as blank-filling patches over server registry metadata.
 const sanitizeSignal = (
   proposed: ProposedSignal,
   edited: PlanConfirmSignalPatch | undefined,
-): ProposedSignal => {
+):
+  | { readonly ok: true; readonly signal: ProposedSignal }
+  | Exclude<MaterializeSignalsResult, { readonly ok: true }> => {
   const template = templateById(proposed.template_id);
-  if (!template) throw new Error(`unknown template: ${proposed.template_id}`);
+  if (!template) {
+    return {
+      ok: false,
+      error: 'unknown_template',
+      detail: `unknown template: ${proposed.template_id}`,
+    };
+  }
 
   const { config, missing } = applyEdits(proposed, edited);
-  const validated = missing.length === 0 ? validateTemplateConfig(template, config) : config;
+  const validated = validateCompletedConfig(template, config, missing);
+  if (!validated.ok) return validated;
 
   return {
-    template_id: template.id,
-    display_name: template.displayName,
-    config: validated,
-    missing,
-    refresh_seconds: template.defaultRefreshSeconds,
-    rights_status: template.rightsStatus,
-    source_label: sourceLabelForTemplate(template.id, template.displayName),
+    ok: true,
+    signal: {
+      template_id: template.id,
+      display_name: template.displayName,
+      config: validated.config,
+      missing,
+      refresh_seconds: template.defaultRefreshSeconds,
+      rights_status: template.rightsStatus,
+      source_label: sourceLabelForTemplate(template.id, template.displayName),
+    },
   };
+};
+
+const validateCompletedConfig = (
+  template: (typeof templates)[number],
+  config: Record<string, unknown>,
+  missing: ReadonlyArray<string>,
+):
+  | { readonly ok: true; readonly config: Record<string, unknown> }
+  | Exclude<MaterializeSignalsResult, { readonly ok: true }> => {
+  if (missing.length > 0) return { ok: true, config };
+  try {
+    return { ok: true, config: validateTemplateConfig(template, config) };
+  } catch (caught) {
+    if (caught instanceof InvalidTemplateConfigError) {
+      return {
+        ok: false,
+        error: caught.code,
+        detail: `${caught.templateId} ${caught.reason}`,
+      };
+    }
+    throw caught;
+  }
 };
 
 const applyEdits = (
@@ -54,10 +102,7 @@ const applyEdits = (
 const templateById = (templateId: string): (typeof templates)[number] | undefined =>
   templates.find((template) => template.id === templateId);
 
-// A source that cannot be exposed through the collection's shared/public surface
-// still belongs in the collection — it just stays private, and the external read
-// routes filter on signal visibility. Elevating it later goes through the update
-// route, which re-checks this policy.
+// Keep exposure-ineligible signals private rather than dropping them.
 export const visibilityForNewSignal = (
   templateId: string,
   collectionVisibility: Visibility,

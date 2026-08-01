@@ -20,6 +20,7 @@ export function useMcpConnections() {
   }, [refresh]);
 
   const disconnect = async (clientId: string) => {
+    if (disconnecting !== null) return;
     setDisconnecting(clientId);
     try {
       await disconnectMcpConnection(clientId);

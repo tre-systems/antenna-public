@@ -1,4 +1,5 @@
 import { fetchJson } from './fetch-json';
+import { isFiniteNumber } from './config-values';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 
 type AirConfig = { lat: number; lon: number; location?: string };
@@ -37,7 +38,7 @@ const buildPoints = (body: unknown, config: AirConfig): DataPoint[] => {
   const ts = parseTs(current.time);
   const points: DataPoint[] = [];
 
-  if (typeof current.european_aqi === 'number') {
+  if (isFiniteNumber(current.european_aqi)) {
     points.push({
       dimensions: { location, metric: 'aqi' },
       value: current.european_aqi,
@@ -45,7 +46,7 @@ const buildPoints = (body: unknown, config: AirConfig): DataPoint[] => {
       ts,
     });
   }
-  if (typeof current.pm2_5 === 'number') {
+  if (isFiniteNumber(current.pm2_5)) {
     points.push({
       dimensions: { location, metric: 'pm2_5' },
       value: current.pm2_5,
@@ -53,7 +54,7 @@ const buildPoints = (body: unknown, config: AirConfig): DataPoint[] => {
       ts,
     });
   }
-  if (typeof current.pm10 === 'number') {
+  if (isFiniteNumber(current.pm10)) {
     points.push({
       dimensions: { location, metric: 'pm10' },
       value: current.pm10,

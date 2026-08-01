@@ -1,8 +1,5 @@
 export type SignInError = {
-  // Two refusals are not worth retrying: a blocked account, and an address the
-  // operator has not invited when this deployment runs a closed allowlist.
-  // Everything else — a cancelled Google consent, a transient failure — is
-  // generic and retryable.
+  // Operator refusals are non-retryable; cancellations and transient failures remain generic.
   readonly kind: 'blocked' | 'not_invited' | 'generic';
   readonly raw: string;
 };

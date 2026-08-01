@@ -51,12 +51,15 @@ const optionalNumber = (value: unknown): number => {
 export const tbenchRow = (p: DataPoint, rank: number, href: string | null): CompactRow | null => {
   const agent = strOf(p.dimensions?.agent);
   const model = strOf(p.dimensions?.model);
+  const cost = optionalNumber(p.dimensions?.cost_usd);
   const accuracy = typeof p.value === 'number' ? p.value : Number(p.value);
   if (!agent || !model || !Number.isFinite(accuracy)) return null;
   return {
     rank,
     title: agent,
-    subtitle: model,
+    subtitle: Number.isFinite(cost)
+      ? `${model} · $${Math.round(cost).toLocaleString('en-US')} eval`
+      : model,
     chip: `${accuracy.toFixed(1)}%`,
     chipTone: accuracy >= 80 ? 'ok' : accuracy >= 65 ? 'info' : 'muted',
     href,

@@ -2,8 +2,7 @@ import { manual } from '@antenna/connectors';
 import { z } from 'zod';
 import { type ConnectorTemplate } from './types';
 
-// The matcher rarely fires for manual signals — they're chosen explicitly by the
-// user. The planner marks `value` as missing and prompts for it.
+// Explicit selection is primary; prompt matches leave value for user confirmation.
 type ManualTemplateConfig = { value?: number | string; unit?: string; label?: string };
 
 export const manualMetricTemplate: ConnectorTemplate<ManualTemplateConfig> = {

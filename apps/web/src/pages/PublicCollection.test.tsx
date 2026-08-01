@@ -1,6 +1,4 @@
-// preact-render-to-string renders synchronously, so the fetch-driven loading
-// path is what's visible in HTML output.  Loaded / not-found states are
-// exercised in e2e against the real Worker.
+// String rendering covers only pre-effect loading; e2e covers loaded states.
 import { describe, expect, it } from 'vitest';
 import renderToString from 'preact-render-to-string';
 import { PublicCollection } from './PublicCollection';

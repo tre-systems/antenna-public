@@ -2,8 +2,7 @@ import { yahooMarketHistory } from '@antenna/connectors';
 import { z } from 'zod';
 import { type ConnectorTemplate } from './types';
 
-// Yahoo-style symbols can include digits and suffixes, e.g. `BA.L`,
-// `0P000125KV.L`, `VTI`, `PII`.
+// Yahoo symbols may contain digits and exchange suffixes.
 const SYMBOL_RX = /\b([A-Z0-9]{1,12}(?:\.[A-Z]{1,3})?)\b/g;
 
 const STOPWORDS = new Set([

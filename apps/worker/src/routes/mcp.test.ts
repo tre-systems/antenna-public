@@ -115,10 +115,7 @@ describe('/api/mcp', () => {
 
   it('scopes MCP reads to the caller token so user A cannot read user B signal', async () => {
     const forwarded: string[] = [];
-    // Stand in for the owner-scoped internal API: GET /api/signals/:id returns
-    // the signal only when the bearer token owns it, else 404 — the same
-    // existence-hiding behaviour proven directly on /api/signals. This asserts
-    // the MCP boundary forwards only the caller's token, so that scoping holds.
+    // Emulate the owner-scoped internal signal API with existence hiding.
     const ownerByToken: Readonly<Record<string, string>> = {
       'Bearer pbk_user-a': 'signal-a',
       'Bearer pbk_user-b': 'signal-b',
@@ -157,15 +154,13 @@ describe('/api/mcp', () => {
       return JSON.stringify(result);
     };
 
-    // User A reads user B's signal: the route forwards A's token, the API denies,
-    // and the tool surfaces an empty result — never user B's data.
+    // Cross-owner reads must surface no signal data.
     const crossUser = await callGetSignal('pbk_user-a', 'signal-b');
     expect(forwarded).toContain('GET /api/signals/signal-b Bearer pbk_user-a');
     expect(crossUser).not.toContain('User B private signal');
     expect(crossUser).toContain('"text":"null"');
 
-    // Positive control: the same path returns data when the caller owns it,
-    // proving the denial above is ownership-driven, not a broken read.
+    // Confirm the same path succeeds for the owning caller.
     const ownRead = await callGetSignal('pbk_user-a', 'signal-a');
     expect(ownRead).toContain('User A signal');
   });

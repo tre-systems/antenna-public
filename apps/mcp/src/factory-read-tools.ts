@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { AntennaReadClient } from './client.js';
+import type { AntennaClient } from './client.js';
 import { jsonToolResult } from './factory-results.js';
 import {
   getSignalHistoryTool,
@@ -12,7 +12,7 @@ import {
   listTemplatesTool,
 } from './tools.js';
 
-export function registerReadTools(server: McpServer, client: AntennaReadClient): void {
+export function registerReadTools(server: McpServer, client: AntennaClient): void {
   server.registerTool(
     'list_collections',
     {

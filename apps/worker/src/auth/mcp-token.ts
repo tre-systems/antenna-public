@@ -17,8 +17,7 @@ export async function hashMcpToken(token: string): Promise<string> {
   return hex(new Uint8Array(digest));
 }
 
-// Any bearer value (not just `pbk_`). Used to recognize OAuth access tokens,
-// which the `mcp` plugin issues as random, non-prefixed strings.
+// Accept both prefixed personal tokens and unprefixed OAuth tokens.
 export function extractBearerToken(value: string | null): string | null {
   if (value === null) return null;
   const match = /^Bearer\s+(.+)$/i.exec(value.trim());
@@ -64,10 +63,7 @@ export async function authenticateMcpToken(
   };
 }
 
-// OAuth access tokens issued by the Better Auth `mcp` plugin (random, non-`pbk_`),
-// stored in `oauth_access_token`. We validate by lookup AND enforce expiry —
-// the plugin's own getMcpSession does NOT check `access_token_expires_at`, so an
-// expired token would otherwise be accepted.
+// Enforce OAuth expiry explicitly because the plugin session lookup does not.
 export async function authenticateOAuthToken(
   client: TokenDb,
   token: string,
@@ -101,9 +97,7 @@ export async function authenticateOAuthToken(
   };
 }
 
-// Resolve any MCP bearer to a user: `pbk_` → the long-lived token table; any other
-// value → an OAuth access token. Shared by the API session middleware and the
-// /api/mcp transport gate so both accept the same credentials.
+// Resolve personal and OAuth MCP bearers through one owner-scoped path.
 export async function authenticateBearer(
   client: TokenDb,
   token: string,

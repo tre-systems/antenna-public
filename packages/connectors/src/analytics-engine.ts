@@ -1,5 +1,4 @@
-// Project and dataset names are interpolated into SQL, so these shapes are the
-// injection guard: reject anything outside them before building a query.
+// These patterns guard identifiers interpolated into Analytics Engine SQL.
 export const ACCOUNT_ID_RX = /^[0-9a-f]{32}$/;
 export const SLUG_RX = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 

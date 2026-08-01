@@ -6,7 +6,6 @@ describe('collectionTemplates', () => {
     expect(collectionTemplates.map((template) => template.id)).toEqual([
       'founder-morning',
       'ai-frontier-watch',
-      'problem-radar',
       'trader-morning',
       'ops-morning',
       'investor-watchlist',
@@ -27,6 +26,18 @@ describe('collectionTemplates', () => {
           `${collectionTemplate.id}:${signal.templateId} config should match registry schema`,
         ).toBe(true);
       }
+    }
+  });
+
+  it('uses one history signal per equity rather than grouped watchlists', () => {
+    const marketTemplates = collectionTemplates.filter((template) =>
+      ['trader-morning', 'investor-watchlist'].includes(template.id),
+    );
+
+    for (const template of marketTemplates) {
+      expect(
+        template.signals.some((signal) => (signal.templateId as string) === 'equity-watchlist'),
+      ).toBe(false);
     }
   });
 });

@@ -4,7 +4,6 @@ import type {
   CollectionListResponse,
   CollectionRecord,
   CollectionTemplateListResponse,
-  CollectionTemplatePublishRecord,
 } from '@antenna/shared';
 
 import { fetchJson } from './http';
@@ -52,20 +51,6 @@ export function deleteCollection(id: string): Promise<CollectionDeleteResponse> 
   return fetchJson<CollectionDeleteResponse>(`/api/collections/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   });
-}
-
-export function publishCollectionTemplate(
-  collectionId: string,
-  body: {
-    label?: string;
-    description?: string | null;
-    summary?: string;
-  },
-): Promise<CollectionTemplatePublishRecord> {
-  return fetchJson<CollectionTemplatePublishRecord>(
-    `/api/collections/${encodeURIComponent(collectionId)}/template`,
-    { method: 'POST', body: JSON.stringify(body) },
-  );
 }
 
 export function getCollectionTemplates(): Promise<CollectionTemplateListResponse> {

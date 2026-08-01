@@ -88,14 +88,7 @@ const runAdapter = async (
   }
 };
 
-// One upstream call serves every signal asking for the same thing. Two layers:
-// a stored snapshot covers users whose refresh times have drifted apart across
-// ticks, and an in-flight map collapses the identical calls that would
-// otherwise run side by side within one tick.
-//
-// Only the fetch is shared. Points, status, alerts, and history stay per
-// signal, so a shared result is indistinguishable from a private one
-// downstream.
+// Share fetches while keeping points, status, alerts, and history signal-scoped.
 const sharedFetch = async (
   ctx: DispatchContext,
   client: Client,
@@ -104,7 +97,11 @@ const sharedFetch = async (
   now: number,
   fetchUpstream: () => Promise<AdapterResult>,
 ): Promise<AdapterResult> => {
-  const cacheKey = snapshotCacheKey(template.id, parseJsonRecord(signal.config));
+  const cacheKey = snapshotCacheKey(
+    template.id,
+    parseJsonRecord(signal.config),
+    template.snapshotVersion,
+  );
 
   const stored = await readSharedSnapshot(client, cacheKey, maxSnapshotAgeMs(signal), now);
   if (stored) {
@@ -122,8 +119,7 @@ const sharedFetch = async (
   ctx.inFlight.set(cacheKey, running);
   try {
     const result = await running;
-    // Only successes are shared. An error belongs to the signal that hit it, so
-    // each one keeps its own retry backoff.
+    // Keep errors signal-scoped so each signal retains its own backoff.
     if (result.ok) await writeSharedSnapshot(client, cacheKey, template.id, result.points, now);
     return result;
   } finally {

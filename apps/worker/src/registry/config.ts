@@ -9,16 +9,28 @@ type TemplateWithConfigSchema = {
   };
 };
 
+export class InvalidTemplateConfigError extends Error {
+  readonly code = 'invalid_config';
+
+  constructor(
+    readonly templateId: string,
+    readonly reason: string,
+  ) {
+    super(`invalid_config: ${templateId} ${reason}`);
+    this.name = 'InvalidTemplateConfigError';
+  }
+}
+
 export const validateTemplateConfig = (
   template: TemplateWithConfigSchema,
   config: Record<string, unknown>,
 ): Record<string, unknown> => {
   const parsed = template.configSchema.safeParse(config);
   if (!parsed.success) {
-    throw new Error(`invalid_config: ${template.id} config does not match registry schema`);
+    throw new InvalidTemplateConfigError(template.id, 'config does not match registry schema');
   }
   if (!parsed.data || typeof parsed.data !== 'object' || Array.isArray(parsed.data)) {
-    throw new Error(`invalid_config: ${template.id} config must be an object`);
+    throw new InvalidTemplateConfigError(template.id, 'config must be an object');
   }
   return parsed.data as Record<string, unknown>;
 };

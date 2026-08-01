@@ -1,5 +1,4 @@
-// iOS/Safari never fires `beforeinstallprompt` (install is via the Share menu),
-// so this affordance is invisible there.
+// Safari installs through its Share menu and never emits beforeinstallprompt.
 
 import { useEffect, useState } from 'preact/hooks';
 

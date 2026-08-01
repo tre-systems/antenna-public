@@ -95,8 +95,7 @@ describe('confirmPlan', () => {
 
     expect(result.created_signal_ids).toHaveLength(1);
     expect(batch).toHaveBeenCalledTimes(1);
-    // The claim leads: it is what makes a second concurrent confirmation abort
-    // before any signal is written.
+    // The claim must precede signal writes.
     expect(prepared.map((statement) => statement.sql)).toEqual([
       'INSERT INTO plan_confirmation_claims (plan_id, claimed_at) VALUES (?, ?)',
       expect.stringContaining('INSERT INTO signals'),
@@ -107,6 +106,25 @@ describe('confirmPlan', () => {
     expect(prepared[1]?.params[2]).toBe('fx-pair');
     expect(prepared[2]?.params[1]).toBe('loading');
     expect(prepared[3]?.params).toEqual(['confirmed', expect.any(Number), record.id]);
+  });
+
+  it('lets unexpected D1 failures reach the invocation boundary', async () => {
+    env = {
+      DB: {
+        ...(env.DB as object),
+        prepare: (sql: string) => ({ bind: (...params: unknown[]) => ({ sql, params }) }),
+        batch: vi.fn().mockRejectedValue(new Error('D1 unavailable')),
+      } as unknown as D1Database,
+    };
+    const record = await createPlan(env, {
+      collection_id: 'collection-1',
+      prompt: 'track CHF/USD',
+      requested_by: 'user-1',
+    });
+
+    await expect(
+      confirmPlan(env, { plan_id: record.id, collection_id: 'collection-1' }),
+    ).rejects.toThrow('D1 unavailable');
   });
 
   it('confirms weather plans once demo-city lat/lon have been resolved', async () => {
@@ -192,7 +210,7 @@ describe('confirmPlan', () => {
       collection_id: 'collection-1',
     });
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error).toMatch(/already resolved/);
+    if (!result.ok) expect(result.error).toBe('plan_already_resolved');
   });
 
   it('refuses a plan confirmed through a different collection', async () => {
@@ -204,7 +222,7 @@ describe('confirmPlan', () => {
 
     const result = await confirmPlan(env, { plan_id: record.id, collection_id: 'other-dash' });
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error).toMatch(/plan not found/);
+    if (!result.ok) expect(result.error).toBe('not_found');
     expect(db.select().from(schema.signals).all()).toHaveLength(0);
   });
 });

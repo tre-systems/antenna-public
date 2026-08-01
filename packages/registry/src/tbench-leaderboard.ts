@@ -2,12 +2,14 @@ import { tbenchLeaderboard, type TbenchLeaderboardConfig } from '@antenna/connec
 import { z } from 'zod';
 import { type ConnectorTemplate } from './types';
 
+const VERSION_PATTERN = /^\d+(?:\.\d+){1,2}$/;
+
 export const tbenchLeaderboardTemplate: ConnectorTemplate<TbenchLeaderboardConfig> = {
   id: 'tbench-leaderboard',
   displayName: 'Terminal Bench leaderboard',
   configSchema: z
     .object({
-      version: z.string().trim().min(1).optional(),
+      version: z.string().trim().regex(VERSION_PATTERN).optional(),
       limit: z.number().int().positive().max(10).optional(),
     })
     .strict(),
@@ -22,5 +24,6 @@ export const tbenchLeaderboardTemplate: ConnectorTemplate<TbenchLeaderboardConfi
   paramExtractors: {},
   rightsStatus: 'with-attribution',
   defaultRefreshSeconds: 21600,
+  snapshotVersion: 2,
   adapter: (config) => tbenchLeaderboard(config),
 };

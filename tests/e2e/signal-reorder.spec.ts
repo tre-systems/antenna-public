@@ -1,14 +1,15 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { createSeededCollection, deleteCollection } from './shared-fixture';
 
-// Rendered titles of the six trader-morning signals, in seeded order.
 const SEEDED_TITLES = [
   'Market overview',
   'GBP/USD',
   'Gold',
   'Crude oil',
   'Crypto history',
-  'Stocks',
+  'VTI 1Y',
+  'SPY 1Y',
+  'QQQ 1Y',
 ] as const;
 
 test('drag moves a card anywhere in the grid and the order persists', async ({ page }) => {
@@ -18,37 +19,29 @@ test('drag moves a card anywhere in the grid and the order persists', async ({ p
     await page.goto(`/?collection=${encodeURIComponent(collectionId)}`);
 
     const gold = page.locator('[data-signal-id]').filter({ hasText: 'Gold' });
-    const watchlist = page.locator('[data-signal-id]').filter({ hasText: 'Stocks' });
+    const qqq = page.locator('[data-signal-id]').filter({ hasText: 'QQQ 1Y' });
     await expect(gold).toHaveCount(1, { timeout: 15_000 });
-    await expect(watchlist).toHaveCount(1);
+    await expect(qqq).toHaveCount(1);
 
     const before = await gridOrder(page);
     const goldIdx = before.indexOf('Gold');
-    const watchlistIdx = before.indexOf('Stocks');
+    const qqqIdx = before.indexOf('QQQ 1Y');
     expect(goldIdx).toBeGreaterThanOrEqual(0);
-    expect(watchlistIdx).toBeGreaterThan(goldIdx);
+    expect(qqqIdx).toBeGreaterThan(goldIdx);
 
-    // Drop Gold onto the watchlist card — a long-distance move across the
-    // whole grid, not just a neighbour swap. The grid live-previews and
-    // reflows during the drag, so the exact landing slot depends on the
-    // pointer path; the contract is that Gold lands late in the order and
-    // whatever the user saw on release is what persists.
-    await dragByHandle(page, gold, watchlist);
+    // The landing slot follows the live preview, so assert a later position rather than an index.
+    await dragByHandle(page, gold, qqq);
 
     await expect.poll(async () => (await gridOrder(page)).indexOf('Gold')).toBeGreaterThan(goldIdx);
     const after = await gridOrder(page);
     expect(after).not.toEqual(before);
 
-    // The grid reorders optimistically while the PATCH is still in flight, so
-    // wait for the server to agree before reloading — otherwise the reload
-    // races the write and reads back the pre-drag order. Compared by signal id
-    // rather than title, since ids are what the write actually reorders.
+    // Wait for the optimistic order to persist before reloading.
     const settledIds = await gridSignalIds(page);
     await expect
       .poll(async () => (await serverSignalIds(page, collectionId)).join('|'))
       .toBe(settledIds.join('|'));
 
-    // The order survives a reload, so the PATCH persisted server-side.
     await page.reload();
     await expect(page.locator('[data-signal-id]').filter({ hasText: 'Gold' })).toHaveCount(1, {
       timeout: 15_000,
@@ -59,7 +52,6 @@ test('drag moves a card anywhere in the grid and the order persists', async ({ p
   }
 });
 
-// Card titles across the whole grid, in DOM order.
 async function gridOrder(page: Page): Promise<string[]> {
   const headers = await page
     .locator('[data-signal-id] [data-testid="signal-card-header"]')
@@ -69,14 +61,12 @@ async function gridOrder(page: Page): Promise<string[]> {
   );
 }
 
-// Signal ids in DOM order — the identity the reorder write actually persists.
 async function gridSignalIds(page: Page): Promise<string[]> {
   return await page
     .locator('[data-signal-id]')
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-signal-id') ?? ''));
 }
 
-// The same list as the server has it. `/api/signals` returns position order.
 async function serverSignalIds(page: Page, collectionId: string): Promise<string[]> {
   const res = await page.request.get(
     `/api/signals?collection_id=${encodeURIComponent(collectionId)}`,
@@ -102,8 +92,7 @@ async function dragByHandle(page: Page, source: Locator, target: Locator): Promi
 
   await page.mouse.move(startX, startY);
   await page.mouse.down();
-  // Several intermediate moves: the drag arms after a 6px threshold and
-  // live-previews on each pointermove.
+  // Intermediate moves exercise the armed drag and its live preview.
   for (let step = 1; step <= 8; step += 1) {
     await page.mouse.move(
       startX + ((endX - startX) * step) / 8,

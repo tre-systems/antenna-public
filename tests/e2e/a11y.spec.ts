@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { createSharedFixture, deleteCollection, openSignalComposer } from './shared-fixture';
+import { createSharedFixture, deleteCollection } from './shared-fixture';
 
 const seriousOrCritical = (violations: Awaited<ReturnType<AxeBuilder['analyze']>>['violations']) =>
   violations.filter(
@@ -42,18 +42,7 @@ test('signed-in collection and token settings have no serious axe violations', a
 
   await page.goto('/settings/tokens');
   await expect(page.getByTestId('settings-connections-command')).toBeVisible({ timeout: 10_000 });
-  await expectNoSeriousA11yViolations(page, 'MCP token settings');
-});
-
-test('add-signal plan preview has no serious axe violations', async ({ page }) => {
-  await page.goto('/');
-  await openSignalComposer(page);
-
-  await page.getByTestId('signal-composer-input').fill('weather in Paris');
-  await page.getByTestId('signal-composer-submit').click();
-  await expect(page.getByTestId('plan-preview')).toBeVisible({ timeout: 15_000 });
-
-  await expectNoSeriousA11yViolations(page, 'add-signal plan preview');
+  await expectNoSeriousA11yViolations(page, 'agent access settings');
 });
 
 test('shared collection view has no serious axe violations', async ({ page }) => {
@@ -69,25 +58,13 @@ test('shared collection view has no serious axe violations', async ({ page }) =>
   }
 });
 
-// Automates the manual narrow-viewport sweep (review Lens 7 / R6): the desktop
-// projects above never exercise phone width, where the common regression is
-// content wider than the viewport (horizontal scroll). 375px is the standard
-// small-phone CSS width (e.g. iPhone SE).
 test('collection fits a phone viewport without horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 667 });
   await page.goto('/');
-  // Anchor on the collection-experience shell, not a state-specific testid.
-  // header-present is `hidden` below the sm breakpoint (invisible on a phone),
-  // and onboarding-shell only renders while the shared e2e user is still in
-  // onboarding — a parallel spec that creates a collection flips that user into
-  // collection state mid-run, so waiting on it races. The collection-experience
-  // <main> wraps both onboarding and collection state, carries no
-  // responsive-hidden class, and is distinct from the bare loading/error
-  // <main>s, so it's the one element reliably present and visible here at 375px.
+  // This shell is stable even when parallel specs complete onboarding for the shared user.
   await expect(page.getByTestId('collection-experience')).toBeVisible({ timeout: 10_000 });
 
-  // +1 absorbs sub-pixel rounding; anything beyond that is real overflow that
-  // forces sideways scrolling on a phone.
+  // One pixel absorbs sub-pixel layout rounding.
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );

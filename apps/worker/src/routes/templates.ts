@@ -39,6 +39,8 @@ const toTemplateRecord = (template: Template): TemplateRecord => ({
   display_name: template.displayName,
   param_keys: [...template.paramKeys],
   planner_enabled: template.plannerEnabled !== false,
+  direct_proposal_enabled:
+    template.plannerEnabled !== false || template.directProposalEnabled === true,
   rights_status: template.rightsStatus,
   default_refresh_seconds: template.defaultRefreshSeconds,
   retain_raw_payload: template.retainRawPayload === true,

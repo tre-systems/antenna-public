@@ -32,9 +32,7 @@ describe('POST /api/signals/:id/refresh', () => {
     const manual = status[0]?.lastManualRequestAt;
     expect(manual).toBeInstanceOf(Date);
     expect((manual as Date).getTime()).toBeGreaterThanOrEqual(before);
-    // The dispatcher refetches only when lastManualRequestAt > updatedAt
-    // (its proxy for "last attempt"). Touching updatedAt here would defeat
-    // that, so the refresh backstop must leave it alone on the existing row.
+    // Preserve updatedAt so dispatch recognizes the pending manual request.
     const updated = status[0]?.updatedAt;
     expect(updated).toBeInstanceOf(Date);
     expect((updated as Date).getTime()).toBe(1_000);

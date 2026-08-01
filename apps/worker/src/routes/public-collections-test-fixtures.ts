@@ -1,6 +1,3 @@
-// Shared scaffolding for the public-collections.*.test.ts files.
-// Not a test file (no .test.ts suffix) so vitest ignores it.
-
 import { Hono } from 'hono';
 import * as schema from '../db/schema';
 import type { Visibility } from '../policy/source-access';
@@ -9,11 +6,11 @@ import { setupRoutesDb, type Drizzle } from './routes-test-fixtures';
 
 export type { Drizzle } from './routes-test-fixtures';
 
-export type PublicEnv = { DB: D1Database; BETTER_AUTH_SECRET: string };
+export type PublicEnv = { DB: D1Database };
 
 export const setup = (): { db: Drizzle; env: PublicEnv } => {
   const { db, env } = setupRoutesDb();
-  return { db, env: { ...env, BETTER_AUTH_SECRET: 'test-better-auth-secret' } };
+  return { db, env };
 };
 
 export const buildApp = (): Hono => {

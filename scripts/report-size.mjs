@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 import ts from 'typescript';
 
@@ -24,7 +24,7 @@ const sourceFiles = execFileSync(
 )
   .trim()
   .split('\n')
-  .filter(Boolean);
+  .filter((file) => file.length > 0 && existsSync(file));
 
 const isTestFile = (file) => /\.(test|spec)\./.test(file);
 

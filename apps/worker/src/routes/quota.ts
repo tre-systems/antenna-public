@@ -3,14 +3,11 @@ import type { CollectionQuota } from '@antenna/shared';
 import type { Db } from '../db/client';
 import { collections, signals } from '../db/schema';
 
-// What one account is allowed to create. Both limits exist to bound cost and to
-// keep one account from crowding the shared dispatch queue, so they live
-// together and report the same shape.
+// Bound per-account cost and shared dispatch-queue occupancy.
 
 const FREE_DASHBOARD_LIMIT = 10;
 
-// Signals are the unit that costs money: each is an upstream fetch, a row
-// write, and a slot in the dispatch queue on every refresh interval.
+// Signals consume upstream, storage, and dispatch capacity on each refresh.
 export const SIGNALS_PER_COLLECTION_LIMIT = 50;
 
 const quotaFrom = (used: number, limit: number): CollectionQuota => ({
@@ -51,8 +48,7 @@ export const countSignalsInCollection = async (
   return row?.count ?? 0;
 };
 
-// True when adding `adding` more signals would take the collection past the
-// limit. Callers check before writing so a partial batch is never persisted.
+// Check signal quota before writing to avoid partial batches.
 export const wouldExceedSignalQuota = async (
   client: Db,
   collectionId: string,

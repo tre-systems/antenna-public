@@ -31,8 +31,7 @@ describe('SignalCard weather and air quality heroes', () => {
   });
 
   it('renders the weather forecast strip, WMO icon, and advice line', () => {
-    // A wet-day fixture so the advice takes the umbrella branch — the most
-    // informative variant, and the one that cross-references the strip.
+    // Wet weather exercises advice that cross-references the forecast strip.
     const FIXED_NOON = new Date();
     FIXED_NOON.setHours(12, 0, 0, 0);
     const noonMs = FIXED_NOON.getTime();
@@ -86,15 +85,13 @@ describe('SignalCard weather and air quality heroes', () => {
       ],
     });
     const html = renderToString(<SignalCard signal={signal} />);
-    // The shared WeatherIcon stamps the raw condition on the <svg>; WMO 61
-    // (drizzle/rain) maps to "rain" in the connector.
+    // WMO 61 maps to the rain icon.
     expect(html).toContain('data-condition="rain"');
     expect(html).toContain('data-testid="weather-forecast"');
     for (let h = 1; h <= 12; h += 1) {
       expect(html).toContain(`data-hour-offset="${String(h)}"`);
     }
-    // The peak rain hour is labelled by local time (5 hours after noon → "5p")
-    // and the advice line repeats that label.
+    // Advice repeats the peak-rain local-time label.
     expect(html).toContain('>5p<');
     expect(html).toContain('data-testid="weather-advice"');
     expect(html).toMatch(/Bring an umbrella — 80% rain at 5p/);

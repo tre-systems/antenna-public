@@ -65,6 +65,11 @@ describe('SignalCard status and errors', () => {
     const signal = makeSignal({
       template_id: 'trading-economics-market',
       config: { symbol: 'EURUSD:CUR' },
+      display: {
+        title: 'EUR/USD',
+        source_label: 'Trading Economics',
+        source_url: 'https://tradingeconomics.com/',
+      },
       points: [],
       status: {
         status: 'error',
@@ -84,8 +89,7 @@ describe('SignalCard status and errors', () => {
     expect(html).not.toContain('setup_required:');
     // Stripped error stays in the title so the secret name survives truncation.
     expect(html).toContain('title="needs TRADING_ECONOMICS_API_KEY"');
-    // The setup note replaces the "Waiting for the next tick…" placeholder
-    // rather than competing with it.
+    // Setup guidance replaces the generic waiting placeholder.
     expect(html).not.toContain('Waiting for the next tick');
   });
 

@@ -9,8 +9,7 @@ type ReorderResult =
   | { readonly ok: true; readonly record: CollectionSignalOrderRecord }
   | { readonly ok: false; readonly error: 'invalid_order_signals' };
 
-// A reorder is a permutation: anything but the collection's own signal ids,
-// each exactly once, is refused rather than partially applied.
+// Accept only exact permutations of a collection's signal ids.
 export const reorderCollectionSignalRows = async (
   client: Client,
   collectionId: string,
@@ -33,11 +32,7 @@ const sameIdSet = (existing: ReadonlyArray<string>, proposed: ReadonlyArray<stri
   return proposedSet.size === proposed.length && proposed.every((id) => existingSet.has(id));
 };
 
-// A reorder is one user action, so it lands as one D1 batch. Written row by row
-// it can stop half way and leave the collection with duplicated or missing
-// positions — a state no later request corrects, because every subsequent read
-// just sorts by whatever is there. The per-row path stays as a fallback for
-// bindings without `batch()` (better-sqlite3 in tests).
+// Batch reorders atomically, with a row-wise fallback for test adapters.
 const persistCollectionSignalOrder = async (
   client: Client,
   collectionId: string,

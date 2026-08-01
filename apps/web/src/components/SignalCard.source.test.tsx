@@ -8,6 +8,11 @@ describe('SignalCard source attribution', () => {
     const html = renderToString(
       <SignalCard
         signal={makeSignal({
+          display: {
+            title: 'EUR/USD',
+            source_label: 'Frankfurter (ECB)',
+            source_url: null,
+          },
           points: [
             {
               dimensions: { pair: 'EUR/USD' },
@@ -29,6 +34,11 @@ describe('SignalCard source attribution', () => {
         signal={makeSignal({
           template_id: 'macro-market-history',
           config: { preset: 'uk-10y-gilt' },
+          display: {
+            title: 'UK 10Y gilt 1Y',
+            source_label: 'Bank of England',
+            source_url: 'https://www.bankofengland.co.uk/boeapps/database/',
+          },
           points: [],
         })}
       />,

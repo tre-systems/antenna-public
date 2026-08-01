@@ -1,17 +1,15 @@
 import { projectPortfolio } from '@antenna/connectors';
 import { z } from 'zod';
 import { numberField, stringField } from './config-fields';
+import { ACCOUNT_ID_PATTERN, SLUG_LIST_PATTERN } from './config-patterns';
 import { type ConnectorTemplate } from './types';
-
-const ACCOUNT_ID_RX = /^[0-9a-f]{32}$/;
-const PROJECTS_RX = /^[a-z0-9_-]+(?:,[a-z0-9_-]+)*$/;
 
 export const projectPortfolioTemplate: ConnectorTemplate = {
   id: 'project-portfolio',
   displayName: 'Project portfolio',
   configSchema: z.object({
-    projects: z.string().regex(PROJECTS_RX),
-    account_id: z.string().regex(ACCOUNT_ID_RX),
+    projects: z.string().regex(SLUG_LIST_PATTERN),
+    account_id: z.string().regex(ACCOUNT_ID_PATTERN),
     days: z.number().int().min(1).max(30).optional(),
     apiToken: z.string().optional(),
   }),

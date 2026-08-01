@@ -5,8 +5,7 @@ import { buildApp, seedCollection, seedSignal, setup } from './public-collection
 
 vi.mock('../db/client', async () => (await import('./routes-test-fixtures')).inMemoryDbClient());
 
-// Fields the owner-facing signal shape carries that must never reach an
-// anonymous reader.
+// Owner-only signal fields must never reach anonymous readers.
 const OWNER_ONLY_PUBLIC_KEYS = [
   'config',
   'refresh_seconds',

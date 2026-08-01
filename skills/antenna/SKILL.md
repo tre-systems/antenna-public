@@ -9,8 +9,8 @@ description: >
 
 # Antenna Skill
 
-Use this Skill when a user is working with Antenna through the MCP
-server. Antenna is a source-rights-aware personal signal layer for agents:
+Use this Skill when a user is working with Antenna through the MCP server.
+Antenna is a source-rights-aware personal signal layer for agents:
 it shows live signals, source links, freshness, and status, and it only creates
 signals from registered templates.
 
@@ -47,8 +47,11 @@ signals from registered templates.
   captured by Ask Antenna.
 - `list_templates()`: inspect registered connector templates and setup/source
   posture.
-- `propose_signal({ prompt })`: create a plan from natural language. This does
-  not create signals.
+- `propose_signal({ prompt, collectionId? })`: create a plan from natural language, optionally in a
+  selected collection. This does not create signals.
+- `propose_template_signal({ templateId, collectionId? })`: create a plan for an exact template
+  returned by `list_templates` when `direct_proposal_enabled` is true. This avoids prompt matching
+  but does not create signals.
 - `reject_plan({ planId })`: reject a pending plan after the user declines it.
 - `confirm_plan({ planId, editedSignals? })`: create signals from a pending plan
   after explicit approval.
@@ -67,6 +70,8 @@ signals from registered templates.
 - `signals://{signal_id}`: one signal snapshot.
 - `morning_brief`: built-in prompt for a concise collection summary. It should
   still use `list_signals` and history tools rather than guessing.
+- `app_brief`: built-in prompt for production health, Worker errors, browser visits, and meaningful
+  product actions. It keeps traffic, visits, health, and usage evidence distinct.
 
 ## Common Workflows
 
@@ -82,7 +87,9 @@ signals from registered templates.
 
 ### Add A Signal
 
-1. Call `propose_signal` with the user's natural-language request.
+1. Call `list_collections` when the target is ambiguous. Use `propose_signal` with the user's
+   natural-language request, or call `list_templates` and `propose_template_signal` when the exact
+   connector is known. Pass `collectionId` when targeting a selected collection.
 2. Show the returned plan: signal title, template, source, missing fields, setup
    requirements, and source-rights posture.
 3. Ask for confirmation. If fields are missing, ask for only those fields.
@@ -141,7 +148,7 @@ after changing the connector registry.
 - `trading-economics-market` - Trading Economics market; params: `symbol`, `label`, `unit`, `sourceUrl`; rights: with-attribution; refresh: 6h; secret: `TRADING_ECONOMICS_API_KEY`.
 - `weather` - Weather; params: `location`, `lat`, `lon`; rights: public; refresh: 30m.
 - `airquality` - Air quality; params: `location`, `lat`, `lon`; rights: public; refresh: 30m.
-- `equity-watchlist` - Equity watchlist; params: `tickers`; rights: with-attribution; refresh: 10m.
+- `equity-watchlist` - Equity watchlist; params: `tickers`; rights: with-attribution; refresh: 10m; planner disabled.
 - `sector-movers` - US sector movers; params: none; rights: with-attribution; refresh: 10m.
 - `github-trending` - GitHub Trending; params: none; rights: with-attribution; refresh: 6h.
 - `github-repo-activity` - GitHub repo activity; params: `owner`, `repo`; rights: public; refresh: 30m.
@@ -160,7 +167,8 @@ after changing the connector registry.
 - `app-usage` - App usage; params: `project`, `account_id`; rights: requires-auth; refresh: 1h; secret: `CF_ANALYTICS_API_TOKEN`.
 - `cloudflare-analytics` - Cloudflare traffic; params: `account_id`; rights: requires-auth; refresh: 1h; secret: `CF_ANALYTICS_API_TOKEN`.
 - `project-portfolio` - Project portfolio; params: `projects`, `account_id`; rights: requires-auth; refresh: 1h; secret: `CF_ANALYTICS_API_TOKEN`.
-- `reddit-problems` - Reddit problem candidates; params: `subreddits`; rights: with-attribution; refresh: 6h.
+- `app-health` - App health; params: `projects`; rights: requires-auth; refresh: 15m; secret: `APP_HEALTH_MANIFEST`; planner disabled.
+- `cloudflare-web-analytics` - Web visits; params: `account_id`, `hosts`; rights: requires-auth; refresh: 1h; secret: `CF_ANALYTICS_API_TOKEN`; planner disabled.
 
 <!-- END GENERATED TEMPLATE LIST -->
 

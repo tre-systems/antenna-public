@@ -31,14 +31,6 @@ export const useCollectionState = (signedIn: boolean, selectedCollectionId: stri
     [selectedCollectionId],
   );
 
-  const saveDescription = useCallback(
-    async (next: string) => {
-      const description = next.length > 0 ? next : null;
-      setCollection(await updateCollection({ description }, selectedCollectionId ?? undefined));
-    },
-    [selectedCollectionId],
-  );
-
   const saveVisibility = useCallback(
     async (visibility: CollectionRecord['visibility']) => {
       setCollection(await updateCollection({ visibility }, selectedCollectionId ?? undefined));
@@ -46,7 +38,7 @@ export const useCollectionState = (signedIn: boolean, selectedCollectionId: stri
     [selectedCollectionId],
   );
 
-  return { collection, saveTitle, saveDescription, saveVisibility };
+  return { collection, saveTitle, saveVisibility };
 };
 
 type LoadFlag = { cancelled: boolean };

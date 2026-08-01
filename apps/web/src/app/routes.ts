@@ -1,11 +1,9 @@
 // Shared-link routes skip auth bootstrap so anonymous collection views stay fast.
 const PUBLIC_PATH_RE = /^\/c\/([^/?#]+)\/?$/;
-const SETTINGS_ACTIVITY_PATH_RE = /^\/settings\/activity\/?$/;
 const SETTINGS_TOKENS_PATH_RE = /^\/settings\/tokens\/?$/;
 
 type AppRoute = {
   readonly publicSlug: string | null;
-  readonly settingsActivityRoute: boolean;
   readonly settingsTokensRoute: boolean;
   readonly selectedCollectionId: string | null;
 };
@@ -15,7 +13,6 @@ export const readInitialAppRoute = (): AppRoute => {
   const { pathname, search } = window.location;
   return {
     publicSlug: publicSlugFromPath(pathname),
-    settingsActivityRoute: SETTINGS_ACTIVITY_PATH_RE.test(pathname),
     settingsTokensRoute: SETTINGS_TOKENS_PATH_RE.test(pathname),
     selectedCollectionId: selectedCollectionFromSearch(search),
   };
@@ -23,7 +20,6 @@ export const readInitialAppRoute = (): AppRoute => {
 
 const emptyRoute = (): AppRoute => ({
   publicSlug: null,
-  settingsActivityRoute: false,
   settingsTokensRoute: false,
   selectedCollectionId: null,
 });

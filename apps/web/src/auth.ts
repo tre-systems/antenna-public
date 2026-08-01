@@ -35,20 +35,24 @@ export async function completeOnboarding(): Promise<User> {
 
 type UnknownFields = { readonly [K in keyof User]?: unknown };
 
-const isUser = (body: UnknownFields): body is User =>
-  typeof body.id === 'string' &&
-  typeof body.email === 'string' &&
-  typeof body.name === 'string' &&
-  (body.image_url === null || typeof body.image_url === 'string') &&
-  typeof body.first_seen_at === 'number' &&
-  (body.onboarded_at === null || typeof body.onboarded_at === 'number') &&
-  isCollectionQuota(body.collection_quota);
+const isUser = (value: unknown): value is User => {
+  if (typeof value !== 'object' || value === null) return false;
+  const body = value as UnknownFields;
+  return (
+    typeof body.id === 'string' &&
+    typeof body.email === 'string' &&
+    typeof body.name === 'string' &&
+    (body.image_url === null || typeof body.image_url === 'string') &&
+    typeof body.first_seen_at === 'number' &&
+    (body.onboarded_at === null || typeof body.onboarded_at === 'number') &&
+    isCollectionQuota(body.collection_quota)
+  );
+};
 
 const parseUser = (raw: unknown): User => {
-  const body = raw as UnknownFields;
-  if (!isUser(body)) throw new Error('GET /api/me returned unexpected shape');
+  if (!isUser(raw)) throw new Error('User endpoint returned unexpected shape');
   // Project rather than pass through so unexpected server fields never reach the UI.
-  const { id, email, name, image_url, first_seen_at, onboarded_at, collection_quota } = body;
+  const { id, email, name, image_url, first_seen_at, onboarded_at, collection_quota } = raw;
   return { id, email, name, image_url, first_seen_at, onboarded_at, collection_quota };
 };
 

@@ -1,6 +1,6 @@
 // Drawn at 24×24 with currentColor strokes so the parent sizes and colours them.
 
-import type { WeatherCondition } from '../signalFormat';
+import type { WeatherCondition } from '../signal-format';
 
 type Props = {
   readonly condition: WeatherCondition;

@@ -4,7 +4,6 @@ import {
   deleteCollection,
   getCollection,
   getCollectionTemplates,
-  publishCollectionTemplate,
   updateCollection,
 } from './collections';
 import { captureFetch } from './test-support';
@@ -138,39 +137,5 @@ describe('api collection endpoints', () => {
     expect(result).toEqual({ deleted: true, id: 'collection/with spaces' });
     expect(calls[0]?.url).toBe('/api/collections/collection%2Fwith%20spaces');
     expect(calls[0]?.init?.method).toBe('DELETE');
-  });
-
-  it('publishCollectionTemplate POSTs owner publication details', async () => {
-    const body = {
-      template: {
-        id: 'collection:public-slug',
-        kind: 'community',
-        label: 'Public Signals',
-        description: 'A reusable signal set',
-        summary: 'Three public signals',
-        source_collection_id: 'collection-1',
-        fork_source_slug: 'public-slug',
-        owner_display_name: 'Rob',
-        signals: [],
-      },
-      skipped_signals: [],
-    };
-    const calls = captureFetch(body);
-    const result = await publishCollectionTemplate('collection/with spaces', {
-      label: 'Public Signals',
-      description: 'A reusable signal set',
-      summary: 'Three public signals',
-    });
-
-    expect(result).toEqual(body);
-    expect(calls[0]?.url).toBe('/api/collections/collection%2Fwith%20spaces/template');
-    expect(calls[0]?.init?.method).toBe('POST');
-    expect(calls[0]?.init?.body).toBe(
-      JSON.stringify({
-        label: 'Public Signals',
-        description: 'A reusable signal set',
-        summary: 'Three public signals',
-      }),
-    );
   });
 });

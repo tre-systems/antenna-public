@@ -30,6 +30,7 @@ export function SettingsDialog({
         type="button"
         aria-label="Close settings"
         onClick={onClose}
+        disabled={saving}
         class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity dark:bg-black/60"
       />
       <div
@@ -38,7 +39,7 @@ export function SettingsDialog({
         aria-labelledby={`signal-settings-title-${signalId}`}
         class="antenna-menu relative m-0 max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-t-2xl p-5 sm:m-4 sm:rounded-2xl"
       >
-        <DialogHeader signalId={signalId} title={title} onClose={onClose} />
+        <DialogHeader signalId={signalId} title={title} saving={saving} onClose={onClose} />
         {children}
         {error ? (
           <p class="mt-3 text-xs text-rose-600 dark:text-rose-400" role="alert">
@@ -54,10 +55,11 @@ export function SettingsDialog({
 type DialogHeaderProps = {
   readonly signalId: string;
   readonly title: string;
+  readonly saving: boolean;
   readonly onClose: () => void;
 };
 
-function DialogHeader({ signalId, title, onClose }: DialogHeaderProps) {
+function DialogHeader({ signalId, title, saving, onClose }: DialogHeaderProps) {
   return (
     <div class="flex items-start justify-between gap-3">
       <div class="min-w-0">
@@ -69,17 +71,18 @@ function DialogHeader({ signalId, title, onClose }: DialogHeaderProps) {
         </h2>
         <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Signal settings</p>
       </div>
-      <CloseButton onClose={onClose} />
+      <CloseButton saving={saving} onClose={onClose} />
     </div>
   );
 }
 
-function CloseButton({ onClose }: Pick<DialogHeaderProps, 'onClose'>) {
+function CloseButton({ saving, onClose }: Pick<DialogHeaderProps, 'saving' | 'onClose'>) {
   return (
     <button
       type="button"
       aria-label="Close"
       onClick={onClose}
+      disabled={saving}
       class="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:hover:bg-white/5 dark:hover:text-slate-200"
       data-testid="signal-settings-close"
     >

@@ -1,5 +1,4 @@
-// preact-render-to-string is synchronous and does not execute effects,
-// so we drive state through the signal directly.
+// Server rendering requires direct signal setup because effects do not run.
 import { afterEach, describe, expect, it } from 'vitest';
 import renderToString from 'preact-render-to-string';
 import { ConnectorRequests } from './ConnectorRequests';
@@ -46,8 +45,7 @@ describe('ConnectorRequests', () => {
     connectorRequests.value = SAMPLE;
     const html = renderToString(<ConnectorRequests />);
     expect(html).toContain('data-testid="connector-requests"');
-    expect(html).toContain('Diagnostics');
-    expect(html).toContain('2 setup requests');
+    expect(html).toContain('Requests waiting on support');
     expect(html).toContain('whisky futures');
     expect(html).toContain('×3');
     expect(html).toContain('Trading Economics');

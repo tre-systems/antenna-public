@@ -29,6 +29,15 @@ describe('pointSourceUrl', () => {
       ),
     ).toBeNull();
   });
+
+  it('uses a safe legacy point URL when display metadata is absent', () => {
+    expect(
+      pointSourceUrl(
+        { dimensions: {}, value: 1, source_url: 'https://legacy.example/source' },
+        makeSignal(),
+      ),
+    ).toBe('https://legacy.example/source');
+  });
 });
 
 describe('signalTitle', () => {
@@ -48,32 +57,8 @@ describe('signalTitle', () => {
     ).toBe('Server title');
   });
 
-  it('uses macro preset labels for free macro history signals', () => {
-    expect(
-      signalTitle(
-        makeSignal({ template_id: 'macro-market-history', config: { preset: 'gbp-usd' } }),
-      ),
-    ).toBe('GBP/USD 1Y');
-  });
-
-  it('humanises known Morningstar codes in market-history titles', () => {
-    expect(
-      signalTitle(
-        makeSignal({ template_id: 'market-history', config: { symbol: '0P000125KV.L' } }),
-      ),
-    ).toBe('Fidelity Index World P 1Y');
-    expect(
-      signalTitle(makeSignal({ template_id: 'market-history', config: { symbol: 'BA.L' } })),
-    ).toBe('BA 1Y');
-    // cfg.label overrides everything so a seed can rename without a SPA map
-    expect(
-      signalTitle(
-        makeSignal({
-          template_id: 'market-history',
-          config: { symbol: '0P000125KV.L', label: 'My pension fund' },
-        }),
-      ),
-    ).toBe('My pension fund 1Y');
+  it('uses stored title as a compatibility fallback', () => {
+    expect(signalTitle(makeSignal({ title: 'Stored title' }))).toBe('Stored title');
   });
 });
 
@@ -92,17 +77,10 @@ describe('signalSourceLabel', () => {
     ).toBe('Server source');
   });
 
-  it('uses the concrete source label for macro presets', () => {
-    expect(
-      signalSourceLabel(
-        makeSignal({ template_id: 'macro-market-history', config: { preset: 'uk-10y-gilt' } }),
-      ),
-    ).toBe('Bank of England');
-    expect(
-      signalSourceLabel(
-        makeSignal({ template_id: 'macro-market-history', config: { preset: 'crude-oil' } }),
-      ),
-    ).toBe('EIA');
+  it('uses template id as a compatibility fallback', () => {
+    expect(signalSourceLabel(makeSignal({ template_id: 'legacy-template' }))).toBe(
+      'legacy-template',
+    );
   });
 });
 
@@ -151,25 +129,11 @@ describe('signalSourceUrl', () => {
     ).toBe('https://example.test/source');
   });
 
-  it('falls back to source config and known template source pages', () => {
+  it('does not derive links from browser-visible config', () => {
     expect(
       signalSourceUrl(
-        makeSignal({
-          template_id: 'trading-economics-market',
-          config: { sourceUrl: 'https://tradingeconomics.com/commodity/gold' },
-        }),
+        makeSignal({ config: { sourceUrl: 'https://untrusted.example/source' }, points: [] }),
       ),
-    ).toBe('https://tradingeconomics.com/commodity/gold');
-    expect(
-      signalSourceUrl(makeSignal({ template_id: 'market-history', config: { symbol: 'BA.L' } })),
-    ).toBe('https://finance.yahoo.com/quote/BA.L/');
-    expect(
-      signalSourceUrl(makeSignal({ template_id: 'crypto-history', config: { pairs: 'BTC-USD' } })),
-    ).toBe('https://www.coinbase.com/price/btc');
-    expect(
-      signalSourceUrl(
-        makeSignal({ template_id: 'macro-market-history', config: { preset: 'crude-oil' } }),
-      ),
-    ).toBe('https://www.eia.gov/dnav/pet/hist/RWTCd.htm');
+    ).toBeNull();
   });
 });

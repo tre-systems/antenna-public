@@ -1,6 +1,4 @@
-// Deployment adoption counts feed the owner-only `antenna-users` signal. The
-// two things that matter: the numbers are right, and only an admin's signal can
-// ever obtain them.
+// Deployment counts must be correct and restricted to admin-owned signals.
 
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { beforeEach, describe, expect, it } from 'vitest';

@@ -2,8 +2,7 @@ import { equitiesStooq } from '@antenna/connectors';
 import { z } from 'zod';
 import { type ConnectorTemplate } from './types';
 
-// 1-5 uppercase letters, optional `.US` / `.UK` style suffix. Conservative on
-// purpose so we don't capture random uppercase tokens.
+// Conservative symbols avoid capturing unrelated uppercase prompt tokens.
 const TICKER_RX = /\b([A-Z]{1,5}(?:\.[A-Z]{2,3})?)\b/g;
 
 const STOPWORDS = new Set([
@@ -60,6 +59,9 @@ const extractTickers = (prompt: string): string | undefined => {
 export const equityWatchlistTemplate: ConnectorTemplate<{ tickers: string }> = {
   id: 'equity-watchlist',
   displayName: 'Equity watchlist',
+  // Keep grouped legacy cards dispatchable while steering new charts to market-history.
+  plannerEnabled: false,
+  directProposalEnabled: true,
   configSchema: z.object({
     tickers: z.string().min(1),
   }),

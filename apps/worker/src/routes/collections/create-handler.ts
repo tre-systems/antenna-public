@@ -6,10 +6,6 @@ import { signalStatus, collections, signals } from '../../db/schema';
 import { toCollectionRecord } from '../collection-record';
 import { err, errWith } from '../http';
 import { countCollectionsForUser, collectionQuotaFromCount } from '../quota';
-import {
-  createCollectionFromCommunityTemplate,
-  COMMUNITY_TEMPLATE_ID_PREFIX,
-} from './community-templates';
 import { newCollectionSlug } from './slug';
 import {
   emptyTemplateRows,
@@ -32,10 +28,6 @@ export const createCollection = async (c: CollectionsContext): Promise<Response>
   if (quotaError) return quotaError;
 
   const templateId = c.req.query('templateId') ?? parsed.data.template_id;
-  if (templateId?.startsWith(COMMUNITY_TEMPLATE_ID_PREFIX)) {
-    return createCollectionFromCommunityTemplate(c, client, userId, templateId, parsed.data);
-  }
-
   const collectionTemplate = resolveCollectionTemplate(templateId);
   if (!collectionTemplate.ok) return err(c, 'unknown_collection_template', 400);
 
@@ -48,8 +40,7 @@ export const createCollection = async (c: CollectionsContext): Promise<Response>
   return c.json(toCollectionRecord(row) satisfies CollectionRecord, 201);
 };
 
-// The refusal response when the account is already at its collection limit,
-// or undefined to carry on. Checked before any write.
+// Refuse collection creation before writing when the account is at quota.
 const collectionQuotaError = async (
   c: CollectionsContext,
   client: Client,
@@ -98,7 +89,7 @@ const templateRowsForCollection = (
 const templateRowsFailure = (c: CollectionsContext, result: TemplateRowsResult): Response => {
   if (result.ok) throw new Error('Expected template row failure');
   if (result.error === 'source_policy_blocked') {
-    return c.json({ error: result.error, reason: result.reason }, 409);
+    return errWith(c, result.error, { reason: result.reason }, 409);
   }
   return err(c, result.error, 400);
 };

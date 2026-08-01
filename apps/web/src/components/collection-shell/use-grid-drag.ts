@@ -5,12 +5,7 @@ import { startEdgeAutoScroll } from './auto-scroll';
 import { createDragGhost, type DragGhost } from './drag-ghost';
 import { finishAllSlides, finishSlides, isSliding } from './flip';
 
-// Pointer drag for grid cards: a ghost tracks the pointer while the grid
-// live-previews the drop order.
-// The card surface takes mouse drags only — a whole-card touch drag would fight
-// page scrolling — so touch reorders must start on the grip handle.
-// Listeners live on window, not setPointerCapture: the live preview re-parents
-// cells, and moving a node silently releases capture.
+// Window listeners survive the grid re-parenting cards during drag previews.
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -73,9 +68,7 @@ function armDrag({ down, cell, signalId, initialOrder, onDone }: DragArgs): () =
   let pointer = { x: down.clientX, y: down.clientY };
   let reflowPending = false;
 
-  // Hit-testing a mid-slide card reads a moving position and thrashes the grid,
-  // so wait for settled layout — except on drop, which snaps first so a fast
-  // flick still lands on the slot under the pointer.
+  // Preview only settled cards; drops snap first to preserve fast flicks.
   const previewAtPointer = (isDrop = false): void => {
     if (reflowPending) return;
     if (isDrop) finishAllSlides(cell);
@@ -175,8 +168,7 @@ function armDrag({ down, cell, signalId, initialOrder, onDone }: DragArgs): () =
 const orderChanged = (a: readonly ApiSignal[], b: readonly ApiSignal[]): boolean =>
   a.length !== b.length || a.some((item, index) => item.id !== b[index]?.id);
 
-// A drop over the card would otherwise land as a click and toggle the card's
-// compact/expanded state. Swallow the one click that follows a real drag.
+// Swallow the click following a drag so it cannot toggle the card.
 function suppressNextClick(): void {
   const squelch = (event: MouseEvent): void => {
     event.stopPropagation();

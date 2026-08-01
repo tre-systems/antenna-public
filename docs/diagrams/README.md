@@ -4,34 +4,39 @@ Graphviz / DOT sources plus rendered PNGs. The `.dot` files are the source of tr
 
 ## Files
 
-| Diagram                           | Source                   | Rendered                 |
-| --------------------------------- | ------------------------ | ------------------------ |
-| System overview                   | `system-overview.dot`    | `system-overview.png`    |
-| Ask Antenna: prompt → live signal | `ask-antenna-flow.dot`   | `ask-antenna-flow.png`   |
-| Ingestion: cron → live data point | `ingestion-flow.dot`     | `ingestion-flow.png`     |
-| Source policy and sharing gate    | `source-policy-gate.dot` | `source-policy-gate.png` |
-| Data model (ER)                   | `data-model.dot`         | `data-model.png`         |
-| Google OAuth via Better Auth      | `auth-flow.dot`          | `auth-flow.png`          |
-| Signal lifecycle (state machine)  | `signal-lifecycle.dot`   | `signal-lifecycle.png`   |
+| Diagram                        | Source                   | Rendered                 |
+| ------------------------------ | ------------------------ | ------------------------ |
+| System boundaries              | `system-overview.dot`    | `system-overview.png`    |
+| Agent-first signal authoring   | `ask-antenna-flow.dot`   | `ask-antenna-flow.png`   |
+| Scheduled signal ingestion     | `ingestion-flow.dot`     | `ingestion-flow.png`     |
+| Signal read authority          | `source-policy-gate.dot` | `source-policy-gate.png` |
+| Operational data relationships | `data-model.dot`         | `data-model.png`         |
+| Google sign-in via Better Auth | `auth-flow.dot`          | `auth-flow.png`          |
+| Signal status lifecycle        | `signal-lifecycle.dot`   | `signal-lifecycle.png`   |
 
 ## Reading Order
 
-1. **System overview** for the whole Worker / SPA / D1 / R2 shape.
-2. **Ask Antenna flow** for how prompts become planned signals, including plan-confirm guardrails.
-3. **Ingestion flow** and **signal lifecycle** for refresh, status, SSE, and retry behaviour.
-4. **Source policy gate** before sharing, generic REST, Yahoo/Finviz, or user-side/private-source changes.
-5. **Data model** when changing persistence or ownership.
-6. **Auth flow** when touching Google OAuth, allowlist enforcement, or collection provisioning.
+1. **System boundaries** for the browser, MCP, Worker, ingestion, storage, and external-service shape.
+2. **Agent-first signal authoring** for proposal, approval, and Worker-owned confirmation guardrails.
+3. **Scheduled ingestion** and **status lifecycle** for bounded refresh, persistence, SSE, and retry behaviour.
+4. **Signal read authority** before changing owner, shared-link, public, or source-policy behaviour.
+5. **Operational data relationships** for ownership, authoring, and ingestion records. Use
+   `apps/worker/src/db/schema.ts` and migrations for exhaustive columns and foreign keys.
+6. **Google sign-in** when touching Better Auth, account access, token persistence, or initial collection provisioning.
+
+Each diagram answers one architectural question. Keep labels at the responsibility/invariant level;
+do not turn a diagram into a second schema, route catalogue, or connector list. Exact fields and
+endpoint shapes belong in their owning source or reference document.
 
 ## Conventions
 
 Color coding by domain:
 
-- Green nodes / clusters — Worker-side code (HTTP, planner, executor, adapters).
-- Yellow / orange — scheduled or time-driven (cron triggers, dispatchers).
-- Purple — registry templates and adapter functions (pure code, no DB writes).
-- Teal — persistence (D1, R2).
-- Blue — client surface, external sources, and reads.
+- Green nodes / clusters — Worker-owned application behavior and successful outcomes.
+- Yellow / orange — scheduled work, retry timing, and signal runtime records.
+- Purple — reviewed registry/adapter code and external identity/data services.
+- Teal — durable persistence and telemetry stores.
+- Blue — client/protocol entry points and observability services.
 - Red — error / stale outcomes.
 - Diamonds — decisions.
 - Bold green outline — terminal success state.

@@ -26,6 +26,7 @@ describe('projectPortfolio', () => {
             { project: 'antenna', day: '2026-07-15 00:00:00', event: 'mcp_call', count: 4 },
             { project: 'antenna', day: '2026-07-06 00:00:00', event: 'view', count: 7 },
             { project: 'rowspire', day: '2026-07-14 00:00:00', event: 'game_started', count: 3 },
+            { project: 'quiet-app', day: '2026-06-01 00:00:00', event: 'view', count: 2 },
           ],
         }),
       ),
@@ -43,16 +44,22 @@ describe('projectPortfolio', () => {
         previous: 7,
         top_event: 'view',
         metric: 'project_activity',
+        telemetry_state: 'active',
       },
       value: 14,
       unit: 'events',
     });
     expect(result.points[2]).toMatchObject({
-      dimensions: { project: 'quiet-app', previous: 0 },
+      dimensions: {
+        project: 'quiet-app',
+        previous: 0,
+        telemetry_state: 'quiet',
+        last_event_at: '2026-06-01',
+      },
       value: 0,
     });
     const [, init] = fetchMock.mock.calls[0] as [string, { body: string }];
-    expect(init.body).toContain("INTERVAL '14' DAY");
+    expect(init.body).toContain("INTERVAL '90' DAY");
     expect(init.body).toContain('index1 AS project');
   });
 

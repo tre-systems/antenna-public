@@ -5,7 +5,6 @@ import { useCollectionState, useSelectedCollectionSignal } from './app/collectio
 import { useOnboardingState } from './app/onboarding-state';
 import { readInitialAppRoute } from './app/routes';
 import { PublicCollection } from './pages/PublicCollection';
-import { SettingsActivity } from './pages/SettingsActivity';
 import { SettingsTokens } from './pages/SettingsTokens';
 import { SignIn } from './pages/SignIn';
 
@@ -33,10 +32,6 @@ export function App() {
 
   if (route.settingsTokensRoute && auth.state.kind === 'signed-in') {
     return <SettingsTokens />;
-  }
-
-  if (route.settingsActivityRoute && auth.state.kind === 'signed-in') {
-    return <SettingsActivity collection={collection.collection} />;
   }
 
   if (auth.state.kind === 'error') {

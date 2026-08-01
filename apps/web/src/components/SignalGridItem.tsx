@@ -49,8 +49,7 @@ export function SignalGridItem({ signal }: Props) {
         title="Drag to reorder"
         onPointerDown={onHandlePointerDown}
         onKeyDown={handleKeyDown}
-        // touch-none makes a touch drag reorder rather than scroll, and the
-        // handle stays visible on coarse pointers since there is no hover.
+        // Touch handles reorder instead of scrolling and stay visible without hover.
         class="absolute left-1 top-1 z-[1] inline-flex h-6 w-6 cursor-grab touch-none items-center justify-center rounded-md text-slate-300 opacity-0 transition-opacity hover:text-slate-500 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 active:cursor-grabbing group-hover:opacity-100 dark:text-slate-600 dark:hover:text-slate-400 [@media(pointer:coarse)]:opacity-60"
         data-testid={`signal-drag-handle-${signal.id}`}
       >

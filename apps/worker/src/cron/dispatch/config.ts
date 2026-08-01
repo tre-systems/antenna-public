@@ -30,9 +30,7 @@ export const prepareAdapterConfig = async (
   return { ok: true, config: validateTemplateConfig(template, withStats.config) };
 };
 
-// Deployment-wide counts are only materialised for an admin's own collection.
-// Anyone else's `antenna-users` signal gets no numbers and reports setup, so a
-// copied or forked signal can never surface them.
+// Materialise deployment counts only for an admin-owned collection.
 const injectDeploymentStats = async (
   client: Client,
   env: DispatchEnv,
