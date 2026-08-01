@@ -1,6 +1,4 @@
-// Smoke test runs against an in-memory better-sqlite3 instance rather than the
-// Workers pool — keeps vitest startup fast and avoids a parallel pool config
-// for a single-table assertion. Shape parity comes from sharing the schema.
+// Smoke-test the shared schema against in-memory SQLite.
 
 import Database from 'better-sqlite3';
 import { eq } from 'drizzle-orm';

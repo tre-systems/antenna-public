@@ -1,4 +1,4 @@
-import { compactNumber, type CloudflareFleetCardData, type FleetWorker } from '../../signalFormat';
+import { compactNumber, type CloudflareFleetCardData, type FleetWorker } from '../../signal-format';
 import { AppUsageBars } from './AppUsageBars';
 
 export function CloudflareFleetHero({ data }: { readonly data: CloudflareFleetCardData }) {
@@ -16,6 +16,10 @@ export function CloudflareFleetHero({ data }: { readonly data: CloudflareFleetCa
       </div>
 
       <AppUsageBars data={data} />
+
+      <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        Worker invocations include APIs, bots and automation—not human visits.
+      </p>
 
       {data.previousWindowRequests !== null ? (
         <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">

@@ -1,8 +1,9 @@
 type Props = {
+  readonly saving: boolean;
   readonly onClose: () => void;
 };
 
-export function DialogHeader({ onClose }: Props) {
+export function DialogHeader({ saving, onClose }: Props) {
   return (
     <div class="flex items-start justify-between gap-3">
       <h2
@@ -15,6 +16,7 @@ export function DialogHeader({ onClose }: Props) {
         type="button"
         aria-label="Close"
         onClick={onClose}
+        disabled={saving}
         class="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:hover:bg-white/5 dark:hover:text-slate-200"
         data-testid="create-collection-close"
       >

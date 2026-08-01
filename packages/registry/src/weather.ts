@@ -5,8 +5,7 @@ import { type ConnectorTemplate } from './types';
 
 type WeatherTemplateConfig = { lat?: number; lon?: number; location?: string };
 
-// Geocoding is a separate concern; until the planner resolves lat/lon we fail
-// loudly here so the caller surfaces the missing params back to the user.
+// Fail clearly until the planner resolves geocoding into coordinates.
 export const weatherTemplate: ConnectorTemplate<WeatherTemplateConfig> = {
   id: 'weather',
   displayName: 'Weather',

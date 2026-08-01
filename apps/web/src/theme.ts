@@ -48,9 +48,7 @@ export const setTheme = (next: ThemeChoice): void => {
 // Keep the page in sync with the OS when the user has chosen 'system'.
 export const watchSystemTheme = (): (() => void) => {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return () => {
-      /* noop */
-    };
+    return () => undefined;
   }
   const media = window.matchMedia('(prefers-color-scheme: dark)');
   const onChange = () => {

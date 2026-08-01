@@ -1,5 +1,4 @@
-// Shared scaffolding for the plan.*.test.ts files in this directory.
-// Not a test file (no .test.ts suffix) so vitest ignores it.
+// Provide shared scaffolding for plan route tests.
 
 import { Hono } from 'hono';
 import type { CollectionPlan } from '@antenna/shared';

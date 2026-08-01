@@ -17,9 +17,9 @@ function sentryPlugins(): PluginOption[] {
 
   return [
     sentryVitePlugin({
-      org: process.env.SENTRY_ORG ?? 'total-reality-engineering',
+      org: process.env.SENTRY_ORG ?? 'your-sentry-org',
       project: process.env.SENTRY_PROJECT ?? 'antenna',
-      url: process.env.SENTRY_URL ?? 'https://de.sentry.io',
+      url: process.env.SENTRY_URL ?? 'https://sentry.io',
       authToken: process.env.SENTRY_AUTH_TOKEN,
       release: {
         name: sentryRelease,
@@ -42,15 +42,8 @@ export default defineConfig({
   plugins: [
     preact(),
     tailwindcss(),
-    // Generates `manifest.webmanifest` and the Workbox service worker.
-    // Registration happens in app code so launch/focus update checks and the
-    // manual profile-menu repair action share one path. PWA assets (icons)
-    // are committed under `public/` after running
-    //
-    // navigateFallbackDenylist keeps /api/* (especially the OAuth callback)
-    // and /healthz off the service worker so the Worker handles them with
-    // its own logic. Workbox precaches only static build output via
-    // globPatterns — auth-bearing API responses are never cached.
+    // App-owned registration lets automatic and manual update checks share one path.
+    // Exclude Worker routes; Workbox precaches static build output only.
     VitePWA({
       injectRegister: false,
       registerType: 'autoUpdate',
@@ -72,8 +65,8 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         display: 'standalone',
-        background_color: '#f6f7fb',
-        theme_color: '#4f46e5',
+        background_color: '#f3f7f4',
+        theme_color: '#0b1624',
         orientation: 'any',
         categories: ['productivity', 'finance', 'news'],
         icons: [

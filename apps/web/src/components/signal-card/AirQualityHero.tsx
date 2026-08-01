@@ -1,4 +1,4 @@
-import type { AirQualityCardData } from '../../signalFormat';
+import type { AirQualityCardData } from '../../signal-format';
 
 export function AirQualityHero({ data }: { readonly data: AirQualityCardData }) {
   return (

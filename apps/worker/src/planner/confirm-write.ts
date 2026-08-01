@@ -17,11 +17,7 @@ export type MaterializedSignal = {
   readonly visibility: Visibility;
 };
 
-// Signals, their status rows, and the plan resolution land together so a
-// confirmation is never half-materialised. The claim insert leads: two
-// confirmations racing the same plan both read it as `proposed`, so without it
-// both would materialise a full set of signals. The loop below is the fallback
-// for bindings without `batch()`.
+// Claim and materialize confirmation atomically when D1 batch support is available.
 export const writeConfirmation = async (
   binding: D1Database,
   client: Db,
@@ -56,9 +52,7 @@ export const writeConfirmation = async (
       .where(eq(collectionPlans.id, planId))
       .run();
   } catch (error) {
-    // Only the non-batch fallback can fail part-way. Release the claim and drop
-    // anything already written, so a transient failure does not strand the plan
-    // as unconfirmable with orphaned signals behind it.
+    // Roll back fallback writes so partial failure does not strand the plan.
     await releaseClaim(client, planId, materialized);
     throw error;
   }

@@ -25,8 +25,40 @@ import { ukEconomicCalendarTemplate } from './uk-economic-calendar';
 import { appUsageTemplate } from './app-usage';
 import { cloudflareAnalyticsTemplate } from './cloudflare-analytics';
 import { projectPortfolioTemplate } from './project-portfolio';
-import { redditProblemsTemplate } from './reddit-problems';
+import { appHealthTemplate } from './app-health';
+import { cloudflareWebAnalyticsTemplate } from './cloudflare-web-analytics';
 import { antennaUsersTemplate } from './antenna-users';
+
+export { aaFrontierTemplate } from './aa-frontier';
+export { aaHighlightsTemplate } from './aa-highlights';
+export { airQualityTemplate } from './airquality';
+export { antennaUsersTemplate } from './antenna-users';
+export { appHealthTemplate } from './app-health';
+export { appUsageTemplate } from './app-usage';
+export { cisaKevRecentTemplate } from './cisa-kev-recent';
+export { cloudflareAnalyticsTemplate } from './cloudflare-analytics';
+export { cloudflareIncidentsTemplate } from './cloudflare-incidents';
+export { cloudflareWebAnalyticsTemplate } from './cloudflare-web-analytics';
+export { cryptoHistoryTemplate } from './crypto-history';
+export { cryptoWatchlistTemplate } from './crypto-watchlist';
+export { equityWatchlistTemplate } from './equity-watchlist';
+export { fxPairTemplate } from './fx-pair';
+export { githubRepoActivityTemplate } from './github-repo-activity';
+export { githubSecurityAdvisoriesTemplate } from './github-security-advisories';
+export { githubTrendingTemplate } from './github-trending';
+export { karpathyJobsSnapshotTemplate } from './karpathy-jobs-snapshot';
+export { macroMarketHistoryTemplate } from './macro-market-history';
+export { manualCostTemplate } from './manual-cost';
+export { manualMetricTemplate } from './manual-metric';
+export { marketHistoryTemplate } from './market-history';
+export { marketOverviewTemplate } from './market-overview';
+export { projectPortfolioTemplate } from './project-portfolio';
+export { restMetricTemplate } from './rest-metric';
+export { sectorMoversTemplate } from './sector-movers';
+export { tbenchLeaderboardTemplate } from './tbench-leaderboard';
+export { tradingEconomicsMarketTemplate } from './trading-economics-market';
+export { ukEconomicCalendarTemplate } from './uk-economic-calendar';
+export { weatherTemplate } from './weather';
 
 export type {
   AlertRule,
@@ -81,5 +113,6 @@ export const templates = [
   appUsageTemplate,
   cloudflareAnalyticsTemplate,
   projectPortfolioTemplate,
-  redditProblemsTemplate,
+  appHealthTemplate,
+  cloudflareWebAnalyticsTemplate,
 ] as const;

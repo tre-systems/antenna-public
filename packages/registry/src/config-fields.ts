@@ -1,7 +1,5 @@
 import type { SignalConfig } from '@antenna/connectors';
 
-// Stored signal configs are unknown-valued records; adapters want concrete types.
-
 export const stringField = (config: SignalConfig, key: string): string => {
   const value = config[key];
   return typeof value === 'string' ? value : '';

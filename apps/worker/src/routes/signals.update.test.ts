@@ -93,6 +93,67 @@ describe('PATCH /api/signals/:id', () => {
     ).toHaveLength(1);
   });
 
+  it('does not clear current data for a no-op config patch', async () => {
+    const { db, env } = setup();
+    seedBaseline(db);
+    db.insert(schema.signalPoints)
+      .values({
+        signalId: 'b1',
+        fetchedAt: new Date(1_000),
+        observedAt: new Date(1_000),
+        metricKey: 'pair=EUR/USD',
+        value: 1.09,
+      })
+      .run();
+
+    const res = await buildApp(OWNER_1).request(
+      '/api/signals/b1',
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ config: { base: 'EUR' } }),
+        headers: { 'content-type': 'application/json' },
+      },
+      env,
+    );
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({ cleared_points: false });
+    expect(
+      db.select().from(schema.signalPoints).where(eq(schema.signalPoints.signalId, 'b1')).all(),
+    ).toHaveLength(1);
+  });
+
+  it('removes optional config keys patched to null', async () => {
+    const { db, env } = setup();
+    seedBaseline(db);
+    db.update(schema.signals)
+      .set({
+        templateId: 'cloudflare-analytics',
+        config: JSON.stringify({
+          account_id: '0123456789abcdef0123456789abcdef',
+          days: 7,
+        }) as unknown as schema.SignalConfig,
+      })
+      .where(eq(schema.signals.id, 'b1'))
+      .run();
+
+    const res = await buildApp(OWNER_1).request(
+      '/api/signals/b1',
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ config: { days: null } }),
+        headers: { 'content-type': 'application/json' },
+      },
+      env,
+    );
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({
+      config: { account_id: '0123456789abcdef0123456789abcdef' },
+      cleared_points: true,
+    });
+  });
+
   it('clamps refresh interval edits to the server-owned cadence window', async () => {
     const { db, env } = setup();
     seedBaseline(db);

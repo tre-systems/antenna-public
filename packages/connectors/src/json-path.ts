@@ -1,5 +1,4 @@
-// Tiny dot+bracket resolver. Handles `a.b`, `a[0]`, `a[0].b`, `a.b[1].c`.
-// Returns undefined on any miss so callers can decide how to surface it.
+// Resolve dot-and-bracket paths, returning undefined on any miss.
 export const resolveJsonPath = (root: unknown, path: string): unknown => {
   const segments = tokenize(path);
   if (segments.length === 0) return undefined;

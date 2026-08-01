@@ -4,10 +4,7 @@ import type { db } from '../db/client';
 import { runD1Batch, type BatchStatement } from '../db/batch';
 import { collections, connectorRequests, signals } from '../db/schema';
 
-// The starter-collection template every new signup is cloned from. The id is the
-// one the migrations create and must stay in step with them — pointing it at a row
-// that does not exist makes cloning a silent no-op, so signups land on an empty
-// collection with nothing to say why.
+// Keep this starter collection id aligned with the seed migrations.
 export const SEED_TEMPLATE_COLLECTION_ID = 'seed-dashboard';
 
 const SIGNAL_INSERT_BATCH_SIZE = 5;
@@ -62,8 +59,7 @@ const cloneSeedSignals = async (
     .where(eq(signals.collectionId, SEED_TEMPLATE_COLLECTION_ID))
     .all();
   if (source.length === 0) return;
-  // signal_status and signal_points are deliberately not cloned: with no status
-  // row the dispatcher treats each signal as due and fills in fresh points.
+  // Omit status and points so dispatch fills fresh data.
   const cloned = source.map((row) => ({
     ...row,
     id: crypto.randomUUID(),

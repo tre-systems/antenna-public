@@ -1,10 +1,10 @@
 export {
   AntennaApiError,
-  createAntennaReadClient,
+  createAntennaClient,
   type FetchLike,
   type ListSignalsFilter,
   type AntennaClientOptions,
-  type AntennaReadClient,
+  type AntennaClient,
   type RefreshSignalResult,
   type RejectPlanResult,
 } from './client.js';

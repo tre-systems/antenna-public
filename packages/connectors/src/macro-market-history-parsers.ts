@@ -153,8 +153,7 @@ const parseIsoDate: DateParser = (value) => {
 const monthIndex = (name: string): number =>
   MONTHS.findIndex((month) => month.toLowerCase() === name.toLowerCase());
 
-// EIA splices markup inside a single token ("Jun-<b>6</b>"), so tags are removed
-// without a separator: a space there would break the week-label and number parses.
+// EIA splices markup inside tokens, so tags must be removed without separators.
 const cleanHtml = (value: string | undefined): string =>
   decodeHtmlEntitiesOnce(stripHtmlTags(value ?? '', ''))
     .replace(/\s+/g, ' ')

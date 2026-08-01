@@ -1,27 +1,17 @@
 import { eq } from 'drizzle-orm';
+import { parseEmailList } from '../auth/access';
 import type { Db } from '../db/client';
 import { user } from '../db/schema';
 
-// Deployment admins. Sign-up is open, so this is not an access gate — it marks
-// the accounts allowed to see deployment-wide operational data. Admins are
-// blocked by BLOCKED_EMAILS like anyone else.
+// Admins may read deployment-wide data but remain subject to BLOCKED_EMAILS.
 export type AdminEnv = { readonly ADMIN_EMAILS?: string };
 
-export const parseAdminEmails = (raw: string | undefined): ReadonlySet<string> => {
-  if (!raw) return new Set();
-  return new Set(
-    raw
-      .split(',')
-      .map((entry) => entry.trim().toLowerCase())
-      .filter((entry) => entry.length > 0),
-  );
-};
+export const parseAdminEmails = parseEmailList;
 
 export const isAdminEmail = (env: AdminEnv, email: string): boolean =>
   parseAdminEmails(env.ADMIN_EMAILS).has(email.trim().toLowerCase());
 
-// Fails closed: an unset ADMIN_EMAILS, or a user id with no row, is not an
-// admin.
+// Missing configuration or users fail closed.
 export const isAdminUser = async (client: Db, env: AdminEnv, userId: string): Promise<boolean> => {
   const admins = parseAdminEmails(env.ADMIN_EMAILS);
   if (admins.size === 0) return false;

@@ -7,7 +7,7 @@ describe('appUsageCardData', () => {
   const TODAY = Date.UTC(2026, 6, 11); // 2026-07-11 UTC
 
   const usagePoint = (day: string, event: string, value: number): DataPoint => ({
-    dimensions: { source: 'app-usage', project: 'swade-toolbox', event, day },
+    dimensions: { source: 'app-usage', project: 'sample-app', event, day },
     value,
     unit: 'events',
     ts: Date.parse(`${day}T00:00:00Z`),
@@ -17,7 +17,7 @@ describe('appUsageCardData', () => {
     id: 'u1',
     template_id: 'app-usage',
     visibility: 'private',
-    config: { project: 'swade-toolbox', account_id: 'a'.repeat(32) },
+    config: { project: 'sample-app', account_id: 'a'.repeat(32) },
     refresh_seconds: 3600,
     status: {
       status: 'live',

@@ -41,10 +41,7 @@ describe('fxFrankfurter', () => {
     expect(new Set(result.points.map((p) => p.value))).toEqual(
       new Set([1.08, 1.082, 1.0823, 1.085]),
     );
-    // Every point must carry the source-of-truth date as ts so the dispatcher
-    // stores it as fetched_at — which is what the sparkline reads as the X
-    // axis. If we stamped Date.now() instead, all 255 daily points would
-    // collapse onto today's column.
+    // Source dates prevent a full range from collapsing onto one sparkline column.
     const tsByDate = new Map(result.points.map((p) => [p.value, p.ts] as const));
     expect(tsByDate.get(1.08)).toBe(Date.parse('2026-05-15'));
     expect(tsByDate.get(1.085)).toBe(Date.parse('2026-05-20'));

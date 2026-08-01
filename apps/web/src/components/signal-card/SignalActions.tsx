@@ -69,8 +69,7 @@ function ExpandToggle({
   );
 }
 
-// Unconfirmed because startRemoval opens a 5-second undo window first. Hover-only,
-// so touch devices reach removal through the kebab menu instead.
+// Hover offers undoable quick removal; touch users use the kebab menu.
 function QuickRemove({ signal }: { readonly signal: ApiSignal }) {
   return (
     <button

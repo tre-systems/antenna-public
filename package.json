@@ -26,7 +26,7 @@
     "skill:templates:check": "node scripts/update-skill-templates.mjs --check",
     "typecheck": "node scripts/typecheck.mjs",
     "test": "vitest run",
-    "test:contracts": "vitest run apps/worker/src/routes/public-collections.test.ts apps/worker/src/routes/shared-collections.test.ts apps/worker/src/policy/source-access.test.ts",
+    "test:contracts": "vitest run apps/worker/src/routes/public-collections.discovery.test.ts apps/worker/src/routes/public-collections.read.test.ts apps/worker/src/routes/shared-collections.test.ts apps/worker/src/policy/source-access.test.ts",
     "test:unit": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "node scripts/run-e2e-tests.mjs",
@@ -49,7 +49,6 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
-    "@cloudflare/workers-types": "^5.20260722.1",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.60.0",
     "@types/node": "^25.9.1",

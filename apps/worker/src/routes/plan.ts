@@ -1,20 +1,17 @@
 import { and, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
-import { planConfirmSchema, planRequestSchema } from '@antenna/shared';
+import { planConfirmSchema, planRequestSchema, type PlanRecord } from '@antenna/shared';
 import { db, type Env as DbEnv } from '../db/client';
 import { collectionPlans, collections } from '../db/schema';
 import type { AuthVars } from '../auth/middleware';
 import { ensureUserCollection } from '../auth';
 import { confirmPlan } from '../planner/execute';
 import { createPlan, getPlan, rejectPlan } from '../planner/plan';
-import { err, ok } from './http';
+import { err, errWith, ok } from './http';
 
 type Bindings = DbEnv;
 
-// The Better Auth hook (`ensureUserCollection`) provisions a collection on
-// first sign-in. The BYPASS_AUTH e2e path skips that hook entirely, so we
-// also lazy-create on first use here — that keeps the route correct without
-// the auth path having to know about every test seam.
+// Lazily provision collections for paths that bypass Better Auth hooks.
 const collectionIdForUser = async (
   env: DbEnv,
   userId: string,
@@ -73,11 +70,14 @@ export const planRoute = new Hono<{ Bindings: Bindings; Variables: AuthVars }>()
     const collectionId = await collectionIdForUser(c.env, user.id, parsed.data.collection_id);
     if (!collectionId) return err(c, 'not_found', 404);
 
-    const record = await createPlan(c.env, {
-      collection_id: collectionId,
-      prompt: parsed.data.prompt,
-      requested_by: user.id,
-    });
+    const base = { collection_id: collectionId, requested_by: user.id };
+    let record: PlanRecord | undefined;
+    if (parsed.data.prompt !== undefined) {
+      record = await createPlan(c.env, { ...base, prompt: parsed.data.prompt });
+    } else if (parsed.data.template_id !== undefined) {
+      record = await createPlan(c.env, { ...base, template_id: parsed.data.template_id });
+    }
+    if (!record) return err(c, 'unknown_template', 404);
     return ok(c, record);
   })
   .get('/:id', async (c) => {
@@ -102,9 +102,10 @@ export const planRoute = new Hono<{ Bindings: Bindings; Variables: AuthVars }>()
       edited_signals: parsed.data.edited_signals,
     });
     if (!result.ok) {
-      // A vanished plan is the only 404 here; everything else is a conflict
-      // with the current state.
-      return err(c, result.error, result.error === 'plan not found' ? 404 : 409);
+      const status = result.error === 'not_found' ? 404 : 409;
+      return result.detail
+        ? errWith(c, result.error, { detail: result.detail }, status)
+        : err(c, result.error, status);
     }
     return ok(c, { created_signal_ids: result.created_signal_ids });
   })

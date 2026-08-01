@@ -7,5 +7,5 @@ export const isEligible = (signal: ApiSignal): boolean => {
 };
 
 export const safeIndexFor = (index: number, total: number): number => {
-  return total === 0 ? 0 : index % total;
+  return total === 0 ? 0 : ((index % total) + total) % total;
 };

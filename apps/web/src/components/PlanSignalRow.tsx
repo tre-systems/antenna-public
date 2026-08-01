@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'preact/hooks';
 import { RIGHTS_STATUS_COPY, type ProposedSignal, type RightsStatus } from '@antenna/shared';
-import { configKeyLabel } from '../configLabels';
+import { configKeyLabel } from '../config-labels';
 
 type Props = {
   signal: ProposedSignal;
   index: number;
-  onChange: (index: number, next: ProposedSignal) => void;
+  onChange: (index: number, update: (current: ProposedSignal) => ProposedSignal) => void;
 };
 
 // Styling only — the label and tooltip copy stay server-owned in @antenna/shared.
@@ -35,24 +35,39 @@ function parseConfigValue(input: string, previous: unknown): unknown {
   return input;
 }
 
+const NUMERIC_CONFIG_KEYS = new Set(['amount', 'lat', 'lon']);
+
+function parseMissingValue(key: string, input: string): unknown {
+  if (!NUMERIC_CONFIG_KEYS.has(key)) return input;
+  const value = Number(input);
+  return Number.isFinite(value) ? value : input;
+}
+
 export function PlanSignalRow({ signal, index, onChange }: Props) {
   const [editing, setEditing] = useState(false);
   const configEntries = useMemo(() => Object.entries(signal.config), [signal.config]);
   const missing = signal.missing;
 
   const setConfigField = (key: string, raw: string) => {
-    const next: ProposedSignal = {
-      ...signal,
-      config: { ...signal.config, [key]: parseConfigValue(raw, signal.config[key]) },
-    };
-    onChange(index, next);
+    onChange(index, (current) => ({
+      ...current,
+      config: {
+        ...current.config,
+        [key]: parseConfigValue(raw, current.config[key]),
+      },
+    }));
   };
 
   const setMissingField = (key: string, raw: string) => {
     const trimmed = raw.trim();
-    const nextConfig = { ...signal.config, [key]: trimmed };
-    const nextMissing = trimmed.length === 0 ? [...missing] : missing.filter((m) => m !== key);
-    onChange(index, { ...signal, config: nextConfig, missing: nextMissing });
+    onChange(index, (current) => ({
+      ...current,
+      config: { ...current.config, [key]: parseMissingValue(key, trimmed) },
+      missing:
+        trimmed.length === 0
+          ? [...current.missing]
+          : current.missing.filter((missingKey) => missingKey !== key),
+    }));
   };
 
   return (
@@ -102,7 +117,7 @@ export function PlanSignalRow({ signal, index, onChange }: Props) {
       {configEntries.length > 0 ? (
         <div class="mt-3">
           <div class="flex items-center justify-between">
-            <p class="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">Config</p>
+            <p class="text-xs uppercase tracking-wide text-slate-600 dark:text-slate-300">Config</p>
             <button
               type="button"
               class="text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"

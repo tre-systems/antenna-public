@@ -72,6 +72,7 @@ describe('tbenchLeaderboard', () => {
         agent: 'Claude Code',
         model: 'Fable 5',
         agent_org: 'Anthropic',
+        cost_usd: 552.67,
       },
       value: 83.8,
     });
@@ -132,6 +133,19 @@ describe('tbenchLeaderboard', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.points.length).toBe(2);
+  });
+
+  it('rejects invalid benchmark versions before fetching', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await tbenchLeaderboard({ version: '../secrets' });
+
+    expect(result).toEqual({
+      ok: false,
+      error: { code: 'parse_failed', message: 'invalid benchmark version' },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('parses accuracy stripping the margin-of-error suffix', async () => {

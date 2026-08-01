@@ -4,7 +4,7 @@ import {
   signalUpdateSchema,
 } from '@antenna/shared';
 import { db } from '../../db/client';
-import { err, ok } from '../http';
+import { err, errWith, ok } from '../http';
 import { deleteOwnedSignal } from './delete-signal';
 import { latestPointsForSignals } from './latest-points';
 import { buildSignal, toDisplayPoints, toPointShape } from './read-model';
@@ -56,7 +56,12 @@ export const getSignalHistory = async (c: SignalsContext): Promise<Response> => 
   const signal = await loadOwnedSignal(client, c.get('user').id, id);
   if (!signal) return err(c, 'not_found', 404);
 
-  const rows = await loadHistoryPoints(client, id, parsed.data.range);
+  const rows = await loadHistoryPoints(
+    client,
+    id,
+    parsed.data.range,
+    signal.templateId === 'equity-watchlist',
+  );
   return ok(c, historyShape(id, parsed.data.range, signal.templateId, rows.map(toPointShape)));
 };
 
@@ -131,9 +136,10 @@ const rateLimitResponse = (c: SignalsContext, rateLimited: ManualRefreshRateLimi
   c.header('X-RateLimit-Limit', '1');
   c.header('X-RateLimit-Remaining', '0');
   c.header('X-RateLimit-Reset', String(rateLimited.resetAtSeconds));
-  return c.json(
+  return errWith(
+    c,
+    'rate_limited',
     {
-      error: 'rate_limited',
       retry_after_seconds: rateLimited.retryAfterSeconds,
       limit: 1,
       reset_at: rateLimited.resetAtSeconds,
@@ -152,7 +158,9 @@ const parseSignalUpdate = async (
 
 const updateFailureResponse = (c: SignalsContext, failure: SignalUpdateFailure): Response => {
   if (failure.kind === 'source_policy_blocked') {
-    return c.json({ error: 'source_policy_blocked', ...failure.blocker }, 409);
+    return errWith(c, 'source_policy_blocked', failure.blocker, 409);
   }
-  return err(c, failure.error, failure.status);
+  return failure.detail
+    ? errWith(c, failure.error, { detail: failure.detail }, failure.status)
+    : err(c, failure.error, failure.status);
 };

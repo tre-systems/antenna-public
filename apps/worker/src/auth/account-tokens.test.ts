@@ -23,5 +23,10 @@ describe('account token protection', () => {
       'http://localhost:5173',
       'http://localhost:8787',
     ]);
+    expect(trustedOriginsForAuth('http://127.0.0.1:8789')).toEqual([
+      'http://localhost:5173',
+      'http://localhost:8787',
+      'http://127.0.0.1:8789',
+    ]);
   });
 });

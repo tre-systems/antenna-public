@@ -1,6 +1,4 @@
-// The Worker signals a refused sign-in through an `error=` query param on the
-// callback redirect. That string is a contract between the two, and it rotted
-// silently once the allowlist became a block list — hence these.
+// The callback error string is a Worker-to-browser contract.
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readErrorFromQuery } from './auth';
@@ -33,8 +31,7 @@ describe('readErrorFromQuery', () => {
   });
 
   it('treats a cancelled Google consent as retryable, not as a block', () => {
-    // The consent screen is published, so access_denied means the person
-    // backed out — telling them their account is blocked would be wrong.
+    // Published consent makes access_denied a cancellation, not an operator refusal.
     withQuery('?error=access_denied');
     expect(readErrorFromQuery()?.kind).toBe('generic');
   });

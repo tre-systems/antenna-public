@@ -2,8 +2,7 @@ import type { CloudflareOptions } from '@sentry/cloudflare';
 
 type BeforeSend = NonNullable<CloudflareOptions['beforeSend']>;
 
-// Sentry's own event shape does not expose these as writable; this is the subset
-// we strip before an event leaves the Worker.
+// Describe the writable Sentry fields stripped before events leave the Worker.
 type SanitizableEvent = {
   type?: undefined;
   request?: {
@@ -32,8 +31,7 @@ const SENSITIVE_EXTRA_KEYS = [
   'token',
 ];
 
-// Collection slugs identify a user's shared content, so they are filtered out of
-// the URL along with the query string.
+// Remove collection slugs and query strings because they identify shared content.
 const sanitizeRequestUrl = (value: string | undefined): string | undefined => {
   if (!value) return value;
   try {

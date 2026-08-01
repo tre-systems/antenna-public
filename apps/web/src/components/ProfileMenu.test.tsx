@@ -1,5 +1,4 @@
-// Render-only tests.  Outside-click + Escape close behaviour needs a real
-// DOM and is covered manually + by other dropdown tests in the codebase.
+// Outside-click and Escape dismissal require DOM coverage.
 import { describe, expect, it } from 'vitest';
 import renderToString from 'preact-render-to-string';
 import { ProfileMenu } from './ProfileMenu';
@@ -7,7 +6,7 @@ import type { User } from '../auth';
 
 const makeUser = (overrides: Partial<User> = {}): User => ({
   id: 'u1',
-  email: 'owner@example.com',
+  email: 'tretest1001@gmail.com',
   name: 'Test User',
   image_url: null,
   first_seen_at: 0,
@@ -31,7 +30,7 @@ describe('ProfileMenu', () => {
     const html = renderToString(
       <ProfileMenu user={makeUser({ name: '' })} signingOut={false} onSignOut={() => {}} />,
     );
-    expect(html).toContain('>O<');
+    expect(html).toContain('>T<');
   });
 
   it('uses the profile image when available', () => {
@@ -50,9 +49,7 @@ describe('ProfileMenu', () => {
     const html = renderToString(
       <ProfileMenu user={makeUser()} signingOut={false} onSignOut={() => {}} />,
     );
-    // greetingFor() depends on local hour (see auth.ts), so accept every
-    // time-of-day branch — the assertion is on the aria-label shape and the
-    // user's first name, not the specific greeting.
+    // Local time changes the greeting, so assert its stable account-label shape.
     expect(html).toMatch(
       /aria-label="Account menu — (Up late|Good (morning|afternoon|evening)), Test"/,
     );

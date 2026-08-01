@@ -1,8 +1,4 @@
-// Shared scaffolding for dispatch.test.ts.
-// Not a test file (no .test.ts suffix) so vitest ignores it.
-//
-// The DDL literal mirrors drizzle/0001_init.sql + 0003_auth.sql. When the
-// schema changes, update both.
+// Keep this test DDL aligned with migrations 0001 and 0003.
 
 import Database from 'better-sqlite3';
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';

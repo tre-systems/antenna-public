@@ -3,8 +3,7 @@ import type { db } from '../db/client';
 import { dismissedStarterSignals, signals } from '../db/schema';
 import { SEED_TEMPLATE_COLLECTION_ID } from './ensure-user-collection';
 
-// Gated on the seed collection still carrying a matching signal, so a user's own
-// signals are never recorded as starter dismissals.
+// Only seed signals may become starter dismissals.
 export const recordStarterSignalDismissal = async (
   client: ReturnType<typeof db>,
   collectionId: string,

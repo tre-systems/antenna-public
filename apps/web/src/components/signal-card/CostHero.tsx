@@ -1,4 +1,4 @@
-import type { CostCardData } from '../../signalFormat';
+import type { CostCardData } from '../../signal-format';
 
 type Props = {
   readonly compact?: boolean;

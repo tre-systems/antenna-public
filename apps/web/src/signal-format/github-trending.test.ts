@@ -86,4 +86,17 @@ describe('githubTrendingCardData', () => {
     expect(githubTrendingCardData(make([], 'fx-pair'))).toBeNull();
     expect(githubTrendingCardData(make([]))).toBeNull();
   });
+
+  it('rejects unsafe point links', () => {
+    const rows = githubTrendingCardData(
+      make([
+        {
+          dimensions: { rank: 1 },
+          value: 'unsafe/repo',
+          display: { label: 'unsafe/repo', source_url: 'javascript:alert(1)' },
+        },
+      ]),
+    );
+    expect(rows?.[0]?.url).toBeNull();
+  });
 });

@@ -228,7 +228,7 @@ const SOURCE_POLICIES: Readonly<Record<string, SourcePolicy>> = {
     label: 'Manual entry',
     sourceUrl: 'https://antenna.example/',
     rightsStatus: 'public',
-    // No network access; private_cloud keeps the owner's own value out of shared reads.
+    // Private-cloud mode keeps owner-entered values out of shared reads.
     executionMode: 'private_cloud',
     publicDisplayEligible: false,
     attribution: 'User-provided value',
@@ -253,7 +253,7 @@ const SOURCE_POLICIES: Readonly<Record<string, SourcePolicy>> = {
     label: 'Antenna deployment',
     sourceUrl: 'https://antenna.example/',
     rightsStatus: 'requires-auth',
-    // No upstream source; the Worker injects aggregates from its own D1 at dispatch.
+    // The Worker injects its own D1 aggregates at dispatch.
     executionMode: 'private_cloud',
     publicDisplayEligible: false,
     attribution: 'Own deployment metrics',
@@ -308,6 +308,30 @@ const SOURCE_POLICIES: Readonly<Record<string, SourcePolicy>> = {
       "Deployment owner's own Worker traffic read via the authenticated GraphQL API; private-only by design.",
     lastReviewed: REVIEW_DATE,
   },
+  'cloudflare-web-analytics': {
+    sourceId: 'cloudflare-web-analytics',
+    label: 'Cloudflare Web Analytics',
+    sourceUrl: 'https://developers.cloudflare.com/web-analytics/',
+    rightsStatus: 'requires-auth',
+    executionMode: 'private_cloud',
+    publicDisplayEligible: false,
+    attribution: 'Cloudflare Web Analytics (privacy-first browser telemetry)',
+    reviewNotes:
+      "Deployment owner's aggregate browser visits read through the authenticated GraphQL API; private-only by design.",
+    lastReviewed: '2026-08-01',
+  },
+  'app-health': {
+    sourceId: 'deployment-health-endpoints',
+    label: 'Production health endpoints',
+    sourceUrl: 'https://antenna.example/',
+    rightsStatus: 'requires-auth',
+    executionMode: 'private_cloud',
+    publicDisplayEligible: false,
+    attribution: 'Deployment-owned public health endpoints',
+    reviewNotes:
+      'Private-only by design. The deployment manifest, never client config, grants fetch authority for each public HTTPS endpoint.',
+    lastReviewed: '2026-08-01',
+  },
   'aa-highlights': {
     sourceId: 'artificial-analysis-highlights',
     label: 'Artificial Analysis',
@@ -335,26 +359,14 @@ const SOURCE_POLICIES: Readonly<Record<string, SourcePolicy>> = {
   'tbench-leaderboard': {
     sourceId: 'tbench-ai-leaderboard',
     label: 'Terminal Bench',
-    sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.0',
+    sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1',
     rightsStatus: 'with-attribution',
     executionMode: 'public_cloud',
     publicDisplayEligible: false,
     attribution: 'Terminal Bench (tbench.ai)',
     reviewNotes:
       'HTML-scraped leaderboard; public data but no JSON API — attribution required and public display needs review.',
-    lastReviewed: '2026-05-22',
-  },
-  'reddit-problems': {
-    sourceId: 'reddit-public-listings',
-    label: 'Reddit',
-    sourceUrl: 'https://www.reddit.com/',
-    rightsStatus: 'with-attribution',
-    executionMode: 'public_cloud',
-    publicDisplayEligible: false,
-    attribution: 'Reddit public subreddit listings',
-    reviewNotes:
-      'Anonymous public listing JSON. Post authors are never normalised or stored. Reddit Data API terms restrict commercial use of free access, so public display needs rights review before any sharing.',
-    lastReviewed: '2026-07-25',
+    lastReviewed: '2026-08-01',
   },
 };
 

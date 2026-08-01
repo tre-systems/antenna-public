@@ -1,17 +1,14 @@
-import { ACCOUNT_ID_RX } from './analytics-engine';
+import { ACCOUNT_ID_RX, SLUG_RX } from './analytics-engine';
 import {
   analyticsWindows,
   firstGraphqlError,
   readAccount,
   serialiseWindows,
+  type AccountRows,
 } from './cloudflare-analytics-model';
-import {
-  dailyPoint,
-  hourlyExceptionPoints,
-  statusPoints,
-  windowPoint,
-  workerPoints,
-} from './cloudflare-analytics-points';
+import { dailyPoint, windowPoint, workerPoints } from './cloudflare-analytics-points';
+import { boundedInt } from './config-values';
+import { discardResponse } from './discard-response';
 import { errorMessage } from './error-message';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 
@@ -19,14 +16,14 @@ type CloudflareAnalyticsConfig = {
   readonly accountId: string;
   readonly apiToken: string;
   readonly days?: number;
+  readonly script?: string;
 };
 
 const DEFAULT_DAYS = 7;
 const MAX_DAYS = 30;
 const GRAPHQL_URL = 'https://api.cloudflare.com/client/v4/graphql';
 
-// Every user-influenced input is a GraphQL variable, so there is no
-// query-string interpolation and no injection surface.
+// Every user-controlled input is a GraphQL variable.
 const QUERY = `query FleetAnalytics(
   $account: String!
   $trendStart: Time!
@@ -61,27 +58,28 @@ const QUERY = `query FleetAnalytics(
         sum { requests errors }
         dimensions { scriptName status }
       }
-      hourly: workersInvocationsAdaptive(
-        limit: 10000
-        filter: { datetime_geq: $currentStart, datetime_lt: $end }
-        orderBy: [datetimeHour_ASC]
-      ) {
-        sum { requests errors }
-        dimensions { datetimeHour scriptName status }
-      }
     }
   }
 }`;
+
+const queryFor = (script: string | undefined): string =>
+  script === undefined
+    ? QUERY
+    : QUERY.replace('dimensions { date }', 'dimensions { date scriptName }');
 
 export const cloudflareAnalytics: Adapter<CloudflareAnalyticsConfig> = async (
   config,
 ): Promise<AdapterResult> => {
   const accountId = config.accountId.trim();
   const apiToken = config.apiToken.trim();
-  const days = normaliseDays(config.days);
+  const days = boundedInt(config.days, DEFAULT_DAYS, 1, MAX_DAYS);
+  const script = normaliseScript(config.script);
 
   if (!ACCOUNT_ID_RX.test(accountId)) {
     return { ok: false, error: { code: 'parse_failed', message: 'invalid account id' } };
+  }
+  if (script === null) {
+    return { ok: false, error: { code: 'parse_failed', message: 'invalid Worker script name' } };
   }
   if (apiToken.length === 0) {
     return { ok: false, error: { code: 'unauthorized', message: 'missing analytics API token' } };
@@ -89,7 +87,7 @@ export const cloudflareAnalytics: Adapter<CloudflareAnalyticsConfig> = async (
 
   const windows = analyticsWindows(new Date(), days);
   const body = JSON.stringify({
-    query: QUERY,
+    query: queryFor(script),
     variables: {
       account: accountId,
       trendStart: windows.trend.start.toISOString(),
@@ -112,15 +110,18 @@ export const cloudflareAnalytics: Adapter<CloudflareAnalyticsConfig> = async (
   }
 
   if (response.status === 401 || response.status === 403) {
+    await discardResponse(response);
     return {
       ok: false,
       error: { code: 'unauthorized', message: `Cloudflare GraphQL HTTP ${response.status}` },
     };
   }
   if (response.status === 429) {
+    await discardResponse(response);
     return { ok: false, error: { code: 'rate_limited', message: 'Cloudflare GraphQL rate limit' } };
   }
   if (!response.ok) {
+    await discardResponse(response);
     return { ok: false, error: { code: 'fetch_failed', message: `HTTP ${response.status}` } };
   }
 
@@ -131,8 +132,7 @@ export const cloudflareAnalytics: Adapter<CloudflareAnalyticsConfig> = async (
     return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
   }
 
-  // GraphQL answers query and permission failures with HTTP 200 plus an
-  // `errors` array, so a bare status check would read them as success.
+  // GraphQL can return query and permission failures with HTTP 200.
   const graphqlError = firstGraphqlError(payload);
   if (graphqlError !== null) {
     const unauthorized = /auth|permission|denied|forbidden/i.test(graphqlError);
@@ -147,15 +147,12 @@ export const cloudflareAnalytics: Adapter<CloudflareAnalyticsConfig> = async (
     return { ok: false, error: { code: 'parse_failed', message: 'unexpected GraphQL payload' } };
   }
 
+  const scoped = scopeRows(account, script);
   const points: DataPoint[] = [
-    ...account.daily.map(dailyPoint),
-    ...workerPoints(account.current, 'current', windows.current, 'worker'),
-    ...workerPoints(account.previous, 'previous', windows.previous, 'worker-comparison'),
-    ...statusPoints(account.current, 'current', windows.current),
-    ...statusPoints(account.previous, 'previous', windows.previous),
-    ...hourlyExceptionPoints(account.hourly),
-    windowPoint(account.current, 'current', windows.current),
-    windowPoint(account.previous, 'previous', windows.previous),
+    ...scoped.daily.map(dailyPoint),
+    ...workerPoints(scoped.current, 'current', windows.current, 'worker'),
+    windowPoint(scoped.current, 'current', windows.current, script),
+    windowPoint(scoped.previous, 'previous', windows.previous, script),
   ];
 
   return {
@@ -164,15 +161,25 @@ export const cloudflareAnalytics: Adapter<CloudflareAnalyticsConfig> = async (
     rawPayload: {
       days,
       windows: serialiseWindows(windows),
-      daily: account.daily,
-      current: account.current,
-      previous: account.previous,
-      hourly: account.hourly,
+      script,
+      daily: scoped.daily,
+      current: scoped.current,
+      previous: scoped.previous,
     },
   };
 };
 
-const normaliseDays = (value: unknown): number => {
-  if (typeof value !== 'number' || !Number.isFinite(value)) return DEFAULT_DAYS;
-  return Math.min(MAX_DAYS, Math.max(1, Math.trunc(value)));
+const normaliseScript = (value: string | undefined): string | undefined | null => {
+  if (value === undefined) return undefined;
+  const script = value.trim();
+  return SLUG_RX.test(script) ? script : null;
+};
+
+const scopeRows = (account: AccountRows, script: string | undefined): AccountRows => {
+  if (script === undefined) return account;
+  return {
+    daily: account.daily.filter((row) => row.dimensions.scriptName === script),
+    current: account.current.filter((row) => row.dimensions.scriptName === script),
+    previous: account.previous.filter((row) => row.dimensions.scriptName === script),
+  };
 };

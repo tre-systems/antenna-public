@@ -27,6 +27,9 @@ export const titleCase = (value: string): string =>
     .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
     .join(' ');
 
-// Preserves the rest of a project slug ("swade-toolbox" → "Swade-toolbox").
 export const capitaliseFirst = (value: string): string =>
-  value.length === 0 ? value : `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
+  value
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ');

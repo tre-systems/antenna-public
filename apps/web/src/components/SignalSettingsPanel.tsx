@@ -1,12 +1,18 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { updateSignal, type ApiSignal } from '../api';
 import { signals, loadSignals, settingsSignalId } from '../signals/signals';
-import { signalTitle } from '../signalFormat';
+import { signalTitle } from '../signal-format';
 import { ConfigFieldset } from './signal-settings/ConfigFieldset';
 import { SettingsDialog } from './signal-settings/SettingsDialog';
 import { RefreshCadenceField } from './signal-settings/RefreshCadenceField';
 import { VisibilityFieldset } from './signal-settings/VisibilityFieldset';
-import { editableConfig, isDraftEqual, type ConfigDraft } from './signal-settings/config-draft';
+import {
+  configPatchFromDraft,
+  editableConfig,
+  isDraftEqual,
+  type ConfigDraft,
+} from './signal-settings/config-draft';
+import { useEscapeDismiss } from './dialog/use-escape-dismiss';
 
 export function SignalSettingsPanel() {
   const signalId = settingsSignalId.value;
@@ -45,7 +51,7 @@ function PanelBody({ signalId, initialRefresh, initialVisibility, initialConfig 
   const [error, setError] = useState<string | null>(null);
   const signal = signals.value?.find((b) => b.id === signalId);
 
-  useCloseOnEscape();
+  useEscapeDismiss(!saving, closeSettings);
 
   if (!signal) return null;
 
@@ -57,6 +63,7 @@ function PanelBody({ signalId, initialRefresh, initialVisibility, initialConfig 
   const configEntries = Object.entries(initialConfig);
 
   const save = async () => {
+    if (saving) return;
     if (!dirty) {
       closeSettings();
       return;
@@ -67,7 +74,7 @@ function PanelBody({ signalId, initialRefresh, initialVisibility, initialConfig 
       await updateSignal(signalId, {
         ...(refreshDirty ? { refresh_seconds: pendingRefresh } : {}),
         ...(visibilityDirty ? { visibility: pendingVisibility } : {}),
-        ...(configDirty ? { config: { ...signal.config, ...pendingConfig } } : {}),
+        ...(configDirty ? { config: configPatchFromDraft(initialConfig, pendingConfig) } : {}),
       });
       await loadSignals();
       closeSettings();
@@ -111,18 +118,6 @@ function PanelBody({ signalId, initialRefresh, initialVisibility, initialConfig 
       </div>
     </SettingsDialog>
   );
-}
-
-function useCloseOnEscape() {
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeSettings();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-    };
-  }, []);
 }
 
 function closeSettings() {

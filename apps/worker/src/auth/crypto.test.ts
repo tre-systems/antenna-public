@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { decrypt, encrypt } from './crypto';
 
-// Fixed test keys — never used in real environments. Generated once with
-// `openssl rand -hex 32`. Two different keys so we can prove cross-key
-// decrypt actually fails (rather than coincidentally succeeding).
+// Fixed test-only keys prove cross-key decryption fails.
 const KEY_A = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 const KEY_B = 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210';
 

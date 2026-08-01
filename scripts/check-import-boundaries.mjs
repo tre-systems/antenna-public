@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SOURCE_ROOTS = ['apps', 'packages'];
+const WORKER_ADAPTER_INVOCATION = 'apps/worker/src/cron/dispatch/signal.ts';
 
 const PACKAGE_BY_DIR = new Map([
   ['packages/shared', '@antenna/shared'],
@@ -47,7 +48,7 @@ const PACKAGE_RULES = {
     bannedRelativePrefixes: ['apps/web/'],
   },
   '@antenna/web': {
-    allowedPackages: new Set(['@antenna/shared', '@antenna/registry/src/display']),
+    allowedPackages: new Set(['@antenna/shared']),
     bannedRelativePrefixes: ['apps/worker/', 'apps/mcp/', 'packages/connectors/'],
   },
 };
@@ -112,9 +113,21 @@ for (const file of files) {
   if (!rules) continue;
   const text = readFileSync(resolve(ROOT, file), 'utf8');
 
+  if (
+    owner.packageName === '@antenna/worker' &&
+    !file.endsWith('.test.ts') &&
+    file !== WORKER_ADAPTER_INVOCATION &&
+    /\.adapter\b/.test(text)
+  ) {
+    errors.push(`${file}: only ${WORKER_ADAPTER_INVOCATION} may invoke an adapter`);
+  }
+
   for (const specifier of importSpecifiers(text)) {
     const antenna = antennaPackage(specifier);
     if (antenna) {
+      if (antenna.includes('/src/')) {
+        errors.push(`${file}: import ${specifier} through the package's public surface`);
+      }
       const allowed = [...rules.allowedPackages].some(
         (allowedPrefix) => antenna === allowedPrefix || antenna.startsWith(`${allowedPrefix}/`),
       );
@@ -125,6 +138,12 @@ for (const file of files) {
 
     const relativeTarget = normalizedRelativeImport(file, specifier);
     if (relativeTarget) {
+      const targetOwner = packageForFile(relativeTarget);
+      if (targetOwner && targetOwner.packageName !== owner.packageName) {
+        errors.push(
+          `${file}: import ${relativeTarget} through ${targetOwner.packageName}'s public surface`,
+        );
+      }
       for (const bannedPrefix of rules.bannedRelativePrefixes) {
         if (relativeTarget.startsWith(bannedPrefix)) {
           errors.push(`${file}: ${owner.packageName} must not reach into ${relativeTarget}`);

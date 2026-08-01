@@ -13,6 +13,8 @@ import {
   type AaCategory,
 } from './aa-highlights-model';
 import { HTML_PAGE_REQUEST_INIT } from './browser-request';
+import { boundedInt } from './config-values';
+import { discardResponse } from './discard-response';
 import { errorMessage } from './error-message';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 
@@ -26,6 +28,7 @@ export type AaFrontierConfig = {
 };
 
 const DEFAULT_LIMIT = 5;
+const MAX_LIMIT = 10;
 
 export const aaHighlights: Adapter<AaHighlightsConfig> = async (config): Promise<AdapterResult> => {
   const category = config.category;
@@ -126,7 +129,7 @@ export const aaFrontier: Adapter<AaFrontierConfig> = async (config): Promise<Ada
 };
 
 const entryLimit = (limit: number | undefined): number =>
-  typeof limit === 'number' && limit > 0 ? limit : DEFAULT_LIMIT;
+  boundedInt(limit, DEFAULT_LIMIT, 1, MAX_LIMIT);
 
 const fetchAaPage = async (): Promise<
   { readonly ok: true; readonly html: string } | Extract<AdapterResult, { ok: false }>
@@ -138,6 +141,7 @@ const fetchAaPage = async (): Promise<
     return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }
   if (!response.ok) {
+    await discardResponse(response);
     return {
       ok: false,
       error: { code: 'fetch_failed', message: `HTTP ${String(response.status)}` },

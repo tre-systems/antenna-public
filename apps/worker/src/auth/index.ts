@@ -1,5 +1,4 @@
-// Better Auth wiring for the Worker. `better-auth/minimal` keeps the Kysely
-// runtime out of the Workers bundle; the drizzle adapter plugs into our D1 client.
+// Use Better Auth's minimal runtime with the D1 Drizzle adapter.
 
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { betterAuth } from 'better-auth/minimal';
@@ -34,11 +33,17 @@ export type AuthEnv = DbEnv & {
 const GOOGLE_SCOPES: ReadonlyArray<string> = ['openid', 'email', 'profile'];
 
 export const trustedOriginsForAuth = (baseUrl: string | undefined): ReadonlyArray<string> => {
-  if (baseUrl) {
-    const origin = new URL(baseUrl).origin;
-    if (origin.startsWith('https://')) return [origin];
+  const localDefaults = ['http://localhost:5173', 'http://localhost:8787'] as const;
+  if (!baseUrl) return [...localDefaults];
+
+  const origin = new URL(baseUrl).origin;
+  if (origin.startsWith('https://')) return [origin];
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+    return localDefaults.includes(origin as (typeof localDefaults)[number])
+      ? [...localDefaults]
+      : [...localDefaults, origin];
   }
-  return ['http://localhost:5173', 'http://localhost:8787'];
+  return [...localDefaults];
 };
 
 export const createAuth = (env: AuthEnv) => {
@@ -63,14 +68,10 @@ export const createAuth = (env: AuthEnv) => {
       usePlural: false,
     }),
     plugins: [
-      // OAuth Authorization Server for MCP clients: serves discovery, dynamic
-      // client registration, and /mcp/{authorize,token}. Access tokens are stored
-      // in D1 and audience-bound, so the upstream Google token is never exposed.
+      // Issue audience-bound MCP access tokens without exposing Google tokens.
       mcp({
         loginPage: '/',
-        // `oidcConfig` is typed as full OIDCOptions (loginPage required); the
-        // plugin overrides it with the top-level loginPage at runtime, so we
-        // repeat it here only to satisfy the type.
+        // Repeat loginPage to satisfy OIDCOptions; the plugin uses the top-level value.
         oidcConfig: { loginPage: '/', requirePKCE: true },
       }),
     ],
@@ -90,8 +91,7 @@ export const createAuth = (env: AuthEnv) => {
         create: {
           // eslint-disable-next-line @typescript-eslint/require-await -- BA hook signature requires Promise<void>
           before: async (incoming) => {
-            // Throwing aborts the create; BA surfaces it as an `error=` query
-            // param on the redirect back to the SPA.
+            // Better Auth redirects thrown create errors back to the SPA.
             if (!emailPermitted(rules, incoming.email)) {
               throw new Error(`Account ${refusalReason(rules, incoming.email)}`);
             }
@@ -107,8 +107,7 @@ export const createAuth = (env: AuthEnv) => {
             await assertSessionUserPermitted(client, incoming.userId, rules);
           },
           after: async (created) => {
-            // Heals returning users whose collection was deleted out from under
-            // them; a no-op on the common path.
+            // Restore a missing collection for returning users.
             await ensureUserCollection(client, created.userId, env.DB);
           },
         },

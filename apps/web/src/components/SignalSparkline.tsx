@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { getSignalHistory, type ApiSignal, type HistoryPoint } from '../api';
+import { pointLabel } from '../signal-format';
 import { SparklineFigure } from './signal-sparkline/SparklineFigure';
 import { SparklinePresentationFigure } from './signal-sparkline/SparklinePresentationFigure';
 import { SparklineSummaryFigure } from './signal-sparkline/SparklineSummaryFigure';
@@ -41,7 +42,11 @@ export function SignalSparkline({
   }, [signalId, fetchHistory, lastOk]);
 
   if (!fetchHistory || history === null) return null;
-  const series = bestSeries(history);
+  const watchlist = signal.template_id === 'equity-watchlist';
+  const series = bestSeries(history, {
+    groupByLabel: watchlist,
+    preferredLabel: watchlist && signal.points[0] ? pointLabel(signal.points[0]) : null,
+  });
   if (series.points.length < 2) return null;
 
   const resolvedVariant = variant ?? (compact ? 'summary' : 'detail');

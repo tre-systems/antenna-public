@@ -1,4 +1,4 @@
-import { compactNumber, type AppUsageCardData } from '../../signalFormat';
+import { compactNumber, type AppUsageCardData } from '../../signal-format';
 import { AppUsageBars } from './AppUsageBars';
 
 export function AppUsageHero({ data }: { readonly data: AppUsageCardData }) {

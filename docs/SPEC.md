@@ -1,109 +1,120 @@
 # Antenna specification
 
-## Product goal
+This document owns the current product contract: what Antenna is, who it serves, and which behavior
+users can rely on. [ARCHITECTURE.md](ARCHITECTURE.md) owns implementation shape.
 
-Antenna gives a person and their agents one governed place to read current
-signals with source and freshness attached. It is a source-aware signal
-composer, not a general scraper, social feed, BI suite, or autonomous agent
-backend.
+## Product Goal
 
-The product is successful when a self-hosting operator can:
+Antenna is a developer-owned personal signal layer for people and their agents. It turns a small set
+of reviewed sources into fresh, attributable, owner-scoped observations that can be read visually in
+an installable app or programmatically through MCP.
 
-1. sign in with Google, on an instance they can close to named addresses
-2. create private collections from reviewed templates
-3. inspect source, freshness, status, and source-policy posture
-4. connect an MCP-aware client to the same owner-scoped data
-5. propose signals in natural language and explicitly confirm the stored plan
-6. share only signals that pass Worker-enforced policy
+The primary user is a developer who asks an agent to configure signals, add a connector when one is
+missing, and use the collection in a recurring report. Antenna is not a no-code connector
+marketplace. Code and deployment remain acceptable parts of extending it.
 
-## Product contract
+## Product Contract
 
-### Authentication
+### Accounts And Collections
 
-- Google OAuth is the interactive sign-in method.
-- `ALLOWED_EMAILS` decides who may create or retain a session: unset means any
-  Google account, set means only those addresses. `BLOCKED_EMAILS` always
-  refuses and wins over the allowlist. Both are rechecked per request.
-- An account is capped at 10 collections and 50 signals per collection, so one
-  account cannot monopolise the shared refresh queue.
-- Google provider access, refresh, and ID tokens are discarded before the
-  account row reaches D1.
-- Production ignores the test-only auth bypass.
-- MCP bearer values are stored as one-way hashes. OAuth-server access and
-  refresh token records remain high-trust D1 data.
-
-### Collections
-
-- Every collection has one owner and is private by default.
-- Visibility may be `private`, `shared`, or `public`.
-- Non-private collections receive an unguessable slug.
-- Anonymous reads omit owner configuration and refresh cadence.
-- Public discovery can be disabled independently of direct shared reads.
+- Google OAuth is the only interactive sign-in method.
+- Sign-up is open when `ALLOWED_EMAILS` is unset. `BLOCKED_EMAILS` is the moderation lever and wins
+  over the allowlist.
+- Every account has at least one owner-scoped collection and may create up to ten.
+- Collections have a title, optional description, ordered signals, saved layout, refresh mode, and
+  `private`, `shared`, or `public` visibility.
+- Private is the default. Shared-link slugs are bearer capabilities and are revoked when a
+  collection returns to private.
+- Public discovery is disabled. External access is by direct link only.
 
 ### Signals
 
-Every returned signal describes:
+A signal is a configured instance of a server-owned connector template. It has:
 
-- title and current value or rows
-- source label and source URL when known
-- observation and fetch freshness
-- status: `live`, `loading`, `stale`, or `error`
-- signal visibility and source-policy posture
+- a title, position, visibility, refresh interval, and validated configuration;
+- sourced observations with fetch and observation timestamps;
+- `loading`, `live`, `stale`, or `error` status, including the last successful refresh;
+- optional history and registry-defined alert rules;
+- Worker-resolved source label, URL, attribution, and rights metadata.
 
-The browser may render these fields but may not invent them.
+New signals start `loading`. The one-minute cron dispatches only due work, honors retry gates, and
+stores successful observations. A recoverable source failure keeps prior good data as `stale`; a
+first or unrecoverable failure becomes `error`. The browser also presents old `live` data as stale
+when it is older than twice the configured refresh interval.
 
-### Ask Antenna
+### Signal Authoring
 
-The current planner is deterministic:
+MCP is the primary authoring surface. An agent:
 
-1. Match prompt fragments against registered connector templates.
-2. Extract safe configuration and report missing fields.
-3. Store the proposed plan in D1.
-4. Accept only missing-field patches from the client.
-5. Re-resolve template identity, policy, refresh cadence, and configuration on
-   the Worker.
-6. Create signals after explicit confirmation.
-7. Record unmatched requests for later connector work.
+1. lists the templates and owned collections;
+2. proposes a signal from an exact template or a natural-language request;
+3. shows the stored plan, source, missing configuration, and target collection to the user;
+4. confirms only after explicit approval.
 
-### MCP
+The Worker, not the client, resolves template identity, source policy, refresh cadence, and display
+metadata. Confirmation accepts patches only for configuration fields marked missing in the stored
+plan, then validates the complete configuration before writing signals. Concurrent confirmation of
+one plan creates at most one set of signals.
 
-MCP is a thin interface over Worker-owned APIs. It may list collections, read
-signals and history, run sourced briefs, propose new signals, and perform
-explicitly approved mutations. It may not bypass ownership, setup requirements,
-or source policy.
+Natural-language matching is deterministic and makes no model call. Unmatched requests are stored
+as owner-scoped connector requests so a developer can decide whether to implement a connector.
+Fresh-account onboarding retains a browser composer; there is no general post-onboarding “track
+something” flow.
 
-## Source policy
+### PWA Workspace
 
-Each registered source has server-owned metadata:
+The installable Preact app is the visual and arrangement surface. It provides:
 
-- stable source identifier and display label
-- execution mode: `public_cloud`, `private_cloud`, or `user_side_runner`
-- rights status
-- public-display eligibility
-- attribution and review notes
-- review date
-- raw-payload retention decision
+- collection switching, source and freshness detail, status, history, and recent alerts;
+- saved card arrangement and slideshow presentation;
+- collection and signal visibility controls that remain subject to Worker policy;
+- light/dark themes, responsive layouts, and service-worker updates.
 
-Public and shared reads fail closed. A response is allowed only when collection
-visibility, signal visibility, execution mode, and reviewed source policy all
-permit the requested audience.
+An SSE channel prompts collection-scoped refetches after changes. The app falls back to polling
+after repeated stream failures. The PWA never becomes authoritative for source or access policy.
 
-Source-policy metadata is an engineering control, not legal advice. Operators
-must verify licences and terms for their jurisdiction and intended use.
+### Agent Access
 
-## Data minimisation
+The Worker hosts a stateless streamable-HTTP MCP endpoint at `/api/mcp`; the repository also ships a
+local stdio entry point using the same server factory. Both call the existing owner-scoped Worker
+API and expose the same tools, resources, and prompts.
 
-Antenna must not store secrets in source configuration or logs. Personal-finance
-signals are instrument-only: public symbols, prices, performance,
-distributions, rates, and market context. Do not persist balances, quantities,
-book costs, gains or losses, account identifiers, cash holdings, or portfolio
-values.
+MCP OAuth is the supported credential flow. Owners can inspect and disconnect clients. Historical
+manual `pbk_` credentials remain revocable, but new manual-token issuance is disabled. Read tools
+may run without approval; tools that confirm, update, reorder, or remove data require the agent to
+show the proposed change and receive explicit approval.
 
-## Out of scope
+### Source And Sharing Policy
 
-- arbitrary server-side private URL fetching
-- autonomous writes without explicit approval
-- public anonymous MCP
-- social ranking or a marketplace
-- AI-generated values treated as source truth
-- custody or analysis of personal financial accounts
+Each connector template points to a reviewed policy in `packages/registry/src/source-policy.ts`.
+The policy owns source identity, rights posture, execution mode, public-display eligibility,
+attribution, and review notes.
+
+Every anonymous collection read must pass all of these gates:
+
+1. the route matches the collection visibility;
+2. the signal visibility permits that route;
+3. the source is reviewed and eligible for external display;
+4. execution mode is `public_cloud`.
+
+External reads omit signal configuration, refresh cadence, and owner controls. `requires-auth`,
+`needs-review`, manual, deployment-owned, credentialed, and private-source signals fail closed.
+Public-cloud results may be shared between owners only when they depend on configuration alone and
+retain no raw payload; points, status, alerts, and history always remain owner-scoped.
+
+Personal-finance monitoring is instrument-only: public symbols, prices, performance, distributions,
+rates, and market context are permitted. Antenna never stores an owner's quantities, balances, book
+costs, gains or losses, account identifiers, cash holdings, or portfolio value.
+
+## Deliberate Boundaries
+
+Antenna does not currently provide:
+
+- a generic arbitrary-URL server-side fetcher or generated connector runtime;
+- a public connector marketplace, collection discovery feed, ranking, or social interaction;
+- automated email briefs or a separate daily-brief screen;
+- brokerage sync, portfolio accounting, trading, or financial advice;
+- native mobile applications, multi-user collection editing, billing, or paid plans;
+- an LLM in collection, dispatch, source policy, or plan matching.
+
+Potential changes to these boundaries belong in GitHub issues until implemented.

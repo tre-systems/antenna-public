@@ -9,7 +9,7 @@ import {
   karpathyCardData,
   weatherCardData,
   type CompactRowsCardData,
-} from '../../signalFormat';
+} from '../../signal-format';
 import { AirQualityHero } from './AirQualityHero';
 import { AppUsageHero } from './AppUsageHero';
 import { CloudflareFleetHero } from './CloudflareFleetHero';
@@ -27,8 +27,7 @@ type Props = {
   readonly cardStatus: CardStatus;
   readonly points: ReadonlyArray<DataPoint>;
   readonly presentation?: boolean;
-  // When set (presentation mode), list-style heroes are capped to this many
-  // rows so a slide stays readable from across a room.
+  // Presentation mode limits list rows for distance readability.
   readonly maxRows?: number;
 };
 
@@ -53,8 +52,7 @@ export function SignalCardBody({
 
 function EmptySignalContent({ cardStatus }: { readonly cardStatus: CardStatus }) {
   if (cardStatus === 'error' || cardStatus === 'setup') return null;
-  // 'loading' means the signal has never fetched yet (a brand-new signal), so
-  // reassure that the first update is on its way rather than implying a stall.
+  // Loading with no data means the first scheduled fetch has not completed.
   const copy =
     cardStatus === 'loading'
       ? 'Fetching the first update…'

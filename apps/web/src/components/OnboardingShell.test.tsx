@@ -5,7 +5,7 @@ import { OnboardingShell } from './OnboardingShell';
 
 const user: User = {
   id: 'u1',
-  email: 'owner@example.com',
+  email: 'tretest1001@gmail.com',
   name: 'Test User',
   image_url: null,
   first_seen_at: 1000,
@@ -32,7 +32,7 @@ describe('OnboardingShell', () => {
     expect(html).toContain('data-testid="onboarding-add-signal"');
     expect(html).toContain('Use starter collection');
     expect(html).toContain('Template or blank');
-    expect(html).toContain('Add a signal');
+    expect(html).toContain('Track something');
   });
 
   it('shows a precise error when completion fails', () => {

@@ -19,10 +19,6 @@ export function isDraftEqual(a: ConfigDraft, b: ConfigDraft): boolean {
   return true;
 }
 
-export function humaniseKey(key: string): string {
-  return key.replace(/[_-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 export function updateConfigDraft(
   draft: ConfigDraft,
   key: string,
@@ -52,4 +48,15 @@ function omitConfigKey(draft: ConfigDraft, omittedKey: string): ConfigDraft {
 
 function isEditableValue(value: unknown): value is string | number {
   return typeof value === 'string' || typeof value === 'number';
+}
+
+export function configPatchFromDraft(
+  originalDraft: ConfigDraft,
+  pendingDraft: ConfigDraft,
+): Record<string, unknown> {
+  const patch: Record<string, unknown> = { ...pendingDraft };
+  for (const key of Object.keys(originalDraft)) {
+    if (!(key in pendingDraft)) patch[key] = null;
+  }
+  return patch;
 }

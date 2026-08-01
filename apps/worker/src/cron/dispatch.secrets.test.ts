@@ -1,5 +1,4 @@
-// Server-held credentials are injected by the dispatcher, never stored in a
-// signal's config; a missing one must report setup rather than fetch.
+// Missing server credentials must report setup before fetching.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runDispatch, type DispatchEnv } from './dispatch';

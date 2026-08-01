@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlanRecord, ProposedSignal } from '@antenna/shared';
-import { confirmPlan, rejectPlan, submitPrompt } from './plans';
+import { confirmPlan, rejectPlan, submitPrompt, submitTemplate } from './plans';
 import { captureFetch } from './test-support';
 
 const samplePlan: PlanRecord = {
@@ -54,6 +54,15 @@ describe('api plan endpoints', () => {
     const calls = captureFetch(samplePlan);
     await submitPrompt('track CHF/USD', undefined);
     expect(calls[0]?.init?.body).toBe(JSON.stringify({ prompt: 'track CHF/USD' }));
+  });
+
+  it('submitTemplate POSTs a server-owned template selection', async () => {
+    const calls = captureFetch(samplePlan);
+    await submitTemplate('market-history', 'collection-2');
+    expect(calls[0]?.url).toBe('/api/plan');
+    expect(calls[0]?.init?.body).toBe(
+      JSON.stringify({ template_id: 'market-history', collection_id: 'collection-2' }),
+    );
   });
 
   it('confirmPlan POSTs edited signals to /api/plan/:id/confirm', async () => {

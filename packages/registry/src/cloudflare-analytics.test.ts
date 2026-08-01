@@ -30,10 +30,13 @@ describe('cloudflareAnalyticsTemplate metadata', () => {
     expect(cloudflareAnalyticsTemplate.serverSecret?.env).toBe('CF_ANALYTICS_API_TOKEN');
   });
 
-  it('accepts a 32-hex account id and rejects malformed config', () => {
+  it('accepts a Worker script filter and rejects malformed config', () => {
     expect(
-      cloudflareAnalyticsTemplate.configSchema.safeParse({ account_id: 'f'.repeat(32), days: 7 })
-        .success,
+      cloudflareAnalyticsTemplate.configSchema.safeParse({
+        account_id: 'f'.repeat(32),
+        days: 7,
+        script: 'sample-worker',
+      }).success,
     ).toBe(true);
     expect(
       cloudflareAnalyticsTemplate.configSchema.safeParse({ account_id: 'short' }).success,
@@ -41,6 +44,12 @@ describe('cloudflareAnalyticsTemplate metadata', () => {
     expect(
       cloudflareAnalyticsTemplate.configSchema.safeParse({ account_id: 'f'.repeat(32), days: 99 })
         .success,
+    ).toBe(false);
+    expect(
+      cloudflareAnalyticsTemplate.configSchema.safeParse({
+        account_id: 'f'.repeat(32),
+        script: 'bad script',
+      }).success,
     ).toBe(false);
   });
 });

@@ -34,6 +34,7 @@ export function InlineEditableText({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const commitInFlight = useRef(false);
 
   useEffect(() => {
     if (!editing) setDraft(value);
@@ -44,6 +45,7 @@ export function InlineEditableText({
   }, [editing]);
 
   const commit = async () => {
+    if (commitInFlight.current) return;
     const next = draft.trim();
     if (!allowEmpty && next.length === 0) {
       setError(`${ariaLabel} is required.`);
@@ -54,6 +56,7 @@ export function InlineEditableText({
       setError(null);
       return;
     }
+    commitInFlight.current = true;
     setSaving(true);
     setError(null);
     try {
@@ -62,6 +65,7 @@ export function InlineEditableText({
     } catch (err) {
       setError(err instanceof Error ? err.message : `Could not save ${ariaLabel.toLowerCase()}.`);
     } finally {
+      commitInFlight.current = false;
       setSaving(false);
     }
   };

@@ -60,8 +60,7 @@ export const mcpConnectionsRoute = new Hono<{ Bindings: Bindings; Variables: Aut
       },
     ]);
     if (!batched) {
-      // Tests and local adapters may not expose D1 batch. Delete bearer grants
-      // first so a partial failure cannot leave usable credentials behind.
+      // Delete bearer grants first when atomic D1 batch support is unavailable.
       await client
         .delete(oauthAccessToken)
         .where(and(eq(oauthAccessToken.userId, userId), eq(oauthAccessToken.clientId, clientId)))

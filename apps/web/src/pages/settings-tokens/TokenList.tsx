@@ -1,4 +1,4 @@
-import { relativeTime } from '../../relativeTime';
+import { relativeTime } from '../../relative-time';
 import type { TokenListState } from './types';
 
 type Props = {
@@ -38,7 +38,7 @@ export function TokenList({ state, revoking, onRevoke }: Props) {
             onClick={() => {
               onRevoke(token.id);
             }}
-            disabled={revoking === token.id}
+            disabled={revoking !== null}
             class="shrink-0 rounded-md px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-400/40 disabled:opacity-60 dark:text-rose-300 dark:hover:bg-rose-500/10"
             data-testid={`settings-tokens-revoke-${token.id}`}
           >

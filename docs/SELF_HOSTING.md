@@ -89,15 +89,16 @@ template, and verify that a signed-out request cannot read private content.
 
 ## 8. Connect MCP
 
-Set an explicit base URL for the local stdio server:
+Add the hosted endpoint to an OAuth-capable client, then complete browser
+sign-in:
 
 ```sh
-ANTENNA_BASE_URL=https://your-host.example \
-  node apps/mcp/dist/server.js
+claude mcp add --transport http antenna https://your-host.example/api/mcp
 ```
 
-Create a personal token from Antenna's settings page or configure an OAuth MCP
-client against the hosted `/api/mcp` endpoint.
+The local stdio entry point requires `ANTENNA_BASE_URL` plus either a Better
+Auth session cookie or a historical manual token. New manual-token issuance is
+disabled; historical tokens remain revocable from the connections screen.
 
 ## Production hardening
 

@@ -18,8 +18,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-// Answer with the base that was actually asked for; a mismatched body makes the
-// adapter fall back to a second endpoint and muddies the fetch count.
+// Match the requested base so adapter fallback does not distort fetch counts.
 const stubFx = () => {
   const fetchMock = vi.fn((url: string) => {
     const base = /from=([A-Z]+)|base=([A-Z]+)/.exec(url);

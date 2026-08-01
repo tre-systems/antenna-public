@@ -1,6 +1,4 @@
-// Best-effort notifier: hands an event to the per-collection DO so connected
-// browsers can refetch. Never throws — a failed notify must not derail the
-// cron tick or the surrounding DB write.
+// Notify connected browsers without allowing failure to derail dispatch.
 
 export type NotifyEnv = {
   readonly CHANNELS?: DurableObjectNamespace;

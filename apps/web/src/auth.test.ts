@@ -61,6 +61,11 @@ describe('getCurrentUser', () => {
     );
     await expect(getCurrentUser()).rejects.toThrow(/shape/);
   });
+
+  it('rejects null without leaking a property-access failure', async () => {
+    mockFetch(() => Promise.resolve(Response.json(null)));
+    await expect(getCurrentUser()).rejects.toThrow('User endpoint returned unexpected shape');
+  });
 });
 
 describe('firstName', () => {

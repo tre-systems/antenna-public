@@ -74,7 +74,7 @@ describe('resolveTemplateDisplay', () => {
     });
   });
 
-  it('resolves specialised dogfood radar titles in the registry', () => {
+  it('resolves specialised signal titles in the registry', () => {
     expect(resolveTemplateDisplay('sector-movers', 'Fallback', {})).toMatchObject({
       title: 'US sector movers',
       sourceLabel: 'Yahoo Finance',
@@ -95,23 +95,23 @@ describe('resolveTemplateDisplay', () => {
   });
 
   it('names the app in usage titles so multiple usage cards are distinguishable', () => {
-    expect(resolveTemplateDisplay('app-usage', 'App usage', { project: 'comprehendo' }).title).toBe(
-      'Comprehendo usage',
+    expect(resolveTemplateDisplay('app-usage', 'App usage', { project: 'sample-app' }).title).toBe(
+      'Sample App usage',
     );
-    expect(
-      resolveTemplateDisplay('app-usage', 'App usage', { project: 'swade-toolbox' }).title,
-    ).toBe('Swade-toolbox usage');
-    expect(resolveTemplateDisplay('app-usage', 'App usage', { project: 'rgou' }).title).toBe(
-      'Royal Game of Ur usage',
+    expect(resolveTemplateDisplay('app-usage', 'App usage', { project: 'example-app' }).title).toBe(
+      'Example App usage',
     );
-    expect(resolveTemplateDisplay('app-usage', 'App usage', { project: 'talata' }).title).toBe(
-      'Talata usage',
+    expect(resolveTemplateDisplay('app-usage', 'App usage', { project: 'status-page' }).title).toBe(
+      'Status Page usage',
     );
     // Missing project falls back rather than showing a bare slug.
     expect(resolveTemplateDisplay('app-usage', 'App usage', {}).title).toBe('App usage');
     expect(resolveTemplateDisplay('cloudflare-analytics', 'Fallback', {}).title).toBe(
       'Cloudflare traffic',
     );
+    expect(
+      resolveTemplateDisplay('cloudflare-analytics', 'Fallback', { script: 'sample-worker' }).title,
+    ).toBe('Sample Worker traffic');
   });
 
   it('uses provider and project to distinguish cost cards', () => {
@@ -133,7 +133,7 @@ describe('resolveTemplateDisplay', () => {
     expect(resolveTemplateDisplay('tbench-leaderboard', 'Terminal Bench leaderboard', {})).toEqual({
       title: 'Terminal Bench leaderboard',
       sourceLabel: 'Terminal Bench',
-      sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.0',
+      sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1',
     });
   });
 });

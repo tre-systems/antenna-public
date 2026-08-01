@@ -64,11 +64,66 @@ describe('GET /api/signals point selection', () => {
     ]);
   });
 
+  it('returns one complete fetch snapshot instead of mixing successive snapshots', async () => {
+    db.insert(schema.signalPoints)
+      .values([
+        {
+          signalId: 'b1',
+          fetchedAt: new Date(2_000),
+          observedAt: new Date(9_000),
+          metricKey: 'project=old|change=10',
+          dimensions: JSON.stringify({
+            project: 'old',
+            change: '10',
+          }) as unknown as schema.DataPointDimensions,
+          value: 10,
+          unit: 'events',
+        },
+        {
+          signalId: 'b1',
+          fetchedAt: new Date(3_000),
+          observedAt: new Date(1_000),
+          metricKey: 'project=current|change=20',
+          dimensions: JSON.stringify({
+            project: 'current',
+            change: '20',
+          }) as unknown as schema.DataPointDimensions,
+          value: 20,
+          unit: 'events',
+        },
+      ])
+      .run();
+
+    const app = buildApp();
+    const res = await app.request('/api/signals', undefined, env);
+    const body: Array<{ id: string; points: Array<{ value: number; fetched_at: number }> }> =
+      await res.json();
+    const signal = body.find((candidate) => candidate.id === 'b1');
+
+    expect(signal?.points).toEqual([expect.objectContaining({ value: 20, fetched_at: 3_000 })]);
+  });
+
+  it('removes unsafe source URLs from latest points', async () => {
+    db.insert(schema.signalPoints)
+      .values({
+        signalId: 'b1',
+        fetchedAt: new Date(3_000),
+        observedAt: new Date(3_000),
+        metricKey: 'pair=EUR/USD',
+        dimensions: JSON.stringify({ pair: 'EUR/USD' }) as unknown as schema.DataPointDimensions,
+        value: 1.09,
+        sourceUrl: 'javascript:alert(document.cookie)',
+      })
+      .run();
+
+    const res = await buildApp().request('/api/signals', undefined, env);
+    const body: Array<{ points: Array<{ source_url: string | null }> }> = await res.json();
+
+    expect(body[0]?.points[0]?.source_url).toBeNull();
+  });
+
   it('keeps per-signal latest points even when other signals dominate by fetched_at', async () => {
-    // Regression: a flat `LIMIT POINT_LIMIT * signalCount` ordered globally by
-    // fetched_at lets live signals (which write many fresh rows on every cron
-    // tick) starve out history-heavy signals whose latest fetched_at is older
-    // (their data is historical-dated). The per-signal top-N must survive.
+    // Per-signal limits prevent busy live signals from starving historical signals.
     db.insert(schema.signals)
       .values({
         id: 'b-history',
@@ -83,9 +138,7 @@ describe('GET /api/signals point selection', () => {
       })
       .run();
 
-    // The live signal (b1) has 80 very-recent points; the history signal
-    // (b-history) has one older point. Old flat-limit logic would consume the
-    // global budget on b1 and return [] for b-history.
+    // A busy live signal must not consume the historical signal's budget.
     const liveBase = Date.now() - 60_000;
     for (let i = 0; i < 80; i += 1) {
       db.insert(schema.signalPoints)

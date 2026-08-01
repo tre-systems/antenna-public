@@ -56,13 +56,7 @@ export default defineConfig({
     ? {
         command: e2eServerCommand,
         url: `${defaultBaseURL}/healthz`,
-        // `npm run test:e2e` provisions and migrates a throwaway D1 for the run
-        // and passes it through E2E_WRANGLER_PERSIST_TO. Reusing a server that
-        // is already listening would silently run the suite against whatever
-        // database that process was started with — a leftover dev server
-        // answers /healthz perfectly well and then fails every API call. Refuse
-        // to reuse in that mode so a stray process is an obvious port clash
-        // instead of a wall of confusing test failures.
+        // Never reuse a worker that may be connected to a different D1.
         reuseExistingServer: !process.env.CI && !persistTo,
         timeout: 120_000,
       }

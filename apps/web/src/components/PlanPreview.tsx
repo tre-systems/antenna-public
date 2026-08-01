@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { confirmPlan, rejectPlan } from '../api';
 import { clearPlan, currentPlan, planError } from '../signals/plan';
 import type { ProposedSignal, SourceBlockerReason } from '@antenna/shared';
@@ -22,17 +22,16 @@ export function PlanPreview({ onConfirmed }: Props) {
   const [signals, setSignals] = useState<ProposedSignal[]>(() => [...(plan?.plan.signals ?? [])]);
   const [busy, setBusy] = useState<'confirm' | 'reject' | null>(null);
 
-  useEffect(() => {
-    setSignals([...(plan?.plan.signals ?? [])]);
-  }, [plan?.id, plan?.plan.signals]);
-
   if (plan === null) return null;
 
   const allResolved = signals.every((signal) => signal.missing.length === 0);
   const canConfirm = signals.length > 0 && allResolved && busy === null;
 
-  const handleSignalChange = (index: number, next: ProposedSignal) => {
-    setSignals((prev) => prev.map((signal, i) => (i === index ? next : signal)));
+  const handleSignalChange = (
+    index: number,
+    update: (current: ProposedSignal) => ProposedSignal,
+  ) => {
+    setSignals((prev) => prev.map((signal, i) => (i === index ? update(signal) : signal)));
   };
 
   const handleConfirm = async () => {
@@ -63,12 +62,11 @@ export function PlanPreview({ onConfirmed }: Props) {
   };
 
   return (
-    <div
-      class="mt-5 border-t border-slate-900/10 pt-5 dark:border-white/10"
-      data-testid="plan-preview"
-    >
+    <div class="border-t border-slate-900/10 pt-4 dark:border-white/10" data-testid="plan-preview">
       <header class="mb-3">
-        <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Proposed signals</h2>
+        <h3 class="text-sm font-semibold text-slate-900 dark:text-white">
+          {signals.length === 1 ? 'Proposed card' : 'Proposed cards'}
+        </h3>
         <p class="mt-0.5 text-xs italic text-slate-500 dark:text-slate-400">"{plan.prompt}"</p>
       </header>
 
@@ -108,7 +106,7 @@ export function PlanPreview({ onConfirmed }: Props) {
           class="rounded-lg bg-white/40 px-3 py-1.5 text-sm font-medium text-slate-600 ring-1 ring-slate-900/10 transition hover:bg-white/70 disabled:opacity-50 dark:bg-white/5 dark:text-slate-200 dark:ring-white/10 dark:hover:bg-white/10"
           data-testid="plan-preview-reject"
         >
-          {busy === 'reject' ? 'Rejecting…' : 'Reject'}
+          {busy === 'reject' ? 'Cancelling…' : 'Cancel'}
         </button>
         <button
           type="button"
@@ -119,7 +117,7 @@ export function PlanPreview({ onConfirmed }: Props) {
           class="antenna-primary rounded-lg px-3 py-1.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
           data-testid="plan-preview-confirm"
         >
-          {busy === 'confirm' ? 'Confirming…' : 'Confirm'}
+          {busy === 'confirm' ? 'Adding…' : 'Add to collection'}
         </button>
       </div>
     </div>

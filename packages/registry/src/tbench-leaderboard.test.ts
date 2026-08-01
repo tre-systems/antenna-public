@@ -31,6 +31,7 @@ describe('tbenchLeaderboardTemplate metadata', () => {
       limit: 10,
     });
     expect(() => tbenchLeaderboardTemplate.configSchema.parse({ limit: 11 })).toThrow();
+    expect(() => tbenchLeaderboardTemplate.configSchema.parse({ version: '../private' })).toThrow();
     expect(() =>
       tbenchLeaderboardTemplate.configSchema.parse({ url: 'https://example.com' }),
     ).toThrow();

@@ -1,7 +1,4 @@
-// Bounded, linear-time HTML scanning for adapters that read external pages.
-// Backtracking regexes over attacker-influenced markup are a denial-of-service
-// risk, and chained entity `.replace` calls decode the same text twice. Every
-// helper here scans forward once and decodes each entity exactly once.
+// Linear scanners avoid catastrophic regex backtracking on external markup.
 export type HtmlElement = {
   readonly openingTag: string;
   readonly innerHtml: string;
@@ -25,8 +22,7 @@ export const decodeHtmlEntitiesOnce = (value: string): string =>
     return ENTITY_VALUES[entity.toLowerCase()] ?? entity;
   });
 
-// `tagReplacement` is configurable because some sources splice markup mid-token,
-// where inserting a space would split a value that has to stay contiguous.
+// Configurable tag replacement supports sources that splice markup within tokens.
 export const stripHtmlTags = (html: string, tagReplacement = ' '): string => {
   let text = '';
   let inTag = false;
@@ -44,7 +40,7 @@ export const stripHtmlTags = (html: string, tagReplacement = ' '): string => {
 };
 
 export const extractHtmlElements = (html: string, tagName: string): HtmlElement[] => {
-  // Lowercased once: case-folding per element would make the scan quadratic.
+  // Case-fold once to keep repeated element scans linear.
   const lower = html.toLowerCase();
   const prefixes = { open: `<${tagName.toLowerCase()}`, close: `</${tagName.toLowerCase()}` };
   const elements: HtmlElement[] = [];
@@ -60,8 +56,7 @@ export const extractHtmlElements = (html: string, tagName: string): HtmlElement[
   return elements;
 };
 
-// Self-closing tags (Atom `<link href=… />`) never have a matching close tag,
-// so attribute reads cannot go through extractHtmlElements.
+// Self-closing tags require direct opening-tag attribute reads.
 export const firstOpeningTag = (html: string, tagName: string): string | undefined => {
   const prefix = `<${tagName.toLowerCase()}`;
   const start = findTag(html.toLowerCase(), prefix, 0);

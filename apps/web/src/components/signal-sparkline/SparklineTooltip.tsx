@@ -1,4 +1,4 @@
-import { formatValue } from '../../signalFormat';
+import { formatValue } from '../../signal-format';
 import { formatHoverDate } from './labels';
 import type { SeriesPoint } from './types';
 

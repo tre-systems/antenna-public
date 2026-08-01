@@ -1,11 +1,5 @@
 import { and, asc, desc, eq, inArray } from 'drizzle-orm';
-import {
-  signalStatus,
-  collectionTemplatePublications,
-  collections,
-  signals,
-  type CollectionLayout,
-} from '../../db/schema';
+import { signalStatus, collections, signals, type CollectionLayout } from '../../db/schema';
 import type { SignalRow, SignalWithStatus, Client, CollectionRow } from './types';
 
 export const listOwnedCollections = (
@@ -81,20 +75,6 @@ export const listCollectionSignalsWithStatus = (
     .where(eq(signals.collectionId, collectionId))
     .orderBy(asc(signals.position))
     .all();
-};
-
-export const loadPublishedCollectionBySlug = async (
-  client: Client,
-  slug: string,
-): Promise<CollectionRow | undefined> => {
-  const [row] = await client
-    .select({ collection: collections })
-    .from(collectionTemplatePublications)
-    .innerJoin(collections, eq(collections.id, collectionTemplatePublications.collectionId))
-    .where(and(eq(collections.slug, slug), eq(collections.visibility, 'public')))
-    .limit(1)
-    .all();
-  return row?.collection;
 };
 
 export const signalCountsForCollections = async (

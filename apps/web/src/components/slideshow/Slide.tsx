@@ -1,5 +1,5 @@
 import type { ApiSignal } from '../../api';
-import { signalSourceLabel, signalTitle } from '../../signalFormat';
+import { signalSourceLabel, signalTitle } from '../../signal-format';
 import { SignalCard } from '../SignalCard';
 
 type SlideProps = {
@@ -22,8 +22,7 @@ export function Slide({ signal }: SlideProps) {
       <h2 class="mt-3 max-w-5xl text-center text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
         {title}
       </h2>
-      {/* Body-only card: the signature hero without the metadata grid or footer,
-          so the slide stays glanceable. The slide owns the larger title. */}
+      {/* Keep the slide glanceable; its header supplies the larger title. */}
       <div class="mt-10 w-full max-w-5xl">
         <SignalCard signal={signal} readOnly bodyOnly />
       </div>

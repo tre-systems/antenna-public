@@ -22,6 +22,8 @@ const COMPACT_ROW_TEMPLATES = new Set([
   'aa-highlights',
   'aa-frontier',
   'project-portfolio',
+  'app-health',
+  'cloudflare-web-analytics',
   'karpathy-jobs-snapshot',
   'market-overview',
 ]);
@@ -36,6 +38,8 @@ const ROW_METRICS: Readonly<Record<string, ReadonlySet<string>>> = {
   'aa-highlights': new Set(['aa_intelligence', 'aa_speed', 'aa_price']),
   'aa-frontier': new Set(['aa_frontier']),
   'project-portfolio': new Set(['project_activity']),
+  'app-health': new Set(['app_health']),
+  'cloudflare-web-analytics': new Set(['host_traffic']),
   'karpathy-jobs-snapshot': new Set(['top_role']),
   'market-overview': new Set(['market_proxy_change']),
 };
@@ -51,6 +55,7 @@ export const compactRowLimit = (template: string): number => {
   if (template === 'karpathy-jobs-snapshot') return 3;
   if (template === 'market-overview') return 10;
   if (template === 'project-portfolio') return 20;
+  if (template === 'app-health' || template === 'cloudflare-web-analytics') return 30;
   if (template === 'aa-frontier') return 10;
   return COMPACT_ROW_LIMIT_DEFAULT;
 };

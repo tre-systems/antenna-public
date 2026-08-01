@@ -1,20 +1,17 @@
 import type { DataPoint } from '../api';
 import type { RenderSignal } from './types';
 
-// Shared helpers for daily-trend card data (app-usage, cloudflare-fleet).
-
 const DAY_MS = 86_400_000;
 
 export function resolveWindowDays(signal: RenderSignal, fallback: number, max: number): number {
-  const config = (signal as { readonly config?: Record<string, unknown> }).config;
+  const config = 'config' in signal ? signal.config : undefined;
   const raw = config?.days;
   const parsed = typeof raw === 'number' && Number.isFinite(raw) ? Math.trunc(raw) : NaN;
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(max, Math.max(1, parsed));
 }
 
-// Ascending ISO (YYYY-MM-DD) days ending today, in UTC to match the
-// connectors' day grouping.
+// UTC dates match connector day grouping.
 export function recentDays(windowDays: number): string[] {
   const now = new Date();
   const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());

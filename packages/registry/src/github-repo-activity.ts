@@ -2,8 +2,7 @@ import { githubRepo } from '@antenna/connectors';
 import { z } from 'zod';
 import { type ConnectorTemplate } from './types';
 
-// Permissive owner/repo capture: GitHub allows alphanumerics, dots, hyphens,
-// and underscores in both segments. Anchored to whitespace or string edges.
+// GitHub owner/repo captures accept its documented punctuation at token boundaries.
 const REPO_RX = /(?:^|\s)([A-Za-z0-9][A-Za-z0-9._-]{0,38})\/([A-Za-z0-9._-]{1,100})(?=\s|$|[.,!?])/;
 
 const matchRepo = (prompt: string): { owner: string; repo: string } | undefined => {

@@ -1,7 +1,8 @@
-import type { Adapter, AdapterResult, DataPoint } from './types';
 import { discardResponse } from './discard-response';
 import { errorMessage } from './error-message';
 import { githubAuthHeader, githubRateLimitError } from './github-http';
+import { isFiniteNumber } from './config-values';
+import type { Adapter, AdapterResult, DataPoint } from './types';
 
 type GithubConfig = { owner: string; repo: string; githubToken?: string };
 
@@ -60,17 +61,17 @@ const buildPoints = (body: unknown, config: GithubConfig): DataPoint[] => {
   const data = body as RepoResponse;
   const points: DataPoint[] = [];
 
-  if (typeof data.stargazers_count === 'number') {
+  if (isFiniteNumber(data.stargazers_count)) {
     points.push({ dimensions: { repo, metric: 'stars' }, value: data.stargazers_count, ts });
   }
-  if (typeof data.open_issues_count === 'number') {
+  if (isFiniteNumber(data.open_issues_count)) {
     points.push({
       dimensions: { repo, metric: 'open_issues' },
       value: data.open_issues_count,
       ts,
     });
   }
-  if (typeof data.forks_count === 'number') {
+  if (isFiniteNumber(data.forks_count)) {
     points.push({ dimensions: { repo, metric: 'forks' }, value: data.forks_count, ts });
   }
   return points;

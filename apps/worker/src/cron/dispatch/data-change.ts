@@ -41,8 +41,7 @@ export const recordSnapshotState = async (
     .run();
 };
 
-// Canonical form — sorted dimension keys, sorted rows — so an unchanged
-// snapshot cannot hash differently just because the source reordered it.
+// Sort dimensions and rows so source ordering cannot change the fingerprint.
 const snapshotHash = async (points: ReadonlyArray<DataPoint>): Promise<string> => {
   const canonical = points
     .map((point) => ({

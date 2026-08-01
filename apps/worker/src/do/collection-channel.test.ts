@@ -1,15 +1,7 @@
-// Exercises the DO's fan-out via its public `fetch` surface. We stub the bits
-// of DurableObjectState the constructor reads (nothing, currently); the rest
-// is plain Web platform — TransformStream, ReadableStream, fetch Request.
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CollectionChannel, encodeSseChunk, encodeSseKeepalive } from './collection-channel';
 
-const makeChannel = (): CollectionChannel => {
-  // The constructor doesn't touch state/env in v0 — pass minimal stubs.
-  const state = {} as unknown as DurableObjectState;
-  return new CollectionChannel(state, {});
-};
+const makeChannel = (): CollectionChannel => new CollectionChannel({} as DurableObjectState, {});
 
 const readChunk = async (reader: ReadableStreamDefaultReader<Uint8Array>): Promise<string> => {
   const { value } = await reader.read();
@@ -65,6 +57,15 @@ describe('CollectionChannel.fetch', () => {
     );
     expect(res.status).toBe(200);
     expect(await res.text()).toBe('ok');
+  });
+
+  it('rejects malformed notify payloads', async () => {
+    const channel = makeChannel();
+    const res = await channel.fetch(
+      new Request('https://do/notify', { method: 'POST', body: JSON.stringify(['not-an-event']) }),
+    );
+
+    expect(res.status).toBe(400);
   });
 
   it('subscribed writer receives the notify payload', async () => {

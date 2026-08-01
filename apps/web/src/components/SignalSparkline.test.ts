@@ -11,6 +11,8 @@ import {
 } from './SignalSparkline';
 import { SparklineFigure } from './signal-sparkline/SparklineFigure';
 import { SparklinePresentationFigure } from './signal-sparkline/SparklinePresentationFigure';
+import { bestSeries } from './signal-sparkline/history';
+import { shouldFetchHistory } from './signal-sparkline/templates';
 
 describe('sparklinePath', () => {
   it('builds an SVG path from timestamped values', () => {
@@ -146,6 +148,47 @@ describe('pointTimestamp', () => {
         dimensions: null,
       } as Parameters<typeof pointTimestamp>[0]),
     ).toBe(1000);
+  });
+});
+
+describe('watchlist history', () => {
+  it('charts equity watchlists and joins source fallbacks by their display label', () => {
+    expect(shouldFetchHistory('equity-watchlist')).toBe(true);
+    const series = bestSeries(
+      [
+        {
+          metric_key: 'exchange=STOOQ|ticker=VTI.US',
+          dimensions: { ticker: 'VTI.US', exchange: 'STOOQ' },
+          display: { label: 'VTI', source_url: null },
+          observed_at: 1_000,
+          fetched_at: 1_000,
+          value: 360,
+        },
+        {
+          metric_key: 'exchange=YAHOO|ticker=VTI',
+          dimensions: { ticker: 'VTI', exchange: 'YAHOO' },
+          display: { label: 'VTI', source_url: null },
+          observed_at: 2_000,
+          fetched_at: 2_000,
+          value: 368,
+        },
+        {
+          metric_key: 'exchange=YAHOO|ticker=BA.L',
+          dimensions: { ticker: 'BA.L', exchange: 'YAHOO' },
+          display: { label: 'BA', source_url: null },
+          observed_at: 2_000,
+          fetched_at: 2_000,
+          value: 21,
+        },
+      ],
+      { groupByLabel: true, preferredLabel: 'VTI' },
+    );
+
+    expect(series.label).toBe('VTI');
+    expect(series.points).toEqual([
+      { ts: 1_000, value: 360 },
+      { ts: 2_000, value: 368 },
+    ]);
   });
 });
 

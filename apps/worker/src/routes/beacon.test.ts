@@ -68,6 +68,15 @@ describe('POST /api/beacon', () => {
     expect(written).toHaveLength(0);
   });
 
+  it('accepts the case-insensitive bearer authentication scheme', async () => {
+    const { dataset } = datasetMock();
+    const app = buildApp({ APP_USAGE: dataset, BEACON_INGEST_TOKEN: TOKEN });
+
+    const response = await app.post({ project: 'demo', event: 'ping' }, `bearer ${TOKEN}`);
+
+    expect(response.status).toBe(202);
+  });
+
   it('rejects malformed events without writing', async () => {
     const { dataset, written } = datasetMock();
     const app = buildApp({ APP_USAGE: dataset, BEACON_INGEST_TOKEN: TOKEN });
@@ -87,17 +96,14 @@ describe('POST /api/beacon', () => {
     const { dataset, written } = datasetMock();
     const app = buildApp({ APP_USAGE: dataset, BEACON_INGEST_TOKEN: TOKEN });
 
-    const res = await app.post(
-      { project: 'swade-toolbox', event: 'character_created' },
-      `Bearer ${TOKEN}`,
-    );
+    const res = await app.post({ project: 'sample-app', event: 'item_created' }, `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(202);
     expect(await res.json()).toEqual({ ok: true });
     expect(written).toEqual([
       {
-        indexes: ['swade-toolbox'],
-        blobs: ['character_created', ''],
+        indexes: ['sample-app'],
+        blobs: ['item_created', ''],
         doubles: [1],
       },
     ]);

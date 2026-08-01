@@ -16,7 +16,6 @@ import { meRoute } from './routes/me';
 import { createMcpRoute } from './routes/mcp';
 import { mcpConnectionsRoute } from './routes/mcp-connections';
 import { mcpTokensRoute } from './routes/mcp-tokens';
-import { notificationsRoute } from './routes/notifications';
 import { planRoute } from './routes/plan';
 import { publicCollectionPageRoute } from './routes/public-collection-page';
 import { publicCollectionsRoute } from './routes/public-collections';
@@ -28,7 +27,6 @@ import {
   createMcpRegisterRateLimit,
   createPlanCreateRateLimit,
   createPublicReadRateLimit,
-  createPublicReportRateLimit,
 } from './routes/public-read-rate-limit';
 import { requestsRoute } from './routes/requests';
 import { runScheduledTickWithTelemetry } from './scheduled';
@@ -37,6 +35,8 @@ import { streamRoute } from './routes/stream';
 import { sentryOptions } from './sentry';
 import { securityHeaders } from './security-headers';
 import { templatesRoute } from './routes/templates';
+import { reportWorkerInvocationException } from './invocation-exception-telemetry';
+import { recordAntennaUsage } from './antenna-usage';
 
 export { CollectionChannel } from './do/collection-channel';
 export { RateLimiter } from './do/rate-limiter';
@@ -55,14 +55,10 @@ app.onError((error, c) => {
 
 app.get('/healthz', (c) => c.json({ ok: true, ts: Date.now() }));
 
-// Public collection pages need server-rendered share metadata for unfurlers.
-// Static Assets still serves the SPA shell; this route only injects page-specific
-// meta tags before the browser app takes over.
+// Inject public share metadata before the SPA takes over.
 app.route('/c', publicCollectionPageRoute);
 
-// BA mounts its own router under /api/auth/* (sign-in, callback, get-session,
-// sign-out, etc.). Hand the raw Request straight through — BA expects the
-// full Request object so it can read cookies and the OAuth state.
+// Better Auth needs the raw request to read cookies and OAuth state.
 const isAuthOAuthStartRequest = (c: {
   readonly req: { readonly method: string; readonly path: string };
 }): boolean => /^\/api\/auth\/sign-in(?:\/|$)/.test(c.req.path);
@@ -71,8 +67,7 @@ const isAuthOAuthCallbackRequest = (c: {
   readonly req: { readonly method: string; readonly path: string };
 }): boolean => /^\/api\/auth\/callback(?:\/|$)/.test(c.req.path);
 
-// Anonymous MCP dynamic client registration — cap per-IP so it can't be used to
-// spam oauth_application rows. Legitimate clients register once per device.
+// Cap anonymous MCP client registration by requester IP.
 const isMcpRegisterRequest = (c: {
   readonly req: { readonly method: string; readonly path: string };
 }): boolean => c.req.method === 'POST' && /^\/api\/auth\/mcp\/register(?:\/|$)/.test(c.req.path);
@@ -89,17 +84,13 @@ app.all('/api/auth/*', async (c) => {
     : null;
   const response = await createAuth(c.env).handler(c.req.raw);
   if (response.ok && rotatingRefreshToken !== null) {
-    // Better Auth creates the replacement grant but does not retire the one it
-    // consumed. Remove it only after success to enforce refresh-token rotation.
+    // Remove the consumed grant only after its replacement succeeds.
     await retireRotatedOAuthGrant(c.env, rotatingRefreshToken);
   }
   return response;
 });
 
-// OAuth discovery at the origin root (RFC 8414 / RFC 9728) so MCP clients that
-// probe the well-known paths — or follow the WWW-Authenticate challenge from
-// /api/mcp — find the authorization server. The metadata is produced by the
-// Better Auth `mcp` plugin; these mirror it at the root path clients expect.
+// Mirror Better Auth metadata at the root paths MCP clients probe.
 app.get('/.well-known/oauth-authorization-server', (c) =>
   oAuthDiscoveryMetadata(createAuth(c.env))(c.req.raw),
 );
@@ -110,33 +101,20 @@ app.get('/.well-known/oauth-protected-resource/api/mcp', (c) =>
   oAuthProtectedResourceMetadata(createAuth(c.env))(c.req.raw),
 );
 
-// External collection reads are deliberately mounted before the session
-// middleware. These routes still fail closed unless collection visibility,
-// signal visibility, and source policy allow the requested exposure.
-const isPublicCollectionReportRequest = (c: {
-  readonly req: { readonly method: string; readonly path: string };
-}): boolean =>
-  c.req.method === 'POST' && /^\/api\/public\/collections\/[^/]+\/report$/.test(c.req.path);
-
-const publicReportRateLimit = createPublicReportRateLimit({
-  shouldLimit: isPublicCollectionReportRequest,
-});
-const publicReadRateLimit = createPublicReadRateLimit({
-  shouldLimit: (c) => !isPublicCollectionReportRequest(c),
-});
-app.use('/api/public/*', publicReportRateLimit);
+// External reads precede session auth but still enforce visibility and source policy.
+const publicReadRateLimit = createPublicReadRateLimit();
 app.use('/api/public/*', publicReadRateLimit);
 app.use('/api/shared/*', publicReadRateLimit);
 app.route('/api/public/collections', publicCollectionsRoute);
 app.route('/api/shared/collections', sharedCollectionsRoute);
 
-// Usage-event ingest authenticates with a machine token, not a session, so it
-// mounts ahead of the session middleware like the public read routes.
+// Usage ingest uses a machine token, so it precedes session auth.
 app.use('/api/beacon', createBeaconIngestRateLimit());
 app.route('/api/beacon', beaconRoute);
 
 // Everything else under /api/* requires a session.
 app.use('/api/*', requireUser());
+app.use('/api/*', recordAntennaUsage());
 
 const isPlanCreateRequest = (c: {
   readonly req: { readonly method: string; readonly path: string };
@@ -149,15 +127,13 @@ app.route('/api/collection', collectionRoute);
 app.route('/api/collections', collectionsRoute);
 app.route('/api/collections', streamRoute);
 app.route('/api/me', meRoute);
-// Dispatch the MCP server's self-proxied /api/* calls in-process (a Cloudflare
-// Worker can't fetch its own hostname — it 522s), re-entering this same app.
+// Dispatch MCP self-proxy calls in-process to avoid Cloudflare hostname loops.
 app.route(
   '/api/mcp',
   createMcpRoute({ dispatch: async (req, env, ctx) => app.fetch(req, env as WorkerEnv, ctx) }),
 );
 app.route('/api/mcp-tokens', mcpTokensRoute);
 app.route('/api/mcp-connections', mcpConnectionsRoute);
-app.route('/api/notifications', notificationsRoute);
 app.use('/api/plan', createPlanCreateRateLimit({ shouldLimit: isPlanCreateRequest }));
 app.route('/api/plan', planRoute);
 app.route('/api/requests', requestsRoute);
@@ -178,9 +154,30 @@ app.get('*', (c) => {
 });
 
 const handler = {
-  fetch: app.fetch,
+  async fetch(request: Request, env: WorkerEnv, ctx: ExecutionContext): Promise<Response> {
+    try {
+      return await app.fetch(request, env, ctx);
+    } catch (error: unknown) {
+      const { pathname } = new URL(request.url);
+      reportWorkerInvocationException(error, {
+        method: request.method,
+        path: pathname,
+        surface: 'fetch',
+      });
+      return new Response('Internal Server Error', { status: 500 });
+    }
+  },
   scheduled(_event: ScheduledController, env: WorkerEnv, ctx: ExecutionContext) {
-    ctx.waitUntil(runScheduledTickWithTelemetry(env));
+    ctx.waitUntil(
+      runScheduledTickWithTelemetry(env).catch((error: unknown) => {
+        reportWorkerInvocationException(error, {
+          method: 'SCHEDULED',
+          path: '/cron',
+          routePath: 'Scheduled cron tick',
+          surface: 'scheduled',
+        });
+      }),
+    );
   },
 } satisfies ExportedHandler<WorkerEnv>;
 

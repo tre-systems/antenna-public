@@ -1,7 +1,6 @@
 import { encrypt } from './crypto';
 
-// Encrypts Google's tokens at rest before Better Auth persists them. Shared by the
-// account create/update `before` hooks so the two paths stay identical.
+// Encrypt Google tokens before Better Auth persists them.
 export const protectAccountTokens = async (
   incoming: Record<string, unknown>,
   key: string,
@@ -13,8 +12,7 @@ export const protectAccountTokens = async (
   if (typeof incoming.refreshToken === 'string' && incoming.refreshToken.length > 0) {
     next.refreshToken = await encrypt(incoming.refreshToken, key);
   }
-  // The app never reads Google's ID token after sign-in, so this extra
-  // bearer-like JWT and its profile claims are not retained in D1.
+  // Drop the unused Google ID token and its profile claims.
   if ('idToken' in incoming) next.idToken = null;
   return next;
 };

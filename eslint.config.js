@@ -24,7 +24,7 @@ export default tseslint.config(
     files: ['**/*.js', '**/*.mjs'],
     ...js.configs.recommended,
     languageOptions: {
-      globals: { ...globals.node, ...globals.browser },
+      globals: globals.node,
     },
   },
   {
@@ -59,6 +59,12 @@ export default tseslint.config(
         'error',
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
       ],
+    },
+  },
+  {
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    rules: {
+      'no-console': 'error',
     },
   },
   eslintConfigPrettier,

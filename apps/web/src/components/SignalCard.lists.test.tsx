@@ -122,8 +122,7 @@ describe('SignalCard list-style cards', () => {
     const signal = makeSignal({
       template_id: 'github-trending',
       config: {},
-      // The server resolves the card-level source to the trending list while
-      // each point carries its own per-repo URL.
+      // Each repository point overrides the card-level trending URL.
       display: {
         title: 'GitHub Trending',
         source_label: 'GitHub Trending',
@@ -158,5 +157,42 @@ describe('SignalCard list-style cards', () => {
     expect(html).toContain('+40');
     expect(html).toContain('+20');
     expect(html).toContain('stars today');
+  });
+
+  it('shows three ranked AI leaderboard entries with model context while compact', () => {
+    const signal = makeSignal({
+      template_id: 'tbench-leaderboard',
+      config: {},
+      points: [
+        {
+          dimensions: {
+            metric: 'leaderboard_entry',
+            rank: 1,
+            agent: 'Claude Code',
+            model: 'Fable 5',
+          },
+          value: 83.8,
+        },
+        {
+          dimensions: { metric: 'leaderboard_entry', rank: 2, agent: 'Codex', model: 'GPT-5.5' },
+          value: 83.1,
+        },
+        {
+          dimensions: {
+            metric: 'leaderboard_entry',
+            rank: 3,
+            agent: 'Terminus 2',
+            model: 'Fable 5',
+          },
+          value: 80.4,
+        },
+      ],
+    });
+
+    const html = renderToString(<SignalCard signal={signal} />);
+    expect(html).toContain('data-testid="compact-rows-summary"');
+    expect(html).toContain('data-visible-rows="3"');
+    expect(html).toContain('GPT-5.5');
+    expect(html).toContain('83.1%');
   });
 });

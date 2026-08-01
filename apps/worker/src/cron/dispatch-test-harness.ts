@@ -1,6 +1,4 @@
-// Shared scaffolding for the dispatch.*.test.ts files: in-memory sqlite stands
-// in for D1, a tiny stub stands in for the R2 bucket.
-// Not a test file (no .test.ts suffix) so vitest ignores it.
+// Provide in-memory D1 and R2 substitutes for dispatch tests.
 
 import { eq } from 'drizzle-orm';
 import { vi } from 'vitest';

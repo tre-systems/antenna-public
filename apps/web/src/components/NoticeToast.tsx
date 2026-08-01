@@ -1,7 +1,6 @@
 import { dismissNotice, notice } from '../signals/signals';
 
-// A transient success/status toast (e.g. after creating a signal). Mirrors the
-// UndoToast position so the two never fight for the same spot at once.
+// Shares UndoToast's position because the shell renders only one notice at a time.
 export function NoticeToast() {
   const message = notice.value;
   if (!message) return null;

@@ -1,3 +1,4 @@
+import { safeExternalUrl } from '@antenna/registry';
 import { sql } from 'drizzle-orm';
 import { parseStringRecord } from '../../db/codecs';
 import { POINT_LIMIT } from './constants';
@@ -33,10 +34,7 @@ const loadLatestPointRows = async (
     signalIds.map((id) => sql`(${id})`),
     sql`, `,
   );
-  // Keep the read bounded per signal. A window over signal_points has to rank
-  // every historical row for each signal, which gets slow as the time series
-  // table grows. Use VALUES instead of UNION SELECT so D1 does not hit SQLite's
-  // compound SELECT term limit when a collection has many signals.
+  // VALUES avoids SQLite's UNION limit while bounding rows per signal.
   return await client.all(sql`
     WITH wanted(signal_id) AS (VALUES ${wantedRows})
     SELECT p.signal_id, p.fetched_at, p.observed_at, p.metric_key, p.dimensions, p.value, p.value_text, p.unit, p.source_url
@@ -45,6 +43,11 @@ const loadLatestPointRows = async (
       SELECT rowid
       FROM signal_points AS latest
       WHERE latest.signal_id = wanted.signal_id
+        AND latest.fetched_at = (
+          SELECT MAX(snapshot.fetched_at)
+          FROM signal_points AS snapshot
+          WHERE snapshot.signal_id = wanted.signal_id
+        )
       ORDER BY latest.fetched_at DESC, latest.observed_at DESC, latest.metric_key ASC
       LIMIT ${POINT_LIMIT}
     )
@@ -96,6 +99,6 @@ const pointShapeFromRawRow = (row: RawPointRow): PointShape => ({
   value: row.value,
   value_text: row.value_text,
   unit: row.unit,
-  source_url: row.source_url,
+  source_url: safeExternalUrl(row.source_url),
   display: { label: '', source_url: null },
 });

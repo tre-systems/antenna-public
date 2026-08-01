@@ -2,67 +2,55 @@ digraph IngestionFlow {
   graph [
     rankdir=TB,
     bgcolor="#ffffff",
-    pad="0.55",
-    nodesep="0.48",
-    ranksep="0.72",
+    pad="0.45",
+    nodesep="0.52",
+    ranksep="0.66",
     splines=polyline,
     outputorder=edgesfirst,
     compound=true,
     newrank=true,
-    forcelabels=true,
     fontname="Avenir",
     label=<
       <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
-        <TR><TD><FONT POINT-SIZE="34"><B>Ingestion: Cron to Live DataPoint</B></FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="34"><B>Scheduled Signal Ingestion</B></FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="14" COLOR="#5b6b80">Bounded selection, policy before fetch, signal-scoped persistence.</FONT></TD></TR>
       </TABLE>
     >,
-    labelloc=t,
-    labeljust=c
+    labelloc=t
   ];
 
   node [
     shape=box,
     style="rounded,filled",
-    margin="0.21,0.13",
-    width=2.85,
-    height=0.74,
-    fixedsize=false,
+    margin="0.24,0.14",
+    width=3.1,
     fontname="Avenir",
-    fontsize=18,
-    penwidth=2.4,
+    fontsize=17,
+    penwidth=2.2,
     fontcolor="#14213d",
-    color="#2264c7",
-    fillcolor="#eaf3ff:#ffffff",
-    gradientangle=270
+    color="#22865a",
+    fillcolor="#eaf8ef"
   ];
 
   edge [
     color="#263a59",
     fontname="Avenir",
-    fontsize=13,
+    fontsize=12,
     fontcolor="#3d4a5c",
-    penwidth=2.2,
-    arrowsize=0.78
+    penwidth=2.0,
+    arrowsize=0.75
   ];
 
-  // ---- Trigger ----
-  T1 [
-    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Cron trigger</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">every 1 minute</FONT></TD></TR></TABLE>>,
-    fillcolor="#fff4d1:#fffaf0",
-    color="#d39a00"
-  ];
+  CRON [label=<<B>Cloudflare Cron Trigger</B><BR/><FONT POINT-SIZE="13">every minute; jobs isolated by scheduled.ts</FONT>>, color="#d39a00", fillcolor="#fff4d1"];
 
-  // ---- Dispatcher ----
   subgraph cluster_dispatch {
     graph [
       label=<
         <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#1e6b43"><B>DISPATCHER</B></FONT></TD></TR>
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#4e7a61">Reads which signals are due and routes each one to its adapter.</FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#1e6b43"><B>BOUNDED DISPATCH</B></FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#4e7a61">One slow source occupies one lane, not the whole tick.</FONT></TD></TR>
         </TABLE>
       >,
-      labelloc=t,
-      labeljust=l,
       color="#b8e5c8",
       fillcolor="#f4fbf6",
       style="rounded,filled",
@@ -70,25 +58,22 @@ digraph IngestionFlow {
       margin=22
     ];
 
-    D1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>dispatch.ts</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">scheduled handler entry point</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
-    D2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>SELECT due signals</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">refresh window, manual request, retry gate</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
-    D4 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Retry and setup gate</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">next_attempt_at / setup_required backoff</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
-    D3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Resolve source policy</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">registry template, execution mode, secrets</FONT></TD></TR></TABLE>>, fillcolor="#eaf8ef:#ffffff", color="#22865a"];
+    DUE [label=<<B>Select at most 250 due signals</B><BR/><FONT POINT-SIZE="13">manual requests first; then oldest attempt</FONT>>];
+    LANES [label=<<B>Process through 8 lanes</B><BR/><FONT POINT-SIZE="13">joined collection supplies visibility and tenant context</FONT>>];
+    GUARD [label=<<B>Resolve and validate</B><BR/><FONT POINT-SIZE="13">template · config · source policy · execution mode · secret</FONT>>];
+    ELIGIBLE [label=<<B>Cloud refresh allowed?</B>>, shape=diamond, width=3.0, height=1.0, color="#1f2f46", fillcolor="#ffffff"];
 
-    D1 -> D2 -> D4 -> D3;
+    DUE -> LANES -> GUARD -> ELIGIBLE;
   }
 
-  // ---- Adapter ----
-  subgraph cluster_adapter {
+  subgraph cluster_fetch {
     graph [
       label=<
         <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#5f3b8a"><B>CONNECTOR ADAPTER</B></FONT></TD></TR>
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#6d4d8d">Pure function. Fetch + parse. Never touches the database.</FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#5f3b8a"><B>FETCH</B></FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#6d4d8d">Only reviewed public-cloud, config-only results may cross owners.</FONT></TD></TR>
         </TABLE>
       >,
-      labelloc=t,
-      labeljust=l,
       color="#d6c6ee",
       fillcolor="#fbf8ff",
       style="rounded,filled",
@@ -96,81 +81,52 @@ digraph IngestionFlow {
       margin=22
     ];
 
-    A1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>adapter(config)</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">registered source adapter</FONT></TD></TR></TABLE>>, fillcolor="#f5f3ff:#ffffff", color="#7c3aed"];
-    A2 [
-      label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>fetch external source</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">native fetch; narrow parser where needed</FONT></TD></TR></TABLE>>,
-      fillcolor="#f5f3ff:#ffffff",
-      color="#7c3aed"
-    ];
-    A3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>normalise to DataPoint[]</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">timestamps, units, dimensions</FONT></TD></TR></TABLE>>, fillcolor="#f5f3ff:#ffffff", color="#7c3aed"];
-    A4 [
-      label=<<B>Success?</B>>,
-      shape=diamond,
-      style=filled,
-      width=2.5,
-      height=1.05,
-      fillcolor="#ffffff",
-      color="#1f2f46",
-      penwidth=2.4
-    ];
+    SHAREABLE [label=<<B>Shared snapshot eligible?</B>>, shape=diamond, width=3.0, height=1.0, color="#1f2f46", fillcolor="#ffffff"];
+    CACHE [label=<<B>Canonical shared snapshot</B><BR/><FONT POINT-SIZE="13">read stored/same-tick result; store successful misses</FONT>>, color="#7c3aed", fillcolor="#f5f3ff"];
+    HIT [label=<<B>Fresh snapshot?</B>>, shape=diamond, width=2.7, height=1.0, color="#1f2f46", fillcolor="#ffffff"];
+    ADAPTER [label=<<B>Run effect-isolated adapter</B><BR/><FONT POINT-SIZE="13">native fetch + narrow parse → AdapterResult</FONT>>, color="#7c3aed", fillcolor="#f5f3ff"];
+    RESULT [label=<<B>Expected source success?</B>>, shape=diamond, width=3.2, height=1.0, color="#1f2f46", fillcolor="#ffffff"];
 
-    A1 -> A2 -> A3 -> A4;
+    SHAREABLE -> CACHE [label="yes"];
+    CACHE -> HIT;
+    HIT -> ADAPTER [label="miss"];
+    SHAREABLE -> ADAPTER [label="no"];
+    ADAPTER -> RESULT;
   }
 
-  // ---- Persistence ----
-  subgraph cluster_persist {
-    graph [
-      label=<
-        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#0f766e"><B>PERSISTENCE</B></FONT></TD></TR>
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#357a74">D1 stores points; R2 stores raw bytes only for reviewed retained sources.</FONT></TD></TR>
-        </TABLE>
-      >,
-      labelloc=t,
-      labeljust=l,
-      color="#99d5cf",
-      fillcolor="#f0fdfa",
-      style="rounded,filled",
-      penwidth=1.8,
-      margin=22
-    ];
+  SUCCESS [label=<
+    <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1">
+      <TR><TD><B>Materialize successful result</B></TD></TR>
+      <TR><TD><FONT POINT-SIZE="13">hash normalized snapshot; evaluate alerts if changed</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="13">upsert points if needed; optionally archive reviewed raw payload</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="13">write live status and last_ok_at</FONT></TD></TR>
+    </TABLE>
+  >, color="#0f766e", fillcolor="#e6fffb"];
 
-    PT1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>D1 signal_points</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">append-only ledger; chunked writes</FONT></TD></TR></TABLE>>, fillcolor="#e6fffb:#ffffff", color="#0f766e"];
-    PT2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>R2 raw payload</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">optional reviewed retention</FONT></TD></TR></TABLE>>, fillcolor="#e6fffb:#ffffff", color="#0f766e"];
-    PT3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>D1 signal_status</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">last_ok_at, last_error, state</FONT></TD></TR></TABLE>>, fillcolor="#e6fffb:#ffffff", color="#0f766e"];
+  FAILURE [label=<
+    <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1">
+      <TR><TD><B>Record signal-scoped failure</B></TD></TR>
+      <TR><TD><FONT POINT-SIZE="13">recoverable + prior success → stale; otherwise error</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="13">sanitize last_error and set next_attempt_at</FONT></TD></TR>
+    </TABLE>
+  >, color="#c53030", fillcolor="#fde2e1"];
 
-    { rank=same; PT1; PT2; PT3; }
-  }
+  BLOCKED [label=<<B>Record setup-required error</B><BR/><FONT POINT-SIZE="13">no external request; retry gate prevents hot looping</FONT>>, color="#c53030", fillcolor="#fde2e1"];
 
-  // ---- Outcomes ----
-  OK [
-    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Signal status: live</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">UI shows fresh value + timestamp</FONT></TD></TR></TABLE>>,
-    fillcolor="#d8f5de:#effcf2",
-    color="#15803d",
-    penwidth=3.0
-  ];
-  ERR [
-    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>Signal status: error / stale</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">UI shows last good value + reason</FONT></TD></TR></TABLE>>,
-    fillcolor="#fde2e1:#fff5f5",
-    color="#c53030",
-    penwidth=3.0
-  ];
-  SSE [
-    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><B>CollectionChannel notify</B></TD></TR><TR><TD CELLPADDING="4"><FONT POINT-SIZE="15">SSE event tells SPA to refetch</FONT></TD></TR></TABLE>>,
-    fillcolor="#eaf8ef:#ffffff",
-    color="#22865a",
-    penwidth=2.4
-  ];
+  NOTIFY [label=<<B>Best-effort CollectionChannel event</B><BR/><FONT POINT-SIZE="13">SSE is invalidation only; clients refetch D1 truth</FONT>>, color="#22865a", fillcolor="#eaf8ef"];
+  LOG [label=<<B>Structured completion event</B><BR/><FONT POINT-SIZE="13">run, signal, collection, template, status, saturation</FONT>>, color="#2f80ed", fillcolor="#edf7ff"];
 
-  // ---- Edges ----
-  T1 -> D1 [lhead=cluster_dispatch, label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">fire</FONT></TD></TR></TABLE>>];
-  D3 -> A1 [ltail=cluster_dispatch, lhead=cluster_adapter, label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">per due signal</FONT></TD></TR></TABLE>>];
-  A4 -> PT1 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">Yes</FONT></TD></TR></TABLE>>, lhead=cluster_persist];
-  A3 -> PT2 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#dfe3e9" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#6b7280">raw bytes</FONT></TD></TR></TABLE>>, color="#6b7280", fontcolor="#6b7280", style=dashed];
-  PT1 -> PT3 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#dfe3e9" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#6b7280">update</FONT></TD></TR></TABLE>>, color="#6b7280", fontcolor="#6b7280", style=dashed];
-  PT3 -> SSE [ltail=cluster_persist, label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">notify</FONT></TD></TR></TABLE>>];
-  SSE -> OK;
-  A4 -> ERR [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">No: caught error</FONT></TD></TR></TABLE>>];
-  ERR -> PT3 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#dfe3e9" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#6b7280">record</FONT></TD></TR></TABLE>>, style=dashed, color="#6b7280", fontcolor="#6b7280"];
-  ERR -> D4 [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#dfe3e9" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#6b7280">backoff</FONT></TD></TR></TABLE>>, style=dashed, color="#6b7280", fontcolor="#6b7280", constraint=false];
+  CRON -> DUE [lhead=cluster_dispatch];
+  ELIGIBLE -> SHAREABLE [label="yes", ltail=cluster_dispatch, lhead=cluster_fetch];
+  ELIGIBLE -> BLOCKED [label="no"];
+  HIT -> SUCCESS [label="hit", ltail=cluster_fetch];
+  RESULT -> SUCCESS [label="yes", ltail=cluster_fetch];
+  RESULT -> FAILURE [label="no", ltail=cluster_fetch];
+
+  SUCCESS -> NOTIFY;
+  FAILURE -> NOTIFY;
+  BLOCKED -> NOTIFY;
+  NOTIFY -> LOG;
+
+  { rank=same; SUCCESS; FAILURE; BLOCKED; }
 }

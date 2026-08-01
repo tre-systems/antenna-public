@@ -1,13 +1,11 @@
 import * as Sentry from '@sentry/cloudflare';
 import { cleanupExpiredOAuthState, shouldRunOAuthCleanup } from './auth/oauth-cleanup';
-import { runDailyDigests } from './cron/digest';
 import { runDispatch } from './cron/dispatch';
 import { errorMessage, logErrorEvent, logEvent } from './cron/log';
 import { runPointRetention, shouldRunPointRetention } from './cron/point-retention';
 import type { WorkerEnv } from './env';
 
-// Every job is isolated: one failure is logged and the tick carries on to the
-// rest. Cron logs surface in `wrangler tail`, so the payload is structured JSON.
+// Isolate periodic jobs so one failure cannot stop the remaining tick.
 const runJob = async (event: string, job: () => Promise<unknown>): Promise<void> => {
   try {
     const summary = await job();
@@ -20,7 +18,6 @@ const runJob = async (event: string, job: () => Promise<unknown>): Promise<void>
 
 const runScheduledTick = async (env: WorkerEnv, now: number): Promise<void> => {
   await runJob('dispatch', () => runDispatch(env));
-  await runJob('daily_digest', () => runDailyDigests(env));
   if (shouldRunOAuthCleanup(now)) {
     await runJob('oauth_cleanup', () => cleanupExpiredOAuthState(env, now));
   }

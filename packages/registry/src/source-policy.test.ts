@@ -26,7 +26,9 @@ const PUBLIC_DISPLAY_BLOCKED = {
   'aa-highlights': /public display needs rights review/i,
   'antenna-users': /never public-display eligible/i,
   'app-usage': /private-only by design/i,
+  'app-health': /private-only by design/i,
   'cloudflare-analytics': /private-only by design/i,
+  'cloudflare-web-analytics': /private-only by design/i,
   'equity-watchlist': /replace before public sharing/i,
   'karpathy-jobs-snapshot': /public display needs source-rights review/i,
   'macro-market-history': /review each preset before public display/i,
@@ -34,7 +36,6 @@ const PUBLIC_DISPLAY_BLOCKED = {
   'manual-metric': /not public-display eligible/i,
   'market-history': /replace before public sharing/i,
   'market-overview': /replace before public sharing/i,
-  'reddit-problems': /public display needs rights review/i,
   'project-portfolio': /Private aggregate/i,
   'rest-metric': /Disabled for planner matching/i,
   'sector-movers': /replace before public sharing/i,
@@ -93,9 +94,7 @@ describe('source policy metadata', () => {
     }
   });
 
-  // No real template is publicDisplayEligible with a non-public-cloud execution
-  // mode or restricted rights, so these blocker branches have no template that
-  // reaches them. Exercise them directly with a synthetic policy.
+  // Synthetic policies cover fail-closed branches absent from the current registry.
   it('reports a specific blocker for each non-public-cloud / restricted-rights reason', () => {
     const base: SourcePolicy = {
       sourceId: 'synthetic',

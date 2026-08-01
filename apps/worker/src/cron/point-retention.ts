@@ -40,8 +40,7 @@ export const runPointRetention = async (
       .run();
   }
 
-  // Shared upstream snapshots are a cache, not history. This only clears rows
-  // for configs nobody tracks any more; live ones are overwritten in place.
+  // Shared upstream snapshots are a short-lived cache, not history.
   await purgeExpiredSnapshots(client, now);
 
   return { policies: grouped.size };

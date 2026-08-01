@@ -75,11 +75,15 @@ export const displayTitle = (
   if (templateId === 'aa-frontier') return 'Frontier model comparison';
   if (templateId === 'app-usage') {
     const project = stringValue(config.project);
-    if (project === 'rgou') return 'Royal Game of Ur usage';
     if (project) return `${capitaliseFirst(project)} usage`;
   }
-  if (templateId === 'cloudflare-analytics') return 'Cloudflare traffic';
-  if (templateId === 'project-portfolio') return 'TRE project portfolio';
+  if (templateId === 'cloudflare-analytics') {
+    const script = stringValue(config.script);
+    return script ? `${capitaliseFirst(script)} traffic` : 'Cloudflare traffic';
+  }
+  if (templateId === 'project-portfolio') return 'Project portfolio';
+  if (templateId === 'app-health') return 'Production app health';
+  if (templateId === 'cloudflare-web-analytics') return 'Real-browser visits';
   if (templateId === 'manual-cost') {
     const provider = stringValue(config.provider);
     const project = stringValue(config.project);

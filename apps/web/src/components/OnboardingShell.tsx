@@ -48,9 +48,9 @@ export function OnboardingShell({
           testId="onboarding-create-collection"
         />
         <OnboardingChoice
-          title="Add a signal"
-          description="Describe the first signal this collection should track."
-          cta="Add signal"
+          title="Track your own signal"
+          description="Use your agent, browse sources, or describe the first card."
+          cta="Track something"
           disabled={saving}
           onClick={onAddSignal}
           testId="onboarding-add-signal"

@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { templates } from '@antenna/registry';
-import { parseJsonRecord } from '../../db/codecs';
+import { canonicalJson, parseJsonRecord } from '../../db/codecs';
 import { signalStatus, signals, signalPoints, type SignalConfig } from '../../db/schema';
-import { validateTemplateConfig } from '../../registry/config';
+import { InvalidTemplateConfigError, validateTemplateConfig } from '../../registry/config';
 import { clampRefreshSeconds } from './refresh';
 import { externalVisibilityBlocker, type PublicVisibilityBlocker } from './source-policy';
 import type { SignalRow, Client } from './types';
@@ -23,7 +23,12 @@ type ResolvedSignalUpdate = {
 };
 
 export type SignalUpdateFailure =
-  | { readonly kind: 'error'; readonly error: string; readonly status: 400 | 409 }
+  | {
+      readonly kind: 'error';
+      readonly error: 'invalid_config' | 'unknown_template';
+      readonly detail?: string;
+      readonly status: 400 | 409;
+    }
   | { readonly kind: 'source_policy_blocked'; readonly blocker: PublicVisibilityBlocker };
 
 type SignalUpdateResult =
@@ -38,7 +43,7 @@ export const resolveSignalUpdate = (
   if (!template) return errorResult('unknown_template', 409);
 
   const config = resolveNextConfig(signal, template, input.config);
-  if (!config.ok) return errorResult(config.error, 400);
+  if (!config.ok) return errorResult('invalid_config', 400, config.detail);
 
   const visibility = resolveNextVisibility(signal, input.visibility);
   if (!visibility.ok) return visibility;
@@ -49,7 +54,9 @@ export const resolveSignalUpdate = (
       nextConfig: config.value,
       nextRefreshSeconds: nextRefreshSeconds(signal, input.refresh_seconds),
       nextVisibility: visibility.value,
-      configChanged: input.config !== undefined,
+      configChanged:
+        input.config !== undefined &&
+        canonicalJson(config.value) !== canonicalJson(parseJsonRecord(signal.config)),
     },
   };
 };
@@ -99,15 +106,30 @@ const resolveNextConfig = (
   patch: Record<string, unknown> | undefined,
 ):
   | { readonly ok: true; readonly value: Record<string, unknown> }
-  | { readonly ok: false; readonly error: string } => {
+  | { readonly ok: false; readonly detail: string } => {
   const existingConfig = parseJsonRecord(signal.config);
   if (patch === undefined) return { ok: true, value: existingConfig };
 
   try {
-    return { ok: true, value: validateTemplateConfig(template, { ...existingConfig, ...patch }) };
+    return {
+      ok: true,
+      value: validateTemplateConfig(template, applyConfigPatch(existingConfig, patch)),
+    };
   } catch (caught) {
-    return { ok: false, error: caught instanceof Error ? caught.message : 'invalid_config' };
+    if (caught instanceof InvalidTemplateConfigError) {
+      return { ok: false, detail: `${caught.templateId} ${caught.reason}` };
+    }
+    throw caught;
   }
+};
+
+const applyConfigPatch = (
+  existing: Record<string, unknown>,
+  patch: Record<string, unknown>,
+): Record<string, unknown> => {
+  const retained = Object.entries(existing).filter(([key]) => patch[key] !== null);
+  const updates = Object.entries(patch).filter(([, value]) => value !== null);
+  return Object.fromEntries([...retained, ...updates]);
 };
 
 const resolveNextVisibility = (
@@ -130,7 +152,11 @@ const resolveNextVisibility = (
 const nextRefreshSeconds = (signal: SignalRow, seconds: number | undefined): number =>
   seconds === undefined ? signal.refreshSeconds : clampRefreshSeconds(seconds);
 
-const errorResult = (error: string, status: 400 | 409): SignalUpdateResult => ({
+const errorResult = (
+  error: 'invalid_config' | 'unknown_template',
+  status: 400 | 409,
+  detail?: string,
+): SignalUpdateResult => ({
   ok: false,
-  failure: { kind: 'error', error, status },
+  failure: { kind: 'error', error, status, ...(detail === undefined ? {} : { detail }) },
 });

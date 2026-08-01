@@ -11,9 +11,9 @@
 - Keep connectors pure. They fetch and normalize data, then return structured
   results. They do not write D1, R2, auth state, or collection state.
 - Validate at boundaries with shared Zod schemas before mutating state.
-- Treat expected failures as data, not exceptions. Return typed error results
-  for unsupported sources, missing credentials, validation failures, and adapter
-  failures.
+- Treat expected failures as data with a closed `ApiErrorCode` or discriminated
+  result. Let unexpected platform and programmer failures reach top-level
+  telemetry.
 - Prefer small, testable helpers over broad rewrites or new framework patterns.
 - Co-locate tests with the code they cover unless the test is a true Playwright
   end-to-end flow.
@@ -186,7 +186,7 @@ Every new source needs a matching entry in `packages/registry/src/source-policy.
 - Signals (`@preact/signals`) own signal state. No React Context for cross-cutting state.
 - No `console.log` in committed code — use a small logger if needed.
 - Wire types that cross HTTP (`DataPoint`, `HistoryPoint`, `SignalStatus`, `ApiSignal`) come from `@antenna/shared`. The SPA does not re-declare Worker response shapes locally.
-- Prefer server-resolved display strings from `/api/signals` over per-`template_id` branches in the SPA. New source labels, source URLs, and point attribution rules belong in `packages/registry/src/display.ts`; `apps/web/src/signalFormat.ts` should only keep browser presentation shaping.
+- Prefer server-resolved display strings from `/api/signals` over per-`template_id` branches in the SPA. New source labels, source URLs, and point attribution rules belong in `packages/registry/src/display.ts`; `apps/web/src/signal-format.ts` keeps only browser presentation shaping.
 
 ## Documentation and reviews
 
@@ -230,7 +230,6 @@ Husky installs two hooks on `npm install`. Don't bypass with `--no-verify`.
 - **`pre-commit`** — `lint-staged` (Prettier on staged `*.{ts,tsx,js,mjs,json,md,css,html}`, ESLint --fix on staged `*.{ts,tsx,js,mjs}`) followed by `npm run test:unit`. Fast; runs on every commit.
 - **`pre-push`** — `npm run test:e2e` (Playwright). The current suite includes hosted-flow coverage under `tests/e2e/`; the wrapper skips only if the folder has no specs.
 
-CI runs `npm run verify`, the production dependency audit, the bundle budget
-check, and Playwright whenever `tests/e2e/` contains specs. Pushes to
-`main` then apply remote D1 migrations, deploy the Worker, and smoke-test
-`/healthz`.
+CI also runs secret scanning, the production dependency audit, the bundle
+budget, and Playwright. It deliberately does not deploy a public-repository
+checkout.

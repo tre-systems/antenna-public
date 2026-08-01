@@ -20,9 +20,16 @@ GOOGLE_CLIENT_SECRET=
 # Generate: `openssl rand -hex 32`
 BETTER_AUTH_SECRET=
 
-# ----- Sign-in allowlist -----
-# Comma-separated list of email addresses allowed to sign in.
+# ----- Google token encryption -----
+# 32-byte hex key for AES-GCM encryption of reusable provider tokens.
+# Generate: `openssl rand -hex 32`
+ENCRYPTION_KEY=
+
+# ----- Access policy -----
+# Leave empty for open sign-up; set to close access to listed addresses.
 ALLOWED_EMAILS=owner@example.com
+# BLOCKED_EMAILS=
+# ADMIN_EMAILS=owner@example.com
 
 # ----- Environment -----
 # `wrangler dev` defaults to "development" if unset, but being explicit makes
@@ -44,15 +51,13 @@ NODE_ENV=development
 # Optional paid economic-data fallback.
 # TRADING_ECONOMICS_API_KEY=
 
-# ----- Optional notifications -----
-# RESEND_API_KEY=
-# NOTIFICATION_FROM_EMAIL=Antenna <antenna@example.com>
-
-# ----- Optional application usage ingestion -----
+# ----- Optional private observability connectors -----
 # Use distinct scoped tokens for independent deployments.
 # BEACON_INGEST_TOKEN=
 # CF_ANALYTICS_API_TOKEN=
+# APP_HEALTH_MANIFEST={"my-app":"https://my-app.example/healthz"}
 
-# ----- Optional observability and abuse protection -----
+# ----- Optional error telemetry -----
 # SENTRY_DSN=
-# PUBLIC_COLLECTION_REPORT_SALT=
+# SENTRY_ENVIRONMENT=development
+# SENTRY_TRACES_SAMPLE_RATE=0

@@ -9,8 +9,7 @@ const templateById = (id: string): DispatchTemplate => {
   return found;
 };
 
-// Most templates need nothing from D1; only the deployment-stats template does,
-// and it gets its own suite below with a real in-memory database.
+// Exercise the D1-backed deployment template separately.
 const fakeClient = {} as unknown as Client;
 const collection = (ownerId = 'owner-1'): CollectionRow =>
   ({ id: 'collection-1', ownerId }) as unknown as CollectionRow;

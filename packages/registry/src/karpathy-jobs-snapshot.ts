@@ -17,8 +17,7 @@ export const karpathyJobsSnapshotTemplate: ConnectorTemplate = {
   ],
   paramExtractors: {},
   rightsStatus: 'with-attribution',
-  // The BLS dataset is annual; a daily tick only keeps the card responsive to
-  // connector and UI changes.
+  // Daily refreshes surface connector changes despite annual BLS source data.
   defaultRefreshSeconds: 86_400,
   adapter: () => karpathyJobs({}),
 };

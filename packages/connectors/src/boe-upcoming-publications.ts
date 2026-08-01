@@ -1,4 +1,5 @@
 import { positiveInt, stringValue } from './config-values';
+import { discardResponse } from './discard-response';
 import { errorMessage } from './error-message';
 import { extractHtmlElements, htmlAttribute, htmlToText } from './html-text';
 import type { Adapter, AdapterResult, DataPoint } from './types';
@@ -47,6 +48,7 @@ export const boeUpcomingPublications: Adapter<BoeUpcomingPublicationsConfig> = a
   }
 
   if (!response.ok) {
+    await discardResponse(response);
     return { ok: false, error: { code: 'fetch_failed', message: `HTTP ${response.status}` } };
   }
 
@@ -98,8 +100,7 @@ export const parseBoeUpcomingPublications = (html: string, now: number): BoePubl
     return [{ ...parsed, url: resolveUrl(href) }];
   });
 
-  // The BoE page lists some publications twice (headline strip and section
-  // body), so dedupe on title + scheduled date.
+  // The BoE repeats entries in its headline strip and section body.
   const seen = new Set<string>();
   return anchors
     .sort((a, b) => a.dateMs - b.dateMs || a.title.localeCompare(b.title))

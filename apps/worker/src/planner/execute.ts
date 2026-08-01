@@ -1,7 +1,13 @@
 import { eq } from 'drizzle-orm';
-import type { Visibility } from '@antenna/shared';
+import type { ProposedSignal, Visibility } from '@antenna/shared';
 import { db, type Db, type Env as DbEnv } from '../db/client';
-import { collectionPlans, collections, signals, type ProposedPlan } from '../db/schema';
+import {
+  collectionPlans,
+  collections,
+  planConfirmationClaims,
+  signals,
+  type ProposedPlan,
+} from '../db/schema';
 import { wouldExceedSignalQuota } from '../routes/quota';
 import {
   materializeSignals,
@@ -17,30 +23,52 @@ type ConfirmArgs = {
   readonly edited_signals?: ReadonlyArray<PlanConfirmSignalPatch>;
 };
 
-// Confirmation refuses for ordinary product reasons — the plan is gone, already
-// resolved, over quota, or carries config the registry rejects. Helpers below
-// still throw internally; this is the boundary that converts them to a value.
+// Convert expected confirmation failures into result values at this boundary.
 export type ConfirmPlanResult =
   | { readonly ok: true; readonly created_signal_ids: string[] }
-  | { readonly ok: false; readonly error: string };
+  | {
+      readonly ok: false;
+      readonly error:
+        | 'invalid_config'
+        | 'not_found'
+        | 'plan_already_resolved'
+        | 'signal_quota_exceeded'
+        | 'unknown_template';
+      readonly detail?: string;
+    };
 
 export const confirmPlan = async (env: DbEnv, args: ConfirmArgs): Promise<ConfirmPlanResult> => {
-  try {
-    return { ok: true, created_signal_ids: await materializeConfirmation(env, args) };
-  } catch (caught) {
-    return { ok: false, error: caught instanceof Error ? caught.message : 'unknown_error' };
-  }
+  const client = db(env);
+  const loaded = await loadProposed(client, args.plan_id, args.collection_id);
+  if (!loaded.ok) return loaded;
+
+  const collectionVisibility = await loadCollectionVisibility(client, loaded.row.collectionId);
+  if (collectionVisibility === null) return { ok: false, error: 'not_found' };
+
+  const plan = parsePlan(loaded.row.proposed, loaded.row.prompt);
+  const proposed = materializeSignals(plan.signals, args.edited_signals);
+  if (!proposed.ok) return proposed;
+
+  return materializeConfirmation(
+    env,
+    client,
+    args.plan_id,
+    loaded.row.collectionId,
+    collectionVisibility,
+    proposed.signals,
+  );
 };
 
-const materializeConfirmation = async (env: DbEnv, args: ConfirmArgs): Promise<string[]> => {
-  const client = db(env);
-  const row = await loadProposed(client, args.plan_id, args.collection_id);
-  const collectionVisibility = await loadCollectionVisibility(client, row.collectionId);
-  const plan = parsePlan(row.proposed, row.prompt);
-  const proposed = materializeSignals(plan.signals, args.edited_signals);
-
+const materializeConfirmation = async (
+  env: DbEnv,
+  client: Db,
+  planId: string,
+  collectionId: string,
+  collectionVisibility: Visibility,
+  proposed: ReadonlyArray<ProposedSignal>,
+): Promise<ConfirmPlanResult> => {
   const materialized: MaterializedSignal[] = [];
-  let position = await nextPosition(client, row.collectionId);
+  let position = await nextPosition(client, collectionId);
 
   for (const signal of proposed) {
     if (signal.missing.length > 0) continue;
@@ -54,43 +82,70 @@ const materializeConfirmation = async (env: DbEnv, args: ConfirmArgs): Promise<s
   }
 
   // Checked before the write so a plan never lands half-materialised.
-  if (await wouldExceedSignalQuota(client, row.collectionId, materialized.length)) {
-    throw new Error('signal_quota_exceeded');
+  if (await wouldExceedSignalQuota(client, collectionId, materialized.length)) {
+    return { ok: false, error: 'signal_quota_exceeded' };
   }
 
-  await writeConfirmation(env.DB, client, args.plan_id, row.collectionId, materialized);
+  try {
+    await writeConfirmation(env.DB, client, planId, collectionId, materialized);
+  } catch (caught) {
+    if (await confirmationAlreadyClaimed(client, planId)) {
+      return { ok: false, error: 'plan_already_resolved' };
+    }
+    throw caught;
+  }
 
-  return materialized.map((signal) => signal.id);
+  return { ok: true, created_signal_ids: materialized.map((signal) => signal.id) };
+};
+
+type ProposedPlanRow = {
+  readonly collectionId: string;
+  readonly prompt: string;
+  readonly proposed: ProposedPlan;
 };
 
 const loadProposed = async (
   client: Db,
   planId: string,
   collectionId: string,
-): Promise<{
-  readonly collectionId: string;
-  readonly prompt: string;
-  readonly proposed: ProposedPlan;
-}> => {
+): Promise<
+  | { readonly ok: true; readonly row: ProposedPlanRow }
+  | Extract<ConfirmPlanResult, { readonly ok: false }>
+> => {
   const [row] = await client
     .select()
     .from(collectionPlans)
     .where(eq(collectionPlans.id, planId))
     .all();
-  if (!row || row.collectionId !== collectionId) throw new Error('plan not found');
-  if (row.status !== 'proposed') throw new Error('plan already resolved');
-  return { collectionId: row.collectionId, prompt: row.prompt, proposed: row.proposed };
+  if (!row || row.collectionId !== collectionId) return { ok: false, error: 'not_found' };
+  if (row.status !== 'proposed') return { ok: false, error: 'plan_already_resolved' };
+  return {
+    ok: true,
+    row: { collectionId: row.collectionId, prompt: row.prompt, proposed: row.proposed },
+  };
 };
 
-const loadCollectionVisibility = async (client: Db, collectionId: string): Promise<Visibility> => {
+const loadCollectionVisibility = async (
+  client: Db,
+  collectionId: string,
+): Promise<Visibility | null> => {
   const [row] = await client
     .select({ visibility: collections.visibility })
     .from(collections)
     .where(eq(collections.id, collectionId))
     .limit(1)
     .all();
-  if (!row) throw new Error('collection not found');
-  return row.visibility;
+  return row?.visibility ?? null;
+};
+
+const confirmationAlreadyClaimed = async (client: Db, planId: string): Promise<boolean> => {
+  const [claim] = await client
+    .select({ planId: planConfirmationClaims.planId })
+    .from(planConfirmationClaims)
+    .where(eq(planConfirmationClaims.planId, planId))
+    .limit(1)
+    .all();
+  return claim !== undefined;
 };
 
 const nextPosition = async (client: Db, collectionId: string): Promise<number> => {

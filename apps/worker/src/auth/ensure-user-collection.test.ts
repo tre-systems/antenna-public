@@ -7,8 +7,7 @@ import { ensureUserCollection, SEED_TEMPLATE_COLLECTION_ID } from './ensure-user
 
 type Drizzle = BetterSQLite3Database<typeof schema>;
 
-// Prompts are compared by parsed host, not substring: "tbench.ai.example.com"
-// contains the string but is a different source.
+// Host checks must not confuse suffixes with the canonical source.
 const promptHostnames = (prompts: readonly string[]): string[] =>
   prompts.flatMap((prompt) => {
     try {
@@ -65,8 +64,6 @@ const setup = (): Drizzle => {
   return drizzle(sqlite, { schema });
 };
 
-// The helper takes the drizzle client directly (it is called from a Better Auth
-// hook that already has one), so the test client is handed in cast.
 const provision = (db: Drizzle, userId: string, binding?: D1Database): Promise<void> =>
   ensureUserCollection(
     db as unknown as Parameters<typeof ensureUserCollection>[0],
@@ -143,8 +140,7 @@ describe('ensureUserCollection', () => {
       .from(schema.signals)
       .where(eq(schema.signals.collectionId, memberDashId))
       .all();
-    // Cloned with fresh ids but the same templates / configs / refresh /
-    // positions so the second user lands on the same layout as the demo.
+    // Clone the starter layout with fresh identifiers.
     expect(memberSignals).toHaveLength(2);
     expect(memberSignals.map((b) => b.templateId).sort()).toEqual(['crypto-watchlist', 'fx-pair']);
     expect(

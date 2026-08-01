@@ -147,4 +147,47 @@ describe('cloudflareFleetCardData', () => {
     expect(data?.currentWindowRequests).toBe(0);
     expect(data?.previousWindowRequests).toBeNull();
   });
+
+  it('ignores fleet points on a card scoped to one Worker', () => {
+    const scopedDay: DataPoint = {
+      ...dayPoint('2026-07-10', 80),
+      dimensions: {
+        ...dayPoint('2026-07-10', 80).dimensions,
+        script: 'sample-worker',
+      },
+    };
+    const scopedWindow = (window: 'current' | 'previous', value: number): DataPoint => ({
+      dimensions: {
+        source: 'cloudflare-analytics',
+        kind: 'fleet-window',
+        window,
+        script: 'sample-worker',
+        errors: '0',
+        error_rate_ppm: '0',
+      },
+      value,
+      unit: 'requests',
+      ts: TODAY,
+    });
+    const data = cloudflareFleetCardData({
+      ...baseSignal,
+      config: { ...baseSignal.config, script: 'sample-worker' },
+      points: [
+        ...baseSignal.points,
+        scopedDay,
+        workerPoint('sample-worker', 75, 0),
+        scopedWindow('current', 75),
+        scopedWindow('previous', 50),
+      ],
+    });
+
+    expect(data).toMatchObject({
+      totalRequests: 80,
+      workerCount: 1,
+      workers: [{ script: 'sample-worker', requests: 75, errors: 0 }],
+      currentWindowRequests: 75,
+      previousWindowRequests: 50,
+      requestChangePercent: 50,
+    });
+  });
 });

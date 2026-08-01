@@ -12,7 +12,6 @@ type CollectionToolbarProps = {
   readonly collection: CollectionRecord | null;
   readonly selectedCollectionId: string | null;
   readonly signingOut: boolean;
-  readonly onAddSignal: () => void;
   readonly onCreateCollection: () => void;
   readonly onPresent: () => void;
   readonly onSaveTitle: (next: string) => Promise<void>;
@@ -25,7 +24,6 @@ export function CollectionToolbar({
   collection,
   selectedCollectionId,
   signingOut,
-  onAddSignal,
   onCreateCollection,
   onPresent,
   onSaveTitle,
@@ -48,7 +46,6 @@ export function CollectionToolbar({
             onChange={onSaveVisibility}
           />
         ) : null}
-        <AddSignalButton onAddSignal={onAddSignal} />
         <PresentButton onPresent={onPresent} />
         <InstallPrompt />
         <ProfileMenu user={user} signingOut={signingOut} onSignOut={onSignOut} />
@@ -56,22 +53,6 @@ export function CollectionToolbar({
     </header>
   );
 }
-
-const AddSignalButton = ({ onAddSignal }: { readonly onAddSignal: () => void }) => (
-  <button
-    type="button"
-    onClick={onAddSignal}
-    class="antenna-primary inline-flex items-center justify-center gap-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition min-[780px]:gap-1.5"
-    data-testid="signal-composer-open"
-    aria-label="Add signal"
-    title="Add a signal"
-  >
-    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="h-3.5 w-3.5">
-      <path d="M8 1.5l1.4 3.7L13 6.5l-3.6 1.3L8 11.5 6.6 7.8 3 6.5l3.6-1.3L8 1.5zM12.5 10l.7 1.8L15 12.5l-1.8.7-.7 1.8-.7-1.8L10 12.5l1.8-.7.7-1.8z" />
-    </svg>
-    <span class="hidden min-[780px]:inline">Add signal</span>
-  </button>
-);
 
 const PresentButton = ({ onPresent }: { readonly onPresent: () => void }) => (
   <button

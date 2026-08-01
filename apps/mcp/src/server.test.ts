@@ -38,6 +38,7 @@ describe('createAntennaMcpServer', () => {
     const resource = await client.readResource({ uri: 'collection://current' });
     const signalResource = await client.readResource({ uri: 'signals://signal-1' });
     const prompt = await client.getPrompt({ name: 'morning_brief', arguments: {} });
+    const appPrompt = await client.getPrompt({ name: 'app_brief', arguments: {} });
     const refreshResult = await client.callTool({
       name: 'refresh_signal',
       arguments: { signalId: 'signal-1' },
@@ -56,7 +57,11 @@ describe('createAntennaMcpServer', () => {
     });
     const proposeResult = await client.callTool({
       name: 'propose_signal',
-      arguments: { prompt: 'track CHF/USD' },
+      arguments: { prompt: 'track CHF/USD', collectionId: 'collection-1' },
+    });
+    const proposeTemplateResult = await client.callTool({
+      name: 'propose_template_signal',
+      arguments: { templateId: 'weather', collectionId: 'collection-1' },
     });
     const rejectResult = await client.callTool({
       name: 'reject_plan',
@@ -77,6 +82,7 @@ describe('createAntennaMcpServer', () => {
       'list_signals',
       'list_templates',
       'propose_signal',
+      'propose_template_signal',
       'refresh_signal',
       'reject_plan',
       'remove_signal',
@@ -87,19 +93,24 @@ describe('createAntennaMcpServer', () => {
     expect(resourceTemplates.resourceTemplates.map((resource) => resource.uriTemplate)).toEqual([
       'signals://{signal_id}',
     ]);
-    expect(prompts.prompts.map((item) => item.name)).toEqual(['morning_brief']);
+    expect(prompts.prompts.map((item) => item.name).sort()).toEqual(['app_brief', 'morning_brief']);
     expect(JSON.stringify(result)).toContain('GitHub Trending');
+    expect(JSON.stringify(result)).toContain('second');
+    expect(JSON.stringify(result)).toContain('point_count');
     expect(JSON.stringify(collectionsResult)).toContain('Antenna');
     expect(JSON.stringify(collectionResult)).toContain('GitHub Trending');
     expect(JSON.stringify(signalResult)).toContain('signal-1');
     expect(JSON.stringify(resource)).toContain('GitHub Trending');
     expect(JSON.stringify(signalResource)).toContain('signal-1');
     expect(JSON.stringify(prompt)).toContain('list_collections first');
+    expect(JSON.stringify(appPrompt)).toContain('instrumentation gap');
+    expect(JSON.stringify(appPrompt)).toContain('never report it as user growth');
     expect(JSON.stringify(refreshResult)).toContain('requested');
     expect(JSON.stringify(updateResult)).toContain('cleared_points');
     expect(JSON.stringify(removeResult)).toContain('deleted');
     expect(JSON.stringify(reorderResult)).toContain('ordered_signal_ids');
     expect(JSON.stringify(proposeResult)).toContain('plan-1');
+    expect(JSON.stringify(proposeTemplateResult)).toContain('plan-1');
     expect(JSON.stringify(rejectResult)).toContain('ok');
     expect(JSON.stringify(confirmResult)).toContain('signal-2');
     expect(fetches).toEqual([
@@ -113,6 +124,7 @@ describe('createAntennaMcpServer', () => {
       'PATCH https://collection.example/api/signals/signal-1',
       'DELETE https://collection.example/api/signals/signal-1',
       'PATCH https://collection.example/api/collections/collection-1/signals/order',
+      'POST https://collection.example/api/plan',
       'POST https://collection.example/api/plan',
       'POST https://collection.example/api/plan/plan-1/reject',
       'POST https://collection.example/api/plan/plan-1/confirm',

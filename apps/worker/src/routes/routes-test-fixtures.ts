@@ -1,11 +1,4 @@
-// Shared scaffolding for the route tests: an in-memory sqlite database stands
-// in for D1. Not a test file (no .test.ts suffix) so vitest ignores it.
-//
-// Used from a test file as:
-//   vi.mock('../db/client', async () => (await import('./routes-test-fixtures')).inMemoryDbClient());
-//
-// The DDL is the union of every table the route tests touch and mirrors the
-// drizzle migrations. Tables a given suite never seeds simply stay empty.
+// Keep this in-memory route-test DDL aligned with the Worker migrations.
 
 import Database from 'better-sqlite3';
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
@@ -172,8 +165,7 @@ const SCHEMA_DDL = `
   );
 `;
 
-// The `DB` binding carries the raw sqlite handle that the `../db/client` mock in
-// each test file unwraps, so route code under test talks to this database.
+// Expose the SQLite handle through the mocked D1 binding.
 export const setupRoutesDb = (): { db: Drizzle; env: { DB: D1Database } } => {
   const sqlite = new Database(':memory:');
   sqlite.exec(SCHEMA_DDL);

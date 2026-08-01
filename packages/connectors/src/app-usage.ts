@@ -1,9 +1,10 @@
 import { ACCOUNT_ID_RX, analyticsSqlUrl, SLUG_RX } from './analytics-engine';
+import { boundedInt } from './config-values';
+import { discardResponse } from './discard-response';
 import { errorMessage } from './error-message';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 
-// Events are written by the Antenna beacon route or by Cloudflare-hosted apps
-// directly (docs/USAGE_RADAR.md).
+// Events come from the Antenna beacon or direct Analytics Engine writes.
 
 type AppUsageConfig = {
   readonly project: string;
@@ -28,7 +29,7 @@ export const appUsage: Adapter<AppUsageConfig> = async (config): Promise<Adapter
   const accountId = config.accountId.trim();
   const apiToken = config.apiToken.trim();
   const dataset = (config.dataset ?? DEFAULT_DATASET).trim();
-  const days = normaliseDays(config.days);
+  const days = boundedInt(config.days, DEFAULT_DAYS, 1, MAX_DAYS);
 
   if (!SLUG_RX.test(project)) {
     return { ok: false, error: { code: 'parse_failed', message: 'invalid project slug' } };
@@ -43,8 +44,7 @@ export const appUsage: Adapter<AppUsageConfig> = async (config): Promise<Adapter
     return { ok: false, error: { code: 'unauthorized', message: 'missing analytics API token' } };
   }
 
-  // _sample_interval weights each stored row by the sampling rate Analytics
-  // Engine applied, so SUM(_sample_interval * double1) is the true event count.
+  // The sample interval recovers true event counts from sampled rows.
   const sql = [
     `SELECT toStartOfInterval(timestamp, INTERVAL '1' DAY) AS day,`,
     `blob1 AS event,`,
@@ -69,15 +69,18 @@ export const appUsage: Adapter<AppUsageConfig> = async (config): Promise<Adapter
   }
 
   if (response.status === 401 || response.status === 403) {
+    await discardResponse(response);
     return {
       ok: false,
       error: { code: 'unauthorized', message: `analytics SQL API HTTP ${response.status}` },
     };
   }
   if (response.status === 429) {
+    await discardResponse(response);
     return { ok: false, error: { code: 'rate_limited', message: 'analytics SQL API rate limit' } };
   }
   if (!response.ok) {
+    await discardResponse(response);
     return { ok: false, error: { code: 'fetch_failed', message: `HTTP ${response.status}` } };
   }
 
@@ -97,8 +100,7 @@ export const appUsage: Adapter<AppUsageConfig> = async (config): Promise<Adapter
     .map((row) => toPoint(row, project))
     .filter((point): point is DataPoint => point !== undefined);
 
-  // Zero events over the window is a real answer for a quiet app, not an
-  // error: emit one zero point so the signal stays live instead of stale.
+  // A zero point keeps a quiet app live rather than stale.
   if (points.length === 0) {
     points.push({
       dimensions: { source: 'app-usage', project, event: 'total', day: today() },
@@ -109,11 +111,6 @@ export const appUsage: Adapter<AppUsageConfig> = async (config): Promise<Adapter
   }
 
   return { ok: true, points, rawPayload: { project, dataset, days, rows } };
-};
-
-const normaliseDays = (value: unknown): number => {
-  if (typeof value !== 'number' || !Number.isFinite(value)) return DEFAULT_DAYS;
-  return Math.min(MAX_DAYS, Math.max(1, Math.trunc(value)));
 };
 
 const readRows = (payload: unknown): SqlRow[] | undefined => {

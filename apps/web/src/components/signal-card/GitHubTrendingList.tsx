@@ -1,4 +1,4 @@
-import type { GithubTrendingRow } from '../../signalFormat';
+import type { GithubTrendingRow } from '../../signal-format';
 
 export function GitHubTrendingList({ rows }: { readonly rows: ReadonlyArray<GithubTrendingRow> }) {
   return (

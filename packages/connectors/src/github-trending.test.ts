@@ -103,8 +103,7 @@ describe('githubTrending', () => {
       { source: 'github-trending', rank: 2 },
     ]);
     expect(result.points[0]?.value).toBe('owner-one/repo-one · TypeScript · +789 stars today');
-    // Points carry no sourceUrl; the registry derives the per-repo URL from the
-    // value text so the signal-level source stays the trending list.
+    // Omitting point URLs keeps the signal-level source on the trending list.
     expect(result.points[0]?.sourceUrl).toBeUndefined();
     expect(result.rawPayload).toMatchObject({
       since: 'daily',

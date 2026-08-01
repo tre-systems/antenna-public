@@ -42,47 +42,12 @@ export const collectionTemplates = [
     ],
   },
   {
-    id: 'problem-radar',
-    label: 'Problem Radar',
-    description:
-      'Problem-shaped posts from subreddits where people describe unmet needs, ranked for follow-up.',
-    summary: 'Business operations, spreadsheet, bookkeeping, and developer tooling pain points.',
-    // Mismatched refresh intervals on purpose: Reddit meters anonymous access per
-    // source IP, so equal intervals would keep these signals in lockstep and the
-    // same two would lose the rate-limit race on every tick.
-    signals: [
-      {
-        templateId: 'reddit-problems',
-        title: 'Small business problems',
-        config: { subreddits: ['smallbusiness'], lookbackHours: 24, limit: 5 },
-        refreshSeconds: 21_600,
-      },
-      {
-        templateId: 'reddit-problems',
-        title: 'Spreadsheet problems',
-        config: { subreddits: ['excel'], lookbackHours: 24, limit: 5 },
-        refreshSeconds: 22_500,
-      },
-      {
-        templateId: 'reddit-problems',
-        title: 'Bookkeeping problems',
-        config: { subreddits: ['bookkeeping'], lookbackHours: 48, limit: 5 },
-        refreshSeconds: 23_700,
-      },
-      {
-        templateId: 'reddit-problems',
-        title: 'Developer tooling problems',
-        config: { subreddits: ['webdev'], lookbackHours: 24, limit: 5 },
-        refreshSeconds: 25_200,
-      },
-    ],
-  },
-  {
     id: 'trader-morning',
     label: 'Trader Morning',
     description:
       'A high-level market pulse for rates, currency, commodities, crypto, and equities.',
-    summary: 'Market overview, GBP/USD, gold, crude oil, Bitcoin history, and broad US ETFs.',
+    summary:
+      'Market overview, GBP/USD, gold, crude oil, Bitcoin history, and separate broad US ETF charts.',
     signals: [
       { templateId: 'market-overview', title: 'Market overview', config: {} },
       {
@@ -93,11 +58,9 @@ export const collectionTemplates = [
       { templateId: 'macro-market-history', title: 'Gold', config: { preset: 'gold' } },
       { templateId: 'macro-market-history', title: 'Crude oil', config: { preset: 'crude-oil' } },
       { templateId: 'crypto-history', title: 'Bitcoin history', config: { pairs: 'BTC-USD' } },
-      {
-        templateId: 'equity-watchlist',
-        title: 'US ETF watchlist',
-        config: { tickers: 'VTI.US,SPY.US,QQQ.US' },
-      },
+      { templateId: 'market-history', title: 'VTI yearly chart', config: { symbol: 'VTI' } },
+      { templateId: 'market-history', title: 'SPY yearly chart', config: { symbol: 'SPY' } },
+      { templateId: 'market-history', title: 'QQQ yearly chart', config: { symbol: 'QQQ' } },
     ],
   },
   {
@@ -122,16 +85,14 @@ export const collectionTemplates = [
     label: 'Investor Watchlist',
     description:
       'A compact private investing collection for broad markets and personal watchlists.',
-    summary: 'Market overview, yearly equity and crypto charts, broad ETFs, GBP/USD, and gold.',
+    summary:
+      'Market overview, separate yearly equity and crypto charts, broad ETFs, GBP/USD, and gold.',
     signals: [
       { templateId: 'market-overview', title: 'Market overview', config: {} },
       { templateId: 'market-history', title: 'VTI yearly chart', config: { symbol: 'VTI' } },
       { templateId: 'crypto-history', title: 'Bitcoin history', config: { pairs: 'BTC-USD' } },
-      {
-        templateId: 'equity-watchlist',
-        title: 'US ETF watchlist',
-        config: { tickers: 'VTI.US,SPY.US,QQQ.US' },
-      },
+      { templateId: 'market-history', title: 'SPY yearly chart', config: { symbol: 'SPY' } },
+      { templateId: 'market-history', title: 'QQQ yearly chart', config: { symbol: 'QQQ' } },
       {
         templateId: 'macro-market-history',
         title: 'GBP/USD',

@@ -1,5 +1,4 @@
-// Shared scaffolding for the collection.*.test.ts files (the single-collection
-// route). Not a test file (no .test.ts suffix) so vitest ignores it.
+// Provide shared scaffolding for single-collection route tests.
 
 import { Hono } from 'hono';
 import * as schema from '../db/schema';

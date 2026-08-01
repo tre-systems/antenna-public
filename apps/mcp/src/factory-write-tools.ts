@@ -1,10 +1,11 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { AntennaReadClient } from './client.js';
+import type { AntennaClient } from './client.js';
 import { jsonToolResult } from './factory-results.js';
 import {
   confirmPlanTool,
   proposeSignalTool,
+  proposeTemplateSignalTool,
   refreshSignalTool,
   rejectPlanTool,
   removeSignalTool,
@@ -12,7 +13,7 @@ import {
   updateSignalTool,
 } from './tools.js';
 
-export function registerWriteTools(server: McpServer, client: AntennaReadClient): void {
+export function registerWriteTools(server: McpServer, client: AntennaClient): void {
   server.registerTool(
     'refresh_signal',
     {
@@ -37,7 +38,7 @@ export function registerWriteTools(server: McpServer, client: AntennaReadClient)
         config: z
           .record(z.string(), z.unknown())
           .optional()
-          .describe('Shallow config patch merged into the current signal config.'),
+          .describe('Shallow config patch; null removes an optional config key.'),
         refreshSeconds: z
           .number()
           .int()
@@ -97,9 +98,35 @@ export function registerWriteTools(server: McpServer, client: AntennaReadClient)
         'Submit a natural-language Ask Antenna prompt and return the proposed plan. This does not confirm or create signals.',
       inputSchema: {
         prompt: z.string().min(1).max(2000).describe('Natural-language collection request.'),
+        collectionId: z
+          .string()
+          .min(1)
+          .optional()
+          .describe('Optional target collection id returned by list_collections.'),
       },
     },
     async (input) => jsonToolResult(await proposeSignalTool(client, input)),
+  );
+
+  server.registerTool(
+    'propose_template_signal',
+    {
+      title: 'Propose signal from connector template',
+      description:
+        'Create a proposal for an exact registered connector template, optionally targeting a collection. Use list_templates first and require direct_proposal_enabled. This does not confirm or create the signal; missing config values are supplied only during approved confirmation.',
+      inputSchema: {
+        templateId: z
+          .string()
+          .min(1)
+          .describe('Registered template id returned by list_templates.'),
+        collectionId: z
+          .string()
+          .min(1)
+          .optional()
+          .describe('Optional target collection id returned by list_collections.'),
+      },
+    },
+    async (input) => jsonToolResult(await proposeTemplateSignalTool(client, input)),
   );
 
   server.registerTool(

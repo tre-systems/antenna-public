@@ -78,8 +78,7 @@ const yahooPointForTicker = async (ticker: string): Promise<YahooPointResult> =>
   };
 };
 
-// Stooq CSV: Symbol,Date,Time,Open,High,Low,Close,Volume. We only consume Close;
-// rows where Stooq has no data come back as "N/D" and are skipped.
+// Stooq's fixed CSV shape uses "N/D" for missing closes.
 const parseCsv = (csv: string): DataPoint[] => {
   const lines = csv
     .split('\n')
@@ -113,8 +112,7 @@ const rowToPoint = (row: string[]): DataPoint | null => {
   };
 };
 
-// Stooq encodes the exchange in the ticker suffix; mapping the common ones
-// keeps values from rendering as bare numbers.
+// Map common ticker suffixes so prices do not render as bare numbers.
 const TICKER_CURRENCY: Record<string, string> = {
   UK: 'GBP',
   L: 'GBP',

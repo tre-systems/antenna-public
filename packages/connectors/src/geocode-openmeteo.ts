@@ -1,5 +1,6 @@
-// Every failure mode collapses to `null` so callers can fall back to manual
-// lat/lon entry uniformly.
+// A single null result lets callers fall back uniformly to manual coordinates.
+import { discardResponse } from './discard-response';
+
 export type GeocodeHit = {
   readonly lat: number;
   readonly lon: number;
@@ -25,7 +26,10 @@ export const geocode = async (name: string): Promise<GeocodeHit | null> => {
   } catch {
     return null;
   }
-  if (!response.ok) return null;
+  if (!response.ok) {
+    await discardResponse(response);
+    return null;
+  }
 
   let body: unknown;
   try {

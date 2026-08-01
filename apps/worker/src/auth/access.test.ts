@@ -1,8 +1,3 @@
-// One access model serves a hosted instance and a self-hosted one, so the
-// interaction between the two lists is what needs pinning: an unset allowlist
-// means open sign-up, a set one closes it, and the block list wins over both.
-// middleware.test.ts covers the per-request path.
-
 import Database from 'better-sqlite3';
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { describe, expect, it } from 'vitest';

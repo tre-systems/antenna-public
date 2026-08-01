@@ -7,6 +7,8 @@ import {
   type ApiSignal,
 } from '../api';
 import { readSignalSnapshot, snapshotKey, writeSignalSnapshot } from './signal-snapshot';
+import { dismissNotice } from './notice';
+import { resetPlanState } from './plan';
 
 export { reorderForDrop } from './signal-order';
 export { dismissNotice, notice, showNotice } from './notice';
@@ -52,43 +54,67 @@ export const UNDO_WINDOW_MS = 5000;
 
 export function setSignalSnapshotOwner(ownerId: string | null): void {
   if (activeSnapshotOwnerId.value === ownerId) return;
+  resetOwnerState();
   activeSnapshotOwnerId.value = ownerId;
   signals.value = null;
   lastFetchedAt.value = null;
   currentSnapshotKey = null;
 }
 
+function resetOwnerState(): void {
+  const pending = pendingRemoval.value;
+  if (pending) clearTimeout(pending.timeoutId);
+  pendingRemoval.value = null;
+  deletingIds.value = new Set();
+  draggingSignalId.value = null;
+  settingsSignalId.value = null;
+  fetchError.value = null;
+  isOffline.value = false;
+  dismissNotice();
+  resetPlanState();
+}
+
 export async function loadSignals(
   collectionId: string | null = activeCollectionId.value,
   ownerId: string | null = activeSnapshotOwnerId.value,
 ): Promise<void> {
+  const activeCollectionAtStart = activeCollectionId.value;
   hydrateSnapshotForScope(ownerId, collectionId);
   try {
     const next = await getSignals(collectionId ?? undefined);
+    if (!isActiveScope(ownerId, activeCollectionAtStart)) return;
     setSignalsFromFreshFetch(next, ownerId, collectionId);
   } catch (err) {
-    handleSignalsFetchError(err);
+    if (isActiveScope(ownerId, activeCollectionAtStart)) handleSignalsFetchError(err);
   }
 }
 
 export async function loadSignalsById(signalIds: readonly string[]): Promise<void> {
   if (signalIds.length === 0) return;
+  const ownerId = activeSnapshotOwnerId.value;
+  const collectionId = activeCollectionId.value;
   if (signals.value === null) {
-    await loadSignals();
+    await loadSignals(collectionId, ownerId);
     return;
   }
   try {
     const fresh = await Promise.all(signalIds.map((id) => getSignal(id)));
-    const byId = new Map(signals.value.map((item) => [item.id, item]));
+    const current = signalsForScope(ownerId, collectionId);
+    if (current === null) return;
+    const byId = new Map(current.map((item) => [item.id, item]));
     for (const item of fresh) byId.set(item.id, item);
-    setSignalsFromFreshFetch(
-      [...byId.values()],
-      activeSnapshotOwnerId.value,
-      activeCollectionId.value,
-    );
+    setSignalsFromFreshFetch([...byId.values()], ownerId, collectionId);
   } catch {
-    await loadSignals();
+    if (isActiveScope(ownerId, collectionId)) await loadSignals(collectionId, ownerId);
   }
+}
+
+function isActiveScope(ownerId: string | null, collectionId: string | null): boolean {
+  return activeSnapshotOwnerId.value === ownerId && activeCollectionId.value === collectionId;
+}
+
+function signalsForScope(ownerId: string | null, collectionId: string | null): ApiSignal[] | null {
+  return isActiveScope(ownerId, collectionId) ? signals.value : null;
 }
 
 function setSignalsFromFreshFetch(
@@ -155,8 +181,7 @@ export function undoRemoval(): void {
 async function commitRemoval(signalId: string): Promise<void> {
   const pending = pendingRemoval.value;
   if (!pending || pending.signal.id !== signalId) return;
-  // Hide via deletingIds before dropping the undo state so the card never
-  // reappears in the gap while the DELETE round-trip runs.
+  // Preserve hiding between the undo state and the DELETE response.
   markDeleting(signalId);
   pendingRemoval.value = null;
   await runDelete(signalId);
@@ -175,6 +200,8 @@ function unmarkDeleting(signalId: string): void {
 }
 
 async function runDelete(signalId: string): Promise<void> {
+  const ownerId = activeSnapshotOwnerId.value;
+  const collectionId = activeCollectionId.value;
   markDeleting(signalId);
   try {
     await deleteSignal(signalId);
@@ -182,7 +209,7 @@ async function runDelete(signalId: string): Promise<void> {
     // The refetch below restores the server's truth either way.
   }
   try {
-    await loadSignals();
+    if (isActiveScope(ownerId, collectionId)) await loadSignals(collectionId, ownerId);
   } finally {
     unmarkDeleting(signalId);
   }
@@ -193,14 +220,17 @@ export async function applyReorder(
   nextOrder: readonly ApiSignal[],
   rollbackTo: readonly ApiSignal[] | null = signals.value,
 ): Promise<void> {
+  const ownerId = activeSnapshotOwnerId.value;
+  const collectionId = activeCollectionId.value;
   signals.value = [...nextOrder];
   try {
     await reorderSignalsApi(
       nextOrder.map((item) => item.id),
-      activeCollectionId.value ?? undefined,
+      collectionId ?? undefined,
     );
-    await loadSignals();
+    if (isActiveScope(ownerId, collectionId)) await loadSignals(collectionId, ownerId);
   } catch (err) {
+    if (!isActiveScope(ownerId, collectionId)) return;
     signals.value = rollbackTo === null ? null : [...rollbackTo];
     fetchError.value = err instanceof Error ? err.message : 'Could not save the new order.';
   }

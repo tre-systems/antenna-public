@@ -119,7 +119,7 @@ describe('compactRowsCardData', () => {
     expect(compactRowsCardData(makeSignal({ template_id: 'weather' }))).toBeNull();
   });
 
-  it('summarises product activity across the configured project portfolio', () => {
+  it('orders project activity by event count and summarises the portfolio', () => {
     const signal = makeSignal({
       template_id: 'project-portfolio',
       points: [
@@ -127,19 +127,7 @@ describe('compactRowsCardData', () => {
           dimensions: {
             metric: 'project_activity',
             rank: 1,
-            project: 'tre-website',
-            previous: 5,
-            change: 100,
-            top_event: 'page_view',
-          },
-          value: 10,
-          unit: 'events',
-        },
-        {
-          dimensions: {
-            metric: 'project_activity',
-            rank: 2,
-            project: 'gamma-station',
+            project: 'second-app',
             previous: 0,
             change: 0,
             top_event: '',
@@ -147,15 +135,102 @@ describe('compactRowsCardData', () => {
           value: 0,
           unit: 'events',
         },
+        {
+          dimensions: {
+            metric: 'project_activity',
+            rank: 2,
+            project: 'example-app',
+            previous: 5,
+            change: 100,
+            top_event: 'page_view',
+          },
+          value: 10,
+          unit: 'events',
+        },
       ],
     });
     const out = compactRowsCardData(signal);
     expect(out?.summary).toBe('10 product events · 1/2 active');
     expect(out?.rows[0]).toMatchObject({
-      title: 'TRE Website',
+      title: 'Example App',
       subtitle: '+100% vs prior · page view',
       chip: '10 events',
     });
-    expect(out?.rows[1]).toMatchObject({ title: 'Gamma Station', subtitle: 'quiet' });
+    expect(out?.rows[1]).toMatchObject({ title: 'Second App', subtitle: 'quiet' });
+  });
+
+  it('renders app health failures and real-browser telemetry gaps explicitly', () => {
+    const health = compactRowsCardData(
+      makeSignal({
+        template_id: 'app-health',
+        points: [
+          {
+            dimensions: {
+              metric: 'app_health',
+              rank: 1,
+              project: 'down-app',
+              state: 'down',
+              http_status: 503,
+              latency_ms: 240,
+            },
+            value: 0,
+            source_url: 'https://down.example/health',
+          },
+          {
+            dimensions: {
+              metric: 'app_health',
+              rank: 2,
+              project: 'acto',
+              state: 'healthy',
+              http_status: 200,
+              latency_ms: 42,
+            },
+            value: 1,
+          },
+        ],
+      }),
+    );
+    expect(health?.summary).toBe('1 down');
+    expect(health?.rows[0]).toMatchObject({
+      title: 'Down App',
+      subtitle: 'HTTP 503 · 240 ms',
+      chip: 'down',
+      chipTone: 'urgent',
+    });
+
+    const visits = compactRowsCardData(
+      makeSignal({
+        template_id: 'cloudflare-web-analytics',
+        points: [
+          {
+            dimensions: {
+              metric: 'host_traffic',
+              rank: 1,
+              host: 'example.com',
+              previous: 50,
+              change: 20,
+              telemetry_state: 'active',
+            },
+            value: 60,
+          },
+          {
+            dimensions: {
+              metric: 'host_traffic',
+              rank: 2,
+              host: 'missing.example',
+              previous: 0,
+              change: 0,
+              telemetry_state: 'unseen',
+            },
+            value: 0,
+          },
+        ],
+      }),
+    );
+    expect(visits?.summary).toBe('60 visits · 1/2 active · 1 unseen');
+    expect(visits?.rows[1]).toMatchObject({
+      subtitle: 'telemetry unseen',
+      chipTone: 'warn',
+    });
   });
 });

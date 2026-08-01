@@ -1,4 +1,5 @@
 import { browserRequestInit } from './browser-request';
+import { discardResponse } from './discard-response';
 import { errorMessage } from './error-message';
 import type { AdapterResult } from './types';
 
@@ -42,6 +43,7 @@ const fetchStooqHost = async (
   }
 
   if (!response.ok) {
+    await discardResponse(response);
     return { ok: false, error: { code: 'fetch_failed', message: `HTTP ${response.status}` } };
   }
 

@@ -2,8 +2,6 @@ import { Hono } from 'hono';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import type { AuthVars, MiddlewareEnv } from './middleware';
 
-// `./index` and `./ensure-user-collection` are stubbed so the middleware test
-// needs neither Better Auth's runtime initialisation nor a database.
 const mockGetSession = vi.fn();
 const mockEnsureUserCollection = vi.fn();
 const mockAuthenticateBearer = vi.fn();
@@ -23,8 +21,7 @@ vi.mock('./mcp-token', () => ({
   },
 }));
 
-// Import the middleware *after* the mock is registered so that the bound
-// reference inside the module uses our mocked createAuth.
+// Import after mocking so the module binds the fake auth factory.
 const { requireUser } = await import('./middleware');
 
 type TestEnv = MiddlewareEnv;
@@ -89,8 +86,7 @@ describe('auth/middleware', () => {
     });
   });
 
-  // Blocking is enforced per request, so it cuts off a live cookie session
-  // rather than waiting for the next sign-in.
+  // Blocking must cut off an existing cookie session immediately.
   it('revokes an existing session when its email is blocked', async () => {
     mockGetSession.mockResolvedValueOnce({
       user: { id: 'u1', email: 'blocked@example.com', name: 'Blocked' },

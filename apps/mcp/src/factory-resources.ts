@@ -1,9 +1,9 @@
 import { ResourceTemplate, type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { AntennaReadClient } from './client.js';
+import type { AntennaClient } from './client.js';
 import { stringVariable } from './factory-results.js';
 import { getSignalTool, listSignalsTool } from './tools.js';
 
-export function registerResources(server: McpServer, client: AntennaReadClient): void {
+export function registerResources(server: McpServer, client: AntennaClient): void {
   server.registerResource(
     'current_collection',
     'collection://current',

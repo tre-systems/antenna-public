@@ -4,7 +4,7 @@ import { appUsage } from './app-usage';
 const ACCOUNT_ID = 'a'.repeat(32);
 
 const baseConfig = {
-  project: 'swade-toolbox',
+  project: 'sample-app',
   accountId: ACCOUNT_ID,
   apiToken: 'cf-analytics-token',
 };
@@ -42,7 +42,7 @@ describe('appUsage', () => {
     expect(result.points[0]).toEqual({
       dimensions: {
         source: 'app-usage',
-        project: 'swade-toolbox',
+        project: 'sample-app',
         event: 'character_created',
         day: '2026-07-10',
       },
@@ -56,7 +56,7 @@ describe('appUsage', () => {
       `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/analytics_engine/sql`,
     );
     expect(init.headers).toEqual({ Authorization: 'Bearer cf-analytics-token' });
-    expect(init.body).toContain("index1 = 'swade-toolbox'");
+    expect(init.body).toContain("index1 = 'sample-app'");
     expect(init.body).toContain('SUM(_sample_interval * double1)');
     expect(init.body).toContain("INTERVAL '14' DAY");
   });

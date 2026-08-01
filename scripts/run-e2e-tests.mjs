@@ -11,10 +11,7 @@ const npxCommand = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 // Must match the port in playwright.config.ts.
 const E2E_PORT = 8787;
 
-// A wrangler dev left over from an earlier run answers /healthz but is bound to
-// a different D1, so the suite would fail every API call for reasons that look
-// nothing like the real cause. Catch it before Playwright starts and say what
-// to do about it.
+// Reject a leftover worker because it may use a different D1.
 function portInUse(port) {
   return new Promise((resolve) => {
     const probe = createServer();

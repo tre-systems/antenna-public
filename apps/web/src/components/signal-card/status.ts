@@ -1,4 +1,4 @@
-import type { DerivedStatus } from '../../signalStatus';
+import type { DerivedStatus } from '../../signal-status';
 import type { CardStatus } from './types';
 
 const SETUP_REQUIRED_PREFIX = 'setup_required:';

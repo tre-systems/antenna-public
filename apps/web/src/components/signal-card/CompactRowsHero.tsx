@@ -1,4 +1,4 @@
-import type { CompactRow, CompactRowsCardData } from '../../signalFormat';
+import type { CompactRow, CompactRowsCardData } from '../../signal-format';
 
 const CHIP_TONES: Record<CompactRow['chipTone'], string> = {
   urgent: 'bg-rose-500/10 text-rose-600 ring-rose-500/20 dark:text-rose-300',

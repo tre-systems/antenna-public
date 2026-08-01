@@ -1,7 +1,6 @@
 import type { Adapter, AdapterResult, DataPoint } from './types';
 
-// The Worker reads these counts from D1 and hands them in already aggregated,
-// so this adapter stays pure like every other connector.
+// The Worker supplies only aggregate D1 counts so this adapter remains pure.
 export type AntennaUsersConfig = {
   readonly total_users?: number;
   readonly new_users_24h?: number;

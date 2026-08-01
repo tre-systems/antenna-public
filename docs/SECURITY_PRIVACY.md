@@ -15,7 +15,7 @@
 | Data                   | Location                | Protection                                          |
 | ---------------------- | ----------------------- | --------------------------------------------------- |
 | Session tokens         | D1                      | opaque values, owner-scoped auth checks             |
-| Google provider tokens | not retained            | discarded before account persistence                |
+| Google provider tokens | D1 `account`            | AES-GCM encrypted; unused ID token discarded        |
 | MCP personal tokens    | D1 `mcp_tokens`         | one-way SHA-256 hashes                              |
 | MCP OAuth grants       | D1 OAuth tables         | high-trust database access controls                 |
 | Connector secrets      | Worker secrets          | injected only by dispatch                           |
@@ -38,13 +38,14 @@
   deployment-wide operational data, and only aggregate counts cross that
   boundary.
 - OAuth state and PKCE are handled by Better Auth.
-- Provider access, refresh, and ID tokens are discarded before persistence.
+- Provider access and refresh tokens are encrypted before persistence; the ID
+  token and its profile claims are discarded.
 - Sign-out invalidates the current session.
 - Production pins `NODE_ENV=production`; the E2E bypass checks this value before
   accepting a synthetic principal.
 
-Operators should avoid requesting provider scopes that the deployment does not
-use and should remove stored provider tokens when no connector needs them.
+Operators should request only the identity scopes the deployment uses and keep
+the encryption key outside source control.
 
 ## Public and shared access
 
@@ -90,17 +91,17 @@ Do not log:
 
 ## Threats and controls
 
-| Threat                            | Primary controls                                      |
-| --------------------------------- | ----------------------------------------------------- |
-| Broken object-level authorization | owner predicates and route-level tests                |
-| Shared-link enumeration           | high-entropy slugs, 404 on unavailable resources      |
-| Source-policy bypass              | server-owned registry and fail-closed serializer      |
-| SSRF                              | arbitrary REST/private fetching disabled by policy    |
-| Stored credential disclosure      | Worker secrets, token minimisation/hashing, redaction |
-| Cross-site scripting              | Preact escaping and restrictive response headers      |
-| Brute force and abuse             | Durable Object rate limiting, per-account quotas      |
-| Replay or double confirmation     | atomic plan claim and idempotent writes               |
-| Supply-chain compromise           | lockfile, dependency review, pinned CI actions        |
+| Threat                            | Primary controls                                   |
+| --------------------------------- | -------------------------------------------------- |
+| Broken object-level authorization | owner predicates and route-level tests             |
+| Shared-link enumeration           | high-entropy slugs, 404 on unavailable resources   |
+| Source-policy bypass              | server-owned registry and fail-closed serializer   |
+| SSRF                              | arbitrary REST/private fetching disabled by policy |
+| Stored credential disclosure      | Worker secrets, encryption/hashing, redaction      |
+| Cross-site scripting              | Preact escaping and restrictive response headers   |
+| Brute force and abuse             | Durable Object rate limiting, per-account quotas   |
+| Replay or double confirmation     | atomic plan claim and idempotent writes            |
+| Supply-chain compromise           | lockfile, dependency review, pinned CI actions     |
 
 ## Operator checklist
 

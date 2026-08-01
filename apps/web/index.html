@@ -7,30 +7,104 @@
     <meta name="theme-color" content="#15151c" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="description"
+      content="Antenna is a personal signal-monitoring app that collects live sourced data into personal collections and connects to agents through MCP."
+    />
+    <meta name="application-name" content="Antenna" />
     <meta name="apple-mobile-web-app-title" content="Antenna" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon.svg" sizes="any" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
     <title>Antenna</title>
+    <style>
+      #static-home {
+        max-width: 42rem;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 3rem;
+        font-family: Inter, system-ui, sans-serif;
+        line-height: 1.6;
+        color: #0f172a;
+        background: #f6f7fb;
+      }
+      @media (prefers-color-scheme: dark) {
+        #static-home {
+          background: #15151c;
+          color: #e2e8f0;
+        }
+        #static-home a {
+          color: #5eead4;
+        }
+      }
+      #static-home .brand-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      #static-home h1 {
+        margin: 0;
+        font-size: 2rem;
+      }
+      #static-home h2 {
+        margin: 2rem 0 0.75rem;
+        font-size: 1.125rem;
+      }
+      #static-home p {
+        font-size: 0.95rem;
+      }
+      #static-home a {
+        color: #0f766e;
+      }
+      #static-home footer {
+        margin-top: 2.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgb(15 23 42 / 10%);
+        font-size: 0.875rem;
+      }
+      #static-home footer a {
+        margin-right: 1rem;
+      }
+    </style>
     <script>
-      // Pre-paint theme application so the first frame matches the persisted
-      // user choice (or the system preference if they've never overridden).
-      // Inline + synchronous = no FOUC.
+      // Apply the saved theme before paint.
       (function () {
         try {
           var saved = localStorage.getItem('antenna.theme');
-          var mode = saved === 'light' || saved === 'dark' ? saved : null;
           var system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          var resolved = mode || system;
-          if (resolved === 'dark') document.documentElement.classList.add('dark');
+          if ((saved === 'light' || saved === 'dark' ? saved : system) === 'dark') {
+            document.documentElement.classList.add('dark');
+          }
         } catch (_) {
-          /* localStorage unavailable — fall through to default light */
+          /* Use the default theme when storage is unavailable. */
         }
       })();
     </script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <main id="static-home">
+        <div class="brand-row">
+          <img src="/favicon.svg" alt="" width="56" height="56" aria-hidden="true" />
+          <h1>Antenna</h1>
+        </div>
+        <p><strong>Track the signals that matter.</strong></p>
+        <p id="app-purpose">
+          A personal signal-monitoring app. Collects live market, operations, and research signals
+          into an installable visual workspace with clear source attribution and freshness, while
+          MCP agents manage and use the same owner-scoped data.
+        </p>
+        <h2>How Antenna uses Google user data</h2>
+        <p>
+          Antenna uses Google Sign-In only to authenticate your account. It receives your name,
+          email address, and profile picture to identify your account and display your profile. It
+          does not request access to Google Calendar, Gmail, Drive, or other Google account data.
+        </p>
+        <footer>
+          <a href="/privacy/">Privacy Policy</a>
+          <a href="/terms/">Terms of Service</a>
+        </footer>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -2,364 +2,150 @@ digraph DataModel {
   graph [
     rankdir=TB,
     bgcolor="#ffffff",
-    pad="0.55",
+    pad="0.45",
     nodesep="0.55",
-    ranksep="0.95",
-    splines=spline,
+    ranksep="0.82",
+    splines=polyline,
     outputorder=edgesfirst,
     compound=true,
     newrank=true,
     fontname="Avenir",
     label=<
       <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
-        <TR><TD><FONT POINT-SIZE="34"><B>Data Model</B></FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="34"><B>Operational Data Relationships</B></FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="14" COLOR="#5b6b80">Focused on ownership, authoring, and ingestion—not a column-level schema copy.</FONT></TD></TR>
       </TABLE>
     >,
-    labelloc=t,
-    labeljust=c
+    labelloc=t
   ];
 
   node [
-    shape=plaintext,
+    shape=box,
+    style="rounded,filled",
+    margin="0.24,0.14",
+    width=2.75,
     fontname="Avenir",
-    fontcolor="#14213d"
+    fontsize=16,
+    penwidth=2.1,
+    fontcolor="#14213d",
+    color="#0f766e",
+    fillcolor="#e6fffb"
   ];
 
   edge [
     color="#263a59",
     fontname="Avenir",
-    fontsize=13,
+    fontsize=11,
     fontcolor="#3d4a5c",
-    penwidth=2.0,
-    arrowsize=0.85,
-    arrowhead=crow,
-    arrowtail=none,
-    dir=forward
+    penwidth=1.9,
+    arrowsize=0.72
   ];
 
-  // ---- Better Auth tables ----
-  subgraph cluster_auth {
+  subgraph cluster_identity {
     graph [
-      label=<
-        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#0f766e"><B>BETTER AUTH (D1-backed)</B></FONT></TD></TR>
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#357a74">Better Auth owns identity/session data; Antenna updates onboarding metadata on user.</FONT></TD></TR>
-        </TABLE>
-      >,
-      labelloc=t,
-      labeljust=l,
+      label=<<B>IDENTITY AND AGENT ACCESS</B>>,
       color="#99d5cf",
       fillcolor="#f0fdfa",
       style="rounded,filled",
-      penwidth=1.8,
-      margin=22
+      fontname="Avenir",
+      fontcolor="#0f766e",
+      penwidth=1.7
     ];
 
-    user [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#0f766e">
-        <TR><TD COLSPAN="2" BGCOLOR="#0f766e"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>user</B></FONT></TD></TR>
-        <TR><TD PORT="id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT PK</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">email</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT UNIQUE</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">name</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">email_verified</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">BOOLEAN</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">created_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">first_seen_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">onboarded_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER?</FONT></TD></TR>
-      </TABLE>
-    >];
+    USER [label=<<B>user</B><BR/><FONT POINT-SIZE="12">Google profile and Antenna onboarding markers</FONT>>];
+    BA [label=<<B>Better Auth records</B><BR/><FONT POINT-SIZE="12">account · session · verification</FONT>>];
+    MCP [label=<<B>MCP access records</B><BR/><FONT POINT-SIZE="12">OAuth clients/grants/consent · legacy token hashes</FONT>>];
 
-    account [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#0f766e">
-        <TR><TD COLSPAN="2" BGCOLOR="#0f766e"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>account</B></FONT></TD></TR>
-        <TR><TD PORT="id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT PK</FONT></TD></TR>
-        <TR><TD PORT="user_id" ALIGN="LEFT"><FONT POINT-SIZE="14">user_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → user</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">provider_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">'google'</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">account_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">Google sub</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">access_token</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT (discarded / NULL)</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">refresh_token</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT (discarded / NULL)</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">access_token_expires_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER (discarded / NULL)</FONT></TD></TR>
-      </TABLE>
-    >];
-
-    session [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#0f766e">
-        <TR><TD COLSPAN="2" BGCOLOR="#0f766e"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>session</B></FONT></TD></TR>
-        <TR><TD PORT="id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT PK</FONT></TD></TR>
-        <TR><TD PORT="user_id" ALIGN="LEFT"><FONT POINT-SIZE="14">user_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → user</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">token</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT UNIQUE</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">expires_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-      </TABLE>
-    >];
-
-    verification [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#0f766e">
-        <TR><TD COLSPAN="2" BGCOLOR="#0f766e"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>verification</B></FONT></TD></TR>
-        <TR><TD PORT="id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT PK</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">identifier</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">value</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">expires_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-      </TABLE>
-    >];
-
+    USER -> BA [label="1 : many"];
+    USER -> MCP [label="1 : many"];
+    { rank=same; USER; BA; MCP; }
   }
 
-  // ---- Antenna-owned user settings ----
-  subgraph cluster_settings {
+  subgraph cluster_workspace {
     graph [
       label=<
-        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#2563eb"><B>USER SETTINGS</B></FONT></TD></TR>
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#3b6fb6">Antenna-owned preferences keyed by user and optional collection scope.</FONT></TD></TR>
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1">
+          <TR><TD ALIGN="LEFT"><FONT COLOR="#1e6b43"><B>OWNER WORKSPACE</B></FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="11" COLOR="#4e7a61">A collection is the tenant boundary.</FONT></TD></TR>
         </TABLE>
       >,
-      labelloc=t,
-      labeljust=l,
-      color="#bfd7ff",
-      fillcolor="#f5f9ff",
-      style="rounded,filled",
-      penwidth=1.8,
-      margin=22
-    ];
-
-    notification_prefs [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#2563eb">
-        <TR><TD COLSPAN="2" BGCOLOR="#2563eb"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>notification_prefs</B></FONT></TD></TR>
-        <TR><TD PORT="user_id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>user_id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → user (PK)</FONT></TD></TR>
-        <TR><TD PORT="scope" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>scope</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">global | collection:id (PK)</FONT></TD></TR>
-        <TR><TD PORT="collection_id" ALIGN="LEFT"><FONT POINT-SIZE="14">collection_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → collections</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14"><B>channel</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">daily_digest (PK)</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">enabled</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">BOOLEAN</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">frequency</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">daily | weekly</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">quiet hours</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">HH:MM</FONT></TD></TR>
-      </TABLE>
-    >];
-
-    notification_deliveries [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#2563eb">
-        <TR><TD COLSPAN="2" BGCOLOR="#2563eb"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>notification_deliveries</B></FONT></TD></TR>
-        <TR><TD PORT="id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT PK</FONT></TD></TR>
-        <TR><TD PORT="user_id" ALIGN="LEFT"><FONT POINT-SIZE="14">user_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → user</FONT></TD></TR>
-        <TR><TD PORT="collection_id" ALIGN="LEFT"><FONT POINT-SIZE="14">collection_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → collections</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">channel</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">daily_digest</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">period</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">start / end</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">status</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">sent | error</FONT></TD></TR>
-      </TABLE>
-    >];
-  }
-
-  // ---- Antenna tables: collections + content ----
-  subgraph cluster_core {
-    graph [
-      label=<
-        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#1e6b43"><B>COLLECTIONS AND SIGNALS</B></FONT></TD></TR>
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#4e7a61">Core domain: who owns what, what signals are on it, their values, and triggered alerts.</FONT></TD></TR>
-        </TABLE>
-      >,
-      labelloc=t,
-      labeljust=l,
       color="#b8e5c8",
       fillcolor="#f4fbf6",
       style="rounded,filled",
-      penwidth=1.8,
-      margin=22
+      penwidth=1.7
     ];
 
-    collections [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#22865a">
-        <TR><TD COLSPAN="2" BGCOLOR="#22865a"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>collections</B></FONT></TD></TR>
-        <TR><TD PORT="id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT PK</FONT></TD></TR>
-        <TR><TD PORT="owner_id" ALIGN="LEFT"><FONT POINT-SIZE="14">owner_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">user id</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">title</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">visibility</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">private | shared | public</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">slug</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT UNIQUE</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">layout</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">JSON</FONT></TD></TR>
-      </TABLE>
-    >];
+    COLLECTION [label=<<B>collections</B><BR/><FONT POINT-SIZE="12">owner · visibility · refresh mode · layout</FONT>>, color="#22865a", fillcolor="#eaf8ef"];
+    SIGNAL [label=<<B>signals</B><BR/><FONT POINT-SIZE="12">template id · config · cadence · position · visibility</FONT>>, color="#22865a", fillcolor="#eaf8ef"];
+    VISIT [label=<<B>user_collection_visits</B><BR/><FONT POINT-SIZE="12">owner's last-seen marker</FONT>>, color="#22865a", fillcolor="#eaf8ef"];
+    DISMISS [label=<<B>dismissed_starter_signals</B><BR/><FONT POINT-SIZE="12">do not recreate removed defaults</FONT>>, color="#22865a", fillcolor="#eaf8ef"];
 
-    user_collection_visits [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#22865a">
-        <TR><TD COLSPAN="2" BGCOLOR="#22865a"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>user_collection_visits</B></FONT></TD></TR>
-        <TR><TD PORT="user_id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>user_id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">user id (PK)</FONT></TD></TR>
-        <TR><TD PORT="collection_id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>collection_id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → collections (PK)</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">last_seen_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-      </TABLE>
-    >];
-
-    collection_template_publications [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#22865a">
-        <TR><TD COLSPAN="2" BGCOLOR="#22865a"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>collection_template_publications</B></FONT></TD></TR>
-        <TR><TD PORT="collection_id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>collection_id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → collections (PK)</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">label</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">summary</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT</FONT></TD></TR>
-        <TR><TD PORT="published_by" ALIGN="LEFT"><FONT POINT-SIZE="14">published_by</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">user id</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">published_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-      </TABLE>
-    >];
-
-    signals [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#22865a">
-        <TR><TD COLSPAN="2" BGCOLOR="#22865a"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>signals</B></FONT></TD></TR>
-        <TR><TD PORT="id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT PK</FONT></TD></TR>
-        <TR><TD PORT="collection_id" ALIGN="LEFT"><FONT POINT-SIZE="14">collection_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → collections</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">template_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">registry key</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">config</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">JSON</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">refresh_seconds</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">position</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">visibility</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">private | shared | public</FONT></TD></TR>
-      </TABLE>
-    >];
-
-    signal_points [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#22865a">
-        <TR><TD COLSPAN="2" BGCOLOR="#22865a"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>signal_points</B></FONT></TD></TR>
-        <TR><TD PORT="signal_id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>signal_id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → signals (PK)</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">fetched_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">dispatch wall-clock</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14"><B>observed_at</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER (PK)</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14"><B>metric_key</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT (PK)</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">dimensions</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">JSON</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">value</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">REAL</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">value_text</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">unit</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">source_url</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">raw_payload_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">R2 key</FONT></TD></TR>
-      </TABLE>
-    >];
-
-    signal_status [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#d39a00">
-        <TR><TD COLSPAN="2" BGCOLOR="#d39a00"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>signal_status</B></FONT></TD></TR>
-        <TR><TD PORT="signal_id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>signal_id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → signals (PK)</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">status</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">live | stale | error | loading</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">last_ok_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">last_error</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">last_manual_request_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">next_attempt_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">future retry gate</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">updated_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-      </TABLE>
-    >];
-
-    signal_alerts [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#d39a00">
-        <TR><TD COLSPAN="2" BGCOLOR="#d39a00"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>signal_alerts</B></FONT></TD></TR>
-        <TR><TD PORT="id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT PK</FONT></TD></TR>
-        <TR><TD PORT="collection_id" ALIGN="LEFT"><FONT POINT-SIZE="14">collection_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → collections</FONT></TD></TR>
-        <TR><TD PORT="signal_id" ALIGN="LEFT"><FONT POINT-SIZE="14">signal_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → signals</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">rule_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">registry rule</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">metric_key</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">point metric</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">observed_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">triggered_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">value / previous</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">REAL</FONT></TD></TR>
-      </TABLE>
-    >];
-
-    public_collection_reports [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#d39a00">
-        <TR><TD COLSPAN="2" BGCOLOR="#d39a00"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>public_collection_reports</B></FONT></TD></TR>
-        <TR><TD PORT="id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT PK</FONT></TD></TR>
-        <TR><TD PORT="collection_id" ALIGN="LEFT"><FONT POINT-SIZE="14">collection_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → collections</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">category</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">fixed enum</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">requester_hash</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">hashed requester</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">created_at</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">INTEGER</FONT></TD></TR>
-      </TABLE>
-    >];
+    COLLECTION -> SIGNAL [label="1 : many"];
+    COLLECTION -> VISIT [label="1 : many"];
+    COLLECTION -> DISMISS [label="1 : many"];
+    { rank=same; VISIT; COLLECTION; DISMISS; }
   }
 
-  // ---- Server-owned registry metadata ----
-  subgraph cluster_registry {
+  subgraph cluster_authoring {
     graph [
-      label=<
-        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#5f3b8a"><B>SERVER REGISTRY (code)</B></FONT></TD></TR>
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#6d4d8d">Templates, schemas, source policy, and display metadata used by the Worker.</FONT></TD></TR>
-        </TABLE>
-      >,
-      labelloc=t,
-      labeljust=l,
-      color="#d6c6ee",
-      fillcolor="#fbf8ff",
-      style="rounded,filled,dashed",
-      penwidth=1.8,
-      margin=22
-    ];
-
-    source_policy_registry [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#7c3aed">
-        <TR><TD COLSPAN="2" BGCOLOR="#7c3aed"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>template source policy</B></FONT></TD></TR>
-        <TR><TD PORT="template_id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>template_id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">registry key</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">config_schema</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">Zod runtime schema</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">rights_status</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">public | attribution | auth | review</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">execution_mode</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">public/private/user-side</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">public_display</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">eligible flag + blocker</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">display</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">labels + URLs</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">attribution</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">returned to clients</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">review_notes</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">review date + notes</FONT></TD></TR>
-      </TABLE>
-    >];
-  }
-
-  // ---- Composer tables ----
-  subgraph cluster_composer {
-    graph [
-      label=<
-        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="17" COLOR="#5f3b8a"><B>COMPOSER HISTORY</B></FONT></TD></TR>
-          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#6d4d8d">Plans the user has been shown; requests for sources we cannot yet fulfil.</FONT></TD></TR>
-        </TABLE>
-      >,
-      labelloc=t,
-      labeljust=l,
+      label=<<B>AUTHORING HISTORY</B>>,
       color="#d6c6ee",
       fillcolor="#fbf8ff",
       style="rounded,filled",
-      penwidth=1.8,
-      margin=22
+      fontname="Avenir",
+      fontcolor="#5f3b8a",
+      penwidth=1.7
     ];
 
-    collection_plans [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#7c3aed">
-        <TR><TD COLSPAN="2" BGCOLOR="#7c3aed"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>collection_plans</B></FONT></TD></TR>
-        <TR><TD PORT="id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT PK</FONT></TD></TR>
-        <TR><TD PORT="collection_id" ALIGN="LEFT"><FONT POINT-SIZE="14">collection_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → collections</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">prompt</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">proposed</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">JSON</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">status</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">proposed | confirmed | rejected</FONT></TD></TR>
-      </TABLE>
-    >];
+    PLAN [label=<<B>collection_plans</B><BR/><FONT POINT-SIZE="12">stored proposal · proposed/confirmed/rejected</FONT>>, color="#7c3aed", fillcolor="#f5f3ff"];
+    CLAIM [label=<<B>plan_confirmation_claims</B><BR/><FONT POINT-SIZE="12">one unique confirmation claim per plan</FONT>>, color="#7c3aed", fillcolor="#f5f3ff"];
+    REQUEST [label=<<B>connector_requests</B><BR/><FONT POINT-SIZE="12">unsupported demand and build state</FONT>>, color="#7c3aed", fillcolor="#f5f3ff"];
 
-    connector_requests [label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ffffff" COLOR="#7c3aed">
-        <TR><TD COLSPAN="2" BGCOLOR="#7c3aed"><FONT COLOR="#ffffff" POINT-SIZE="17"><B>connector_requests</B></FONT></TD></TR>
-        <TR><TD PORT="id" ALIGN="LEFT"><FONT POINT-SIZE="14"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT PK</FONT></TD></TR>
-        <TR><TD PORT="collection_id" ALIGN="LEFT"><FONT POINT-SIZE="14">collection_id</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">FK → collections</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">prompt</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">requested_by</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">TEXT</FONT></TD></TR>
-        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="14">status</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="13" COLOR="#5b6b80">requested | building | available | rejected</FONT></TD></TR>
-      </TABLE>
-    >];
+    PLAN -> CLAIM [label="0 : 1"];
+    { rank=same; PLAN; REQUEST; }
   }
 
-  // ---- Relationships (parent -> child so dot puts parents above) ----
-  user:id -> account:user_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
-  user:id -> session:user_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
-  user:id -> collections:owner_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">owns (logical)</FONT></TD></TR></TABLE>>];
-  user:id -> notification_prefs:user_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
-  user:id -> notification_deliveries:user_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
-  user:id -> user_collection_visits:user_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
-  user:id -> collection_template_publications:published_by [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">publishes</FONT></TD></TR></TABLE>>];
+  subgraph cluster_runtime {
+    graph [
+      label=<<B>SIGNAL RUNTIME</B>>,
+      color="#e7c86e",
+      fillcolor="#fffaf0",
+      style="rounded,filled",
+      fontname="Avenir",
+      fontcolor="#8a6200",
+      penwidth=1.7
+    ];
 
-  collections:id -> signals:collection_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
-  collections:id -> notification_prefs:collection_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">optional scope</FONT></TD></TR></TABLE>>];
-  collections:id -> notification_deliveries:collection_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
-  collections:id -> user_collection_visits:collection_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
-  collections:id -> collection_template_publications:collection_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">0 : 1</FONT></TD></TR></TABLE>>];
-  collections:id -> signal_alerts:collection_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
-  collections:id -> public_collection_reports:collection_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
-  collections:id -> collection_plans:collection_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
-  collections:id -> connector_requests:collection_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
+    STATUS [label=<<B>signal_status</B><BR/><FONT POINT-SIZE="12">attempt/success/error · retry gate · snapshot hash</FONT>>, color="#d39a00", fillcolor="#fff4d1"];
+    POINT [label=<<B>signal_points</B><BR/><FONT POINT-SIZE="12">idempotent current/history observations</FONT>>, color="#d39a00", fillcolor="#fff4d1"];
+    ALERT [label=<<B>signal_alerts</B><BR/><FONT POINT-SIZE="12">rule hits with previous and observed values</FONT>>, color="#d39a00", fillcolor="#fff4d1"];
+    SNAPSHOT [label=<<B>upstream_snapshots</B><BR/><FONT POINT-SIZE="12">public-cloud normalized fetch cache</FONT>>, color="#d39a00", fillcolor="#fff4d1"];
+    RAW [label=<<B>R2 payload objects</B><BR/><FONT POINT-SIZE="12">reviewed opt-in archive with lifecycle expiry</FONT>>, color="#0f766e", fillcolor="#e6fffb"];
 
-  source_policy_registry:template_id -> signals [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#dfe3e9" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#6b7280">server derives policy</FONT></TD></TR></TABLE>>, style=dashed, color="#6b7280", fontcolor="#6b7280", arrowhead=normal];
-  signals:id -> signal_points:signal_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
-  signals:id -> signal_status:signal_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : 1</FONT></TD></TR></TABLE>>, arrowhead=none];
-  signals:id -> signal_alerts:signal_id [label=<<TABLE BORDER="1" CELLBORDER="0" STYLE="ROUNDED" COLOR="#d7dee8" BGCOLOR="#ffffff" CELLSPACING="0" CELLPADDING="4"><TR><TD><FONT POINT-SIZE="13" COLOR="#3d4a5c">1 : N</FONT></TD></TR></TABLE>>];
+    STATUS -> POINT [style=invis];
+    POINT -> ALERT [style=invis];
+    { rank=same; STATUS; POINT; ALERT; }
+    { rank=same; SNAPSHOT; RAW; }
+  }
+
+  REGISTRY [label=<
+    <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1">
+      <TR><TD><B>Static server registry (code)</B></TD></TR>
+      <TR><TD><FONT POINT-SIZE="12">template schemas · source policy · execution mode · display metadata</FONT></TD></TR>
+    </TABLE>
+  >, color="#7c3aed", fillcolor="#f5f3ff"];
+
+  USER -> COLLECTION [label="owns (logical)", lhead=cluster_workspace];
+  COLLECTION -> PLAN [label="1 : many", lhead=cluster_authoring];
+  COLLECTION -> REQUEST [label="0 : many", lhead=cluster_authoring];
+  CLAIM -> SIGNAL [label="confirmation creates", lhead=cluster_workspace, style=dashed, color="#6b7280"];
+
+  SIGNAL -> STATUS [label="1 : 1", lhead=cluster_runtime];
+  SIGNAL -> POINT [label="1 : many", lhead=cluster_runtime];
+  SIGNAL -> ALERT [label="1 : many", lhead=cluster_runtime];
+  SNAPSHOT -> SIGNAL [label="reused fetch; never ownership", style=dashed, color="#6b7280"];
+  POINT -> RAW [label="optional raw_payload_id", style=dashed, color="#6b7280"];
+
+  REGISTRY -> SIGNAL [label="template identity + policy", style=dashed, color="#6b7280"];
+  REGISTRY -> COLLECTION [style=invis, weight=10];
 }

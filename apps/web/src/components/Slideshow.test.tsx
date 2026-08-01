@@ -1,5 +1,4 @@
-// Render-only tests. Auto-advance, fullscreen request, and keyboard
-// controls need a real DOM and are exercised in e2e + manual smoke.
+// DOM-dependent playback and fullscreen behavior remain e2e/manual checks.
 import { describe, expect, it } from 'vitest';
 import renderToString from 'preact-render-to-string';
 import { Slideshow } from './Slideshow';
@@ -10,6 +9,11 @@ const NOW = Date.now();
 const liveSignal = (id: string, overrides: Partial<ApiSignal> = {}): ApiSignal => ({
   id,
   template_id: 'fx-pair',
+  display: {
+    title: 'EUR/USD',
+    source_label: 'Frankfurter (ECB)',
+    source_url: 'https://www.frankfurter.app/',
+  },
   visibility: 'private',
   config: { base: 'EUR', quote: 'USD' },
   refresh_seconds: 900,
@@ -40,9 +44,7 @@ describe('Slideshow', () => {
   });
 
   it('renders the slide title once — the embedded signal header must be suppressed', () => {
-    // Regression: the slide rendered its own large centred title AND the
-    // SignalCard's own header, so every presentation slide showed two
-    // overlapping copies of the title (and a duplicate source label).
+    // The slide owns its title and source; its body-only card must not duplicate them.
     const html = renderToString(
       <Slideshow
         signals={[liveSignal('eur', { config: { base: 'EUR', quote: 'USD' } })]}
@@ -54,9 +56,7 @@ describe('Slideshow', () => {
   });
 
   it('strips the operator metadata grid and freshness line from each slide', () => {
-    // Radiator regression: slides reused the expanded card, which mounted the
-    // Source/Last updated/Status/Refresh/Visibility detail grid — duplicating
-    // the source eyebrow and cluttering an across-the-room screen.
+    // Presentation mode omits the owner detail grid for distance readability.
     const html = renderToString(<Slideshow signals={[liveSignal('a')]} onClose={() => {}} />);
     expect(html).not.toContain('data-testid="signal-detail-panel"');
     expect(html).not.toContain('Visibility');
@@ -78,15 +78,12 @@ describe('Slideshow', () => {
     });
     const html = renderToString(<Slideshow signals={[setupSignal]} onClose={() => {}} />);
     expect(html).toContain('data-testid="slideshow-empty"');
-    // Controls aren't useful when there's nothing to advance through, so
-    // suppress them.
+    // Empty slideshows have nothing to control.
     expect(html).not.toContain('data-testid="slideshow-pause"');
   });
 
   it('starts with chrome + controls visible (pointer not yet idle on first paint)', () => {
-    // Idle timer fires asynchronously, so the initial render must show
-    // chrome at full opacity. Without that, opening presentation mode on
-    // a touch device with no pointer movement would land on a blank screen.
+    // Initial chrome must be visible before the asynchronous idle timer runs.
     const html = renderToString(<Slideshow signals={[liveSignal('a')]} onClose={() => {}} />);
     expect(html).toContain('data-pointer-idle="false"');
     expect(html).toContain('data-testid="slideshow-chrome-wrapper"');

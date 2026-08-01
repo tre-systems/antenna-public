@@ -1,4 +1,3 @@
 #!/usr/bin/env sh
-# Run end-to-end tests before pushing. The wrapper skips cleanly when no
-# Playwright tests exist yet.
+# Run end-to-end tests before pushing.
 node scripts/run-e2e-tests.mjs

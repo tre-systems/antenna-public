@@ -34,8 +34,7 @@ export function cloudflareFleetCardData(signal: RenderSignal): CloudflareFleetCa
   if (signal.points.length === 0) return null;
 
   const windowDays = resolveWindowDays(signal, DEFAULT_WINDOW_DAYS, MAX_WINDOW_DAYS);
-  // Cloudflare's trend rows are complete UTC days ending yesterday. Ask the
-  // shared helper for one extra day, then remove today.
+  // Cloudflare returns complete UTC days through yesterday, so discard today.
   const days = recentDays(windowDays + 1).slice(0, -1);
   const dayIndex = new Map(days.map((day, index) => [day, index]));
   const series = new Array<number>(days.length).fill(0);
@@ -44,9 +43,13 @@ export function cloudflareFleetCardData(signal: RenderSignal): CloudflareFleetCa
   let previousWindowRequests: number | null = null;
   let currentWindowErrors = 0;
   let currentErrorRatePpm = 0;
+  const configuredScript = scriptFromConfig(signal);
 
   for (const point of signal.points) {
     const kind = stringDim(point, 'kind');
+    if (configuredScript !== null && scopedKind(kind)) {
+      if (stringDim(point, 'script') !== configuredScript) continue;
+    }
     if (kind === 'day') {
       const day = stringDim(point, 'day');
       const index = day === null ? undefined : dayIndex.get(day);
@@ -82,8 +85,7 @@ export function cloudflareFleetCardData(signal: RenderSignal): CloudflareFleetCa
 
   return {
     windowDays,
-    // Prefer the summed daily series; fall back to the worker totals if a
-    // snapshot somehow lacks the day rows.
+    // Worker totals keep incomplete snapshots useful when daily rows are absent.
     totalRequests: dailyTotal > 0 ? dailyTotal : workerTotal,
     totalErrors: workers.reduce((sum, worker) => sum + worker.errors, 0),
     workerCount: workers.length,
@@ -101,6 +103,15 @@ export function cloudflareFleetCardData(signal: RenderSignal): CloudflareFleetCa
     ),
   };
 }
+
+const scriptFromConfig = (signal: RenderSignal): string | null => {
+  if (!('config' in signal)) return null;
+  const script = signal.config.script;
+  return typeof script === 'string' && script.trim() ? script.trim() : null;
+};
+
+const scopedKind = (kind: string | null): boolean =>
+  kind === 'day' || kind === 'worker' || kind === 'fleet-window';
 
 const percentChange = (current: number, previous: number | null): number | null => {
   if (previous === null || previous === 0) return null;

@@ -10,7 +10,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@antenna/registry": "*",
     "@antenna/shared": "*",
     "@preact/signals": "^2.0.5",
     "@sentry/browser": "^10.68.0",

@@ -12,8 +12,7 @@ type Bindings = DbEnv;
 
 const LIMIT = 100;
 
-// Rows are per-occurrence; aggregate by fragment (stored in `prompt`) so the
-// UI sees "this connector requested N times" without an extra table.
+// Aggregate occurrence rows by the fragment stored in prompt.
 export const requestsRoute = new Hono<{ Bindings: Bindings; Variables: AuthVars }>().get(
   '/',
   async (c) => {
@@ -42,8 +41,7 @@ export const requestsRoute = new Hono<{ Bindings: Bindings; Variables: AuthVars 
       .all();
 
     const records: ConnectorRequestRecord[] = rows.map((row) => {
-      // `notes` holds the original prompt the fragment came from; fragment is
-      // the canonical key when it's missing (e.g. legacy rows without notes).
+      // Fall back to fragment for legacy rows without notes.
       const prompt = row.firstNotes ?? row.fragment;
       return {
         id: row.firstId ?? row.fragment,

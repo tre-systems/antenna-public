@@ -12,6 +12,16 @@ export function submitPrompt(prompt: string, collectionId?: string): Promise<Pla
   });
 }
 
+export function submitTemplate(templateId: string, collectionId?: string): Promise<PlanRecord> {
+  return fetchJson<PlanRecord>('/api/plan', {
+    method: 'POST',
+    body: JSON.stringify({
+      template_id: templateId,
+      ...(collectionId === undefined ? {} : { collection_id: collectionId }),
+    }),
+  });
+}
+
 export function confirmPlan(
   planId: string,
   editedSignals?: Array<{ config?: Record<string, unknown> }>,

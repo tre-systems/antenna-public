@@ -1,7 +1,12 @@
 import { useEffect } from 'preact/hooks';
 import { effect } from '@preact/signals';
 import { getConnectorRequests } from '../api';
-import { connectorRequests, currentPlan } from '../signals/plan';
+import {
+  connectorRequests,
+  currentPlan,
+  isCurrentPlanState,
+  planStateVersion,
+} from '../signals/plan';
 import { safeExternalUrl } from '../signal-format/display';
 import type { SourceBlockerReason } from '@antenna/shared';
 
@@ -16,8 +21,10 @@ const BLOCKER_LABELS: Record<SourceBlockerReason, string> = {
 };
 
 const loadRequests = async () => {
+  const version = planStateVersion();
   try {
-    connectorRequests.value = await getConnectorRequests();
+    const next = await getConnectorRequests();
+    if (isCurrentPlanState(version)) connectorRequests.value = next;
   } catch {
     // Best-effort; the signal stays hidden if empty.
   }
@@ -26,8 +33,7 @@ const loadRequests = async () => {
 export function ConnectorRequests() {
   useEffect(() => {
     void loadRequests();
-    // currentPlan returning to null means a plan was just confirmed/rejected, so
-    // a new request row may exist. `primed` skips effect()'s synchronous fire.
+    // A completed plan may create a request; skip effect()'s synchronous fire.
     let primed = false;
     return effect(() => {
       const plan = currentPlan.value;
@@ -43,7 +49,10 @@ export function ConnectorRequests() {
   if (requests.length === 0) return null;
 
   return (
-    <details class="antenna-panel rounded-2xl p-4 text-sm" data-testid="connector-requests">
+    <details
+      class="border-t border-slate-900/[0.08] pt-4 text-sm dark:border-white/10"
+      data-testid="connector-requests"
+    >
       <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-slate-900 marker:hidden dark:text-white">
         <span class="flex min-w-0 items-center gap-1.5">
           <svg
@@ -58,14 +67,14 @@ export function ConnectorRequests() {
           >
             <path d="M5.5 11h5M6.5 13.5h3M8 1.5a4.5 4.5 0 0 0-3 7.85V11h6V9.35A4.5 4.5 0 0 0 8 1.5z" />
           </svg>
-          <span>Diagnostics</span>
+          <span>Requests waiting on support</span>
         </span>
         <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-white/5 dark:text-slate-300">
-          {requests.length} setup {requests.length === 1 ? 'request' : 'requests'}
+          {requests.length}
         </span>
       </summary>
       <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-        Sources waiting on credentials, stable data, or source-rights review.
+        Things you previously asked for that Antenna could not yet connect to a reviewed source.
       </p>
       <ul class="mt-3 space-y-0.5">
         {requests.map((req) => (

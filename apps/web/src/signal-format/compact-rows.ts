@@ -1,5 +1,5 @@
 import type { DataPoint } from '../api';
-import { numOf } from './common';
+import { rankOf } from './common';
 import { projectRow } from './compact-row-projectors';
 import { summaryFor } from './compact-row-summary';
 import type { CompactRow, CompactRowsCardData } from './compact-row-types';
@@ -18,8 +18,15 @@ const rankedRowPoints = (points: ReadonlyArray<DataPoint>, templateId: string): 
   points
     .filter((p) => isRowMetric(p.dimensions?.metric, templateId))
     .slice()
-    .sort((a, b) => numOf(a.dimensions?.rank) - numOf(b.dimensions?.rank))
+    .sort((a, b) => compareRows(a, b, templateId))
     .slice(0, compactRowLimit(templateId));
+
+const compareRows = (a: DataPoint, b: DataPoint, templateId: string): number => {
+  const rankDelta = rankOf(a) - rankOf(b);
+  if (templateId !== 'project-portfolio') return rankDelta;
+  const eventDelta = Number(b.value) - Number(a.value);
+  return eventDelta || rankDelta;
+};
 
 const projectedRows = (signal: RenderSignal, points: ReadonlyArray<DataPoint>): CompactRow[] => {
   const rows: CompactRow[] = [];

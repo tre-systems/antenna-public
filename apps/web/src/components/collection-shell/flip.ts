@@ -5,8 +5,7 @@ type CellRects = Map<string, { left: number; top: number }>;
 export const prefersReducedMotion = (): boolean =>
   typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// First-Last-Invert-Play over the grid cells. Positions are container-relative
-// so page scrolling between renders does not read as movement.
+// Container-relative FLIP positions ignore page scrolling between renders.
 export function useGridFlip(containerRef: { readonly current: HTMLElement | null }): void {
   const previous = useRef<CellRects>(new Map());
   useLayoutEffect(() => {
@@ -42,8 +41,7 @@ function playMove(
   );
 }
 
-// Re-inserting a node restarts the one-shot `signal-enter` intro, which flashes
-// on top of the slide; finishing it first (in useLayoutEffect) never paints.
+// Finish the one-shot intro before re-insertion can restart it.
 function stopEnterReplay(cell: HTMLElement): void {
   if (typeof cell.getAnimations !== 'function') return;
   for (const animation of cell.getAnimations({ subtree: true })) {

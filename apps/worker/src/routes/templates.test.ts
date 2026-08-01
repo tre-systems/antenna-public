@@ -26,6 +26,7 @@ describe('GET /api/templates', () => {
       display_name: 'FX pair',
       param_keys: ['base', 'quote'],
       planner_enabled: true,
+      direct_proposal_enabled: true,
       rights_status: 'public',
       default_refresh_seconds: 900,
       retain_raw_payload: false,
@@ -53,11 +54,16 @@ describe('GET /api/templates', () => {
 
     expect(body.find((item) => item.id === 'rest-metric')).toMatchObject({
       planner_enabled: false,
+      direct_proposal_enabled: false,
       source_policy: {
         rights_status: 'needs-review',
         execution_mode: 'private_cloud',
         public_display_eligible: false,
       },
+    });
+    expect(body.find((item) => item.id === 'app-health')).toMatchObject({
+      planner_enabled: false,
+      direct_proposal_enabled: true,
     });
     const tradingEconomics = body.find((item) => item.id === 'trading-economics-market');
     expect(tradingEconomics?.server_secret_required).toBe(true);
@@ -72,7 +78,7 @@ describe('GET /api/templates', () => {
 });
 
 describe('GET /api/templates/collections', () => {
-  it('returns curated collection templates without community discovery', async () => {
+  it('returns curated collection templates', async () => {
     const res = await buildApp().request('/api/templates/collections');
 
     expect(res.status).toBe(200);
@@ -80,13 +86,11 @@ describe('GET /api/templates/collections', () => {
     expect(body.templates.map((template) => template.id)).toEqual([
       'founder-morning',
       'ai-frontier-watch',
-      'problem-radar',
       'trader-morning',
       'ops-morning',
       'investor-watchlist',
       'local-living',
     ]);
-    expect(body.templates.every((template) => template.kind === 'curated')).toBe(true);
     expect(body.templates[0]).toMatchObject({
       id: 'founder-morning',
       kind: 'curated',
@@ -101,6 +105,5 @@ describe('GET /api/templates/collections', () => {
     });
     expect(JSON.stringify(body)).not.toContain('adapter');
     expect(JSON.stringify(body)).not.toContain('matchHints');
-    expect(JSON.stringify(body)).not.toContain('kind":"community');
   });
 });

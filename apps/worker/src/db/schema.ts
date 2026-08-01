@@ -2,8 +2,7 @@ import { sql } from 'drizzle-orm';
 import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import type { CollectionPlan } from '@antenna/shared';
 
-// JSON shapes are stored as TEXT and serialised/deserialised at the call site.
-// `.$type<...>()` annotates the column type without producing runtime checks.
+// JSON shapes use TEXT columns with call-site serialization and validation.
 
 export type CollectionLayout = {
   readonly version: number;
@@ -97,8 +96,7 @@ export const signals = sqliteTable(
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
   },
-  // Backs the dispatch join and every collection read; `position` extends it to
-  // cover the ordered list without a second index.
+  // Cover dispatch joins and ordered collection reads with one index.
   (t) => [index('signals_collection_position_idx').on(t.collectionId, t.position)],
 );
 
@@ -120,8 +118,7 @@ export const signalPoints = sqliteTable(
     signalId: text('signal_id')
       .notNull()
       .references(() => signals.id, { onDelete: 'cascade' }),
-    // Dispatch wall-clock time. Latest reads sort by this so historical or
-    // forecast points from one adapter result cannot crowd out fresh status.
+    // Sort latest reads by dispatch time rather than observation time.
     fetchedAt: integer('fetched_at', { mode: 'timestamp_ms' }).notNull(),
     observedAt: integer('observed_at', { mode: 'timestamp_ms' }).notNull(),
     metricKey: text('metric_key').notNull(),
@@ -155,9 +152,7 @@ export const signalStatus = sqliteTable(
     // Dispatcher reads this on each tick to honour user-triggered refreshes.
     lastManualRequestAt: integer('last_manual_request_at', { mode: 'timestamp_ms' }),
     nextAttemptAt: integer('next_attempt_at', { mode: 'timestamp_ms' }),
-    // Fingerprint and timestamp of the last materialised adapter snapshot.
-    // Successful unchanged refreshes still advance last_ok_at without writing
-    // another identical set of signal_points.
+    // Track the last materialized snapshot to avoid duplicate point writes.
     lastDataHash: text('last_data_hash'),
     lastDataAt: integer('last_data_at', { mode: 'timestamp_ms' }),
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
@@ -165,9 +160,7 @@ export const signalStatus = sqliteTable(
   (t) => [index('signal_status_last_ok_at_idx').on(t.lastOkAt)],
 );
 
-// One adapter result shared by every signal with the same template and config.
-// Public-cloud sources only (see 0053_upstream_snapshots.sql) and a pure cache:
-// any row can be deleted and the next dispatch refetches it.
+// Cache public-cloud results shared by identical template and config.
 export const upstreamSnapshots = sqliteTable(
   'upstream_snapshots',
   {
@@ -223,9 +216,7 @@ export const collectionPlans = sqliteTable(
   (t) => [index('collection_plans_collection_id_idx').on(t.collectionId)],
 );
 
-// One row per confirmed plan. The primary key is the guard: a second
-// confirmation racing the same plan fails to claim it and aborts before any
-// signal is written.
+// Use one claim row per plan to prevent concurrent duplicate confirmation.
 export const planConfirmationClaims = sqliteTable('plan_confirmation_claims', {
   planId: text('plan_id')
     .primaryKey()
@@ -268,8 +259,7 @@ export const publicCollectionReports = sqliteTable(
   ],
 );
 
-// Better Auth tables: the shape mirrors better-auth 1.6.x core schemas, so column
-// names must not drift from what its adapter expects.
+// Keep Better Auth column names aligned with its adapter schema.
 
 export const user = sqliteTable('user', {
   id: text('id').primaryKey(),
@@ -362,8 +352,7 @@ export const mcpTokens = sqliteTable(
   (t) => [index('mcp_tokens_user_id_idx').on(t.userId)],
 );
 
-// `access_token` / `refresh_token` hold AES-GCM ciphertext, written by the
-// `databaseHooks.account.create/update.before` hook — never plaintext.
+// Store Google access and refresh tokens only as AES-GCM ciphertext.
 export const account = sqliteTable(
   'account',
   {
@@ -385,8 +374,7 @@ export const account = sqliteTable(
   },
   (t) => [
     index('account_user_id_idx').on(t.userId),
-    // Better Auth resolves the linked Google account by provider + account id
-    // on every sign-in.
+    // Support Better Auth's provider and account lookup on sign-in.
     index('account_provider_account_idx').on(t.providerId, t.accountId),
   ],
 );
@@ -405,9 +393,7 @@ export const verification = sqliteTable(
   (t) => [index('verification_identifier_idx').on(t.identifier)],
 );
 
-// OAuth Authorization Server tables for the Better Auth `mcp` plugin. Property
-// names MUST match the plugin's field names so its Drizzle adapter binds, and the
-// token/consent rows reference the application's `client_id`, not its `id`.
+// Keep MCP OAuth fields and client_id references aligned with Better Auth.
 
 export const oauthApplication = sqliteTable(
   'oauth_application',
@@ -469,51 +455,6 @@ export const oauthConsent = sqliteTable(
   (t) => [
     index('oauth_consent_client_id_idx').on(t.clientId),
     index('oauth_consent_user_id_idx').on(t.userId),
-  ],
-);
-
-// Recurring problems found across many `reddit-problems` snapshots. Rows here
-// are derived data: the clustering job rebuilds them from the R2 payload
-// archive, so they can be deleted and regenerated without losing anything.
-export const problemClusters = sqliteTable(
-  'problem_clusters',
-  {
-    id: text('id').primaryKey(),
-    collectionId: text('collection_id')
-      .notNull()
-      .references(() => collections.id, { onDelete: 'cascade' }),
-    label: text('label').notNull(),
-    // Distinct post count, not member-row count. This is the demand signal and
-    // the only thing clusters are ranked by.
-    distinctPosts: integer('distinct_posts').notNull(),
-    subreddits: text('subreddits').notNull(),
-    firstSeenAt: integer('first_seen_at', { mode: 'timestamp_ms' }).notNull(),
-    lastSeenAt: integer('last_seen_at', { mode: 'timestamp_ms' }).notNull(),
-    computedAt: integer('computed_at', { mode: 'timestamp_ms' }).notNull(),
-  },
-  (t) => [
-    index('problem_clusters_collection_idx').on(t.collectionId),
-    index('problem_clusters_rank_idx').on(t.collectionId, t.distinctPosts),
-  ],
-);
-
-// The posts behind a cluster, so every ranking can be explained by the evidence
-// it was built from. Authors are deliberately absent, matching the connector.
-export const problemClusterMembers = sqliteTable(
-  'problem_cluster_members',
-  {
-    clusterId: text('cluster_id')
-      .notNull()
-      .references(() => problemClusters.id, { onDelete: 'cascade' }),
-    postId: text('post_id').notNull(),
-    subreddit: text('subreddit').notNull(),
-    title: text('title').notNull(),
-    permalink: text('permalink').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-  },
-  (t) => [
-    primaryKey({ columns: [t.clusterId, t.postId] }),
-    index('problem_cluster_members_cluster_idx').on(t.clusterId),
   ],
 );
 

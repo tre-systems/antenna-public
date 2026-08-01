@@ -3,8 +3,7 @@
   "include": ["vitest.config.ts", "playwright.config.ts", "tests/e2e/**/*.ts"],
   "compilerOptions": {
     "noEmit": true,
-    // e2e specs run code in the browser via page.evaluate, so the DOM globals
-    // (document, window) are legitimately in scope there.
+    // page.evaluate makes DOM globals valid in e2e specs.
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["node"]
   }

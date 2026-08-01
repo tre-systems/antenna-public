@@ -1,5 +1,4 @@
-// Shared scaffolding for the collections.*.test.ts files.
-// Not a test file (no .test.ts suffix) so vitest ignores it.
+// Provide shared scaffolding for collection route tests.
 
 import { Hono } from 'hono';
 import * as schema from '../db/schema';
@@ -73,8 +72,7 @@ export const seedOwnedSignal = (
     .run();
 };
 
-// Every dependent row the delete route is expected to sweep up with a
-// collection, so the delete test can assert each table ends up empty.
+// Seed every dependent row the collection delete route must remove.
 export const seedSignalChildren = (db: Drizzle, collectionId: string, signalId: string): void => {
   db.insert(schema.signalPoints)
     .values({

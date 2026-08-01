@@ -23,7 +23,8 @@ describe('PATCH /api/signals/:id rejections', () => {
 
     expect(res.status).toBe(400);
     expect(await res.json()).toEqual({
-      error: 'invalid_config: fx-pair config does not match registry schema',
+      error: 'invalid_config',
+      detail: 'fx-pair config does not match registry schema',
     });
   });
 

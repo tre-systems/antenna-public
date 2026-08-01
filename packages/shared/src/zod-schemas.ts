@@ -67,10 +67,14 @@ export const collectionPlanSchema = z.object({
 
 export const planRequestSchema = z
   .object({
-    prompt: z.string().min(1).max(2000),
+    prompt: z.string().min(1).max(2000).optional(),
+    template_id: z.string().trim().min(1).max(80).optional(),
     collection_id: z.string().trim().min(1).optional(),
   })
-  .strict();
+  .strict()
+  .refine((value) => (value.prompt === undefined) !== (value.template_id === undefined), {
+    message: 'Provide either prompt or template_id.',
+  });
 
 export const planConfirmSignalPatchSchema = z
   .object({
@@ -97,45 +101,11 @@ export const publicCollectionsQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 });
 
-export const publicCollectionReportSchema = z
-  .object({
-    category: z.enum(['broken', 'inappropriate', 'spam', 'other']),
-    message: z.string().trim().min(1).max(1000).optional(),
-  })
-  .strict();
-
 export const signalAlertsQuerySchema = z.object({
   collection_id: z.string().trim().min(1).optional(),
   since: z.coerce.number().int().nonnegative().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
-
-export const notificationChannelSchema = z.enum(['daily_digest']);
-
-export const notificationFrequencySchema = z.enum(['daily', 'weekly']);
-
-const quietHourSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
-
-export const notificationPreferenceQuerySchema = z.object({
-  collection_id: z.string().trim().min(1).optional(),
-});
-
-export const notificationPreferencePatchSchema = z
-  .object({
-    collection_id: z.string().trim().min(1).nullable().optional(),
-    enabled: z.boolean().optional(),
-    frequency: notificationFrequencySchema.optional(),
-    quiet_hours_start: quietHourSchema.nullable().optional(),
-    quiet_hours_end: quietHourSchema.nullable().optional(),
-  })
-  .strict()
-  .refine(
-    (body) =>
-      body.enabled !== undefined ||
-      body.frequency !== undefined ||
-      body.quiet_hours_start !== undefined ||
-      body.quiet_hours_end !== undefined,
-  );
 
 export const meOnboardingCompleteSchema = z
   .object({
@@ -194,15 +164,6 @@ export const collectionCreateSchema = z
     template_id: z.string().trim().min(1).max(80).optional(),
   })
   .strict();
-
-export const collectionTemplatePublishSchema = z
-  .object({
-    label: z.string().trim().min(1).max(120).optional(),
-    description: z.string().trim().max(500).nullable().optional(),
-    summary: z.string().trim().min(1).max(240).optional(),
-  })
-  .strict()
-  .default({});
 
 export const collectionSignalOrderUpdateSchema = z
   .object({

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createAntennaReadClient } from './client';
+import { createAntennaClient } from './client';
 import { jsonFetch } from './client-test-fixtures';
 
-describe('createAntennaReadClient mutations', () => {
+describe('createAntennaClient mutations', () => {
   it('requests an owner-scoped manual refresh for a signal', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       token: 'api-token',
       fetchImpl: jsonFetch(requests, { requested: true }),
@@ -20,7 +20,7 @@ describe('createAntennaReadClient mutations', () => {
 
   it('patches an owner-scoped signal config through the Worker route', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       token: 'api-token',
       fetchImpl: jsonFetch(requests, {
@@ -55,7 +55,7 @@ describe('createAntennaReadClient mutations', () => {
 
   it('deletes an owner-scoped signal through the Worker route', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       token: 'api-token',
       fetchImpl: jsonFetch(requests, { deleted: true }),
@@ -70,7 +70,7 @@ describe('createAntennaReadClient mutations', () => {
 
   it('reorders collection signals through the owner-scoped collection order route', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       token: 'api-token',
       fetchImpl: jsonFetch(requests, {
@@ -95,7 +95,7 @@ describe('createAntennaReadClient mutations', () => {
 
   it('reorders signals through a collection-id-scoped order route when provided', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       token: 'api-token',
       fetchImpl: jsonFetch(requests, {
@@ -121,7 +121,7 @@ describe('createAntennaReadClient mutations', () => {
 
   it('posts a natural-language signal proposal prompt', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       sessionCookie: 'session-value',
       fetchImpl: jsonFetch(requests, {
@@ -134,18 +134,47 @@ describe('createAntennaReadClient mutations', () => {
       }),
     });
 
-    const plan = await client.proposeSignal('track CHF/USD');
+    const plan = await client.proposeSignal('track CHF/USD', 'collection-1');
 
     expect(plan.id).toBe('plan-1');
     expect(requests[0]?.url).toBe('https://collection.example/api/plan');
     expect(requests[0]?.method).toBe('POST');
     expect(requests[0]?.headers.get('Content-Type')).toBe('application/json');
-    expect(await requests[0]?.json()).toEqual({ prompt: 'track CHF/USD' });
+    expect(await requests[0]?.json()).toEqual({
+      prompt: 'track CHF/USD',
+      collection_id: 'collection-1',
+    });
+  });
+
+  it('posts an exact connector-template signal proposal', async () => {
+    const requests: Request[] = [];
+    const client = createAntennaClient({
+      baseUrl: 'https://collection.example',
+      sessionCookie: 'session-value',
+      fetchImpl: jsonFetch(requests, {
+        id: 'plan-1',
+        collection_id: 'collection-1',
+        prompt: 'weather',
+        status: 'proposed',
+        plan: { prompt: 'weather', signals: [], unmatched: [] },
+        created_at: 1,
+      }),
+    });
+
+    const plan = await client.proposeTemplateSignal('weather', 'collection-1');
+
+    expect(plan.id).toBe('plan-1');
+    expect(requests[0]?.url).toBe('https://collection.example/api/plan');
+    expect(requests[0]?.method).toBe('POST');
+    expect(await requests[0]?.json()).toEqual({
+      template_id: 'weather',
+      collection_id: 'collection-1',
+    });
   });
 
   it('rejects an owner-scoped pending plan', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       token: 'api-token',
       fetchImpl: jsonFetch(requests, { ok: true }),
@@ -160,7 +189,7 @@ describe('createAntennaReadClient mutations', () => {
 
   it('confirms a user-approved plan with optional missing-field patches', async () => {
     const requests: Request[] = [];
-    const client = createAntennaReadClient({
+    const client = createAntennaClient({
       baseUrl: 'https://collection.example',
       token: 'api-token',
       fetchImpl: jsonFetch(requests, { created_signal_ids: ['signal-1'] }),

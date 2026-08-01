@@ -7,9 +7,7 @@ import * as schema from '../db/schema';
 
 type Sqlite = ReturnType<typeof Database>;
 
-// Better Auth's own tables (apps/worker/drizzle/0003_auth.sql). The sign-out
-// handler resolves the session cookie against these, so they must exist even
-// though these tests don't seed a live session.
+// Sign-out resolves cookies against Better Auth's schema.
 const BA_SCHEMA_DDL = `
   CREATE TABLE user (
     id text PRIMARY KEY NOT NULL,
@@ -65,8 +63,7 @@ vi.mock('../db/client', async () => {
   };
 });
 
-// Import after the mock is registered so createAuth binds to the
-// better-sqlite3-backed client rather than the D1 one.
+// Import after mocking so createAuth binds the in-memory client.
 const { createAuth } = await import('./index');
 
 type TestEnv = Parameters<typeof createAuth>[0];
@@ -84,8 +81,7 @@ const buildEnv = (): TestEnv => {
 };
 
 const buildApp = () => {
-  // Mirror the production mount at apps/worker/src/index.ts so we exercise the
-  // real Better Auth router, not a stub.
+  // Mirror the production mount to exercise the real Better Auth router.
   const app = new Hono<{ Bindings: TestEnv }>();
   app.all('/api/auth/*', (c) => createAuth(c.env).handler(c.req.raw));
   return app;
@@ -95,10 +91,7 @@ const signOutRequest = (env: TestEnv, init: RequestInit) =>
   buildApp().request('https://antenna.example/api/auth/sign-out', init, env);
 
 describe('POST /api/auth/sign-out', () => {
-  // The regression: the SPA used to POST with no Content-Type. Better Auth's
-  // router (better-call) 415s any request whose body Content-Type isn't JSON,
-  // so the cookie was never cleared. signOut() now sends application/json + an
-  // empty body; assert the server accepts exactly that shape.
+  // Sign-out requires an empty JSON request rather than a content-type-free POST.
   it('accepts the SPA sign-out request (JSON content-type + empty body)', async () => {
     const env = buildEnv();
     const res = await signOutRequest(env, {

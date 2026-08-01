@@ -12,15 +12,10 @@ import type {
 
 export type { DispatchEnv, DispatchSummary } from './dispatch/types';
 
-// How many signals are in flight at once. Adapter calls are network-bound, so
-// serialising them wasted almost all of the tick; the cap keeps concurrent
-// upstream load and D1 write pressure predictable.
+// Bound concurrent upstream calls and D1 write pressure.
 const DISPATCH_CONCURRENCY = 8;
 
-// Cron walks the signals that are due right now, most-overdue first. Per-user
-// isolation is handled at read/write route boundaries; private auth resolution
-// uses the owning collection's owner_id before any account-connected adapter
-// runs.
+// Process due signals oldest-attempt first after resolving their owners.
 export const runDispatch = async (env: DispatchEnv): Promise<DispatchSummary> => {
   const ctx: DispatchContext = { runId: crypto.randomUUID(), inFlight: new Map() };
   const client = db(env);
@@ -34,8 +29,7 @@ export const runDispatch = async (env: DispatchEnv): Promise<DispatchSummary> =>
     due: due.length,
     ok: counts.ok,
     failed: counts.failed,
-    // A saturated tick means more work was due than one invocation can take.
-    // The next tick picks up where this one left off, oldest attempt first.
+    // A saturated tick leaves oldest-attempt ordering for the next invocation.
     saturated: due.length >= DISPATCH_TICK_LIMIT,
   });
   return { ran: due.length, ...counts };
@@ -52,8 +46,7 @@ const dispatchRows = async (
   let failed = 0;
   let next = 0;
 
-  // Shared cursor over `rows`: each worker takes the next index until the queue
-  // drains, so a slow adapter holds up one lane instead of the whole tick.
+  // Let each worker claim the next row so one slow adapter blocks only one lane.
   const worker = async (): Promise<void> => {
     for (let i = next++; i < rows.length; i = next++) {
       const row = rows[i];

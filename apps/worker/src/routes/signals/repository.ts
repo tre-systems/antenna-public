@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, max, sql, type SQL } from 'drizzle-orm';
 import { signalStatus, collections, signals, signalPoints } from '../../db/schema';
 import { HISTORY_POINT_LIMIT, type HistoryRange, rangeToMs } from './constants';
 import type { SignalRow, SignalWithStatus, Client } from './types';
@@ -48,14 +48,50 @@ export const loadHistoryPoints = async (
   client: Client,
   signalId: string,
   range: HistoryRange,
+  sampleDaily = false,
 ): Promise<ReadonlyArray<typeof signalPoints.$inferSelect>> => {
-  return client
+  if (sampleDaily) return loadDailyHistoryPoints(client, signalId, range);
+  const newest = await client
     .select()
     .from(signalPoints)
     .where(historyPointFilter(signalId, range))
-    .orderBy(asc(signalPoints.observedAt))
+    .orderBy(desc(signalPoints.observedAt), desc(signalPoints.metricKey))
     .limit(HISTORY_POINT_LIMIT)
     .all();
+  return newest.reverse();
+};
+
+const loadDailyHistoryPoints = async (
+  client: Client,
+  signalId: string,
+  range: HistoryRange,
+): Promise<ReadonlyArray<typeof signalPoints.$inferSelect>> => {
+  const day = sql<number>`CAST(${signalPoints.observedAt} / 86400000 AS INTEGER)`;
+  const sampled = client
+    .select({
+      signalId: signalPoints.signalId,
+      metricKey: signalPoints.metricKey,
+      observedAt: max(signalPoints.observedAt).as('latest_observed_at'),
+    })
+    .from(signalPoints)
+    .where(historyPointFilter(signalId, range))
+    .groupBy(signalPoints.signalId, signalPoints.metricKey, day)
+    .as('sampled_history');
+  const rows = await client
+    .select({ point: signalPoints })
+    .from(signalPoints)
+    .innerJoin(
+      sampled,
+      and(
+        eq(signalPoints.signalId, sampled.signalId),
+        eq(signalPoints.metricKey, sampled.metricKey),
+        eq(signalPoints.observedAt, sampled.observedAt),
+      ),
+    )
+    .orderBy(desc(signalPoints.observedAt), desc(signalPoints.metricKey))
+    .limit(HISTORY_POINT_LIMIT)
+    .all();
+  return rows.map((row) => row.point).reverse();
 };
 
 const ownerConditions = (userId: string, collectionId?: string): SQL[] => {

@@ -21,8 +21,6 @@ const stubMatchMedia = (prefersDark: boolean): MediaQueryListLike => {
   };
   const matchMediaFn = vi.fn(() => mql) as unknown as typeof window.matchMedia;
   globalThis.matchMedia = matchMediaFn;
-  // theme.ts guards on `typeof window !== 'undefined'`, so we need a real
-  // window object that exposes the same stub.
   // @ts-expect-error overriding for the test environment
   globalThis.window = { matchMedia: matchMediaFn };
   return mql;

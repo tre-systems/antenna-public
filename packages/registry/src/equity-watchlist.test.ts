@@ -5,6 +5,10 @@ const anyHintMatches = (prompt: string): boolean =>
   equityWatchlistTemplate.matchHints.some((rx) => rx.test(prompt));
 
 describe('equityWatchlistTemplate.matchHints', () => {
+  it('is retained for legacy signals but excluded from new plans', () => {
+    expect(equityWatchlistTemplate.plannerEnabled).toBe(false);
+  });
+
   it.each([
     'add a stock tile',
     'I want to track stocks',

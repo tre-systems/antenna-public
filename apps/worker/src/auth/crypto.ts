@@ -1,6 +1,4 @@
-// AES-GCM for the OAuth tokens on the `account` row. Key is 64 hex chars
-// (`openssl rand -hex 32`); output is `${ivBase64}.${ciphertextBase64}` with a
-// fresh 12-byte IV per encrypt, per NIST SP 800-38D.
+// Encrypt OAuth tokens with AES-GCM and a fresh 12-byte IV.
 
 const IV_BYTES = 12;
 const HEX_KEY_LENGTH = 64;

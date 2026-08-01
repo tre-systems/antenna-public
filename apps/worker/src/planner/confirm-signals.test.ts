@@ -15,8 +15,7 @@ vi.mock('../db/client', async () => {
   };
 });
 
-// Exercised through confirmPlan: what a client may influence, and what the
-// registry re-resolves regardless, is only observable in the written row.
+// Confirm through the public boundary and inspect the resulting rows.
 describe('confirmed signal materialisation', () => {
   let db: Drizzle;
   let env: { DB: D1Database };
@@ -50,9 +49,7 @@ describe('confirmed signal materialisation', () => {
 
   it('keeps non-display-eligible sources private inside a shared collection', async () => {
     shareCollection();
-    // github-trending is registered but not public-display eligible, so the
-    // confirmed signal must fall back to private rather than the confirm
-    // being rejected outright.
+    // Ineligible public signals must fall back to private.
     const record = await createPlan(env, {
       collection_id: 'collection-1',
       prompt: 'github trending',
@@ -124,7 +121,10 @@ describe('confirmed signal materialisation', () => {
       ],
     });
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error).toMatch(/invalid_config: fx-pair/);
+    if (!result.ok) {
+      expect(result.error).toBe('invalid_config');
+      expect(result.detail).toMatch(/fx-pair config/);
+    }
     expect(db.select().from(schema.signals).all()).toHaveLength(0);
   });
 

@@ -1,4 +1,5 @@
 import type { DataPoint } from '../api';
+import { safeExternalUrl } from './display';
 import type { RenderSignal } from './types';
 
 export type GithubTrendingRow = {
@@ -25,7 +26,7 @@ const parseTrendingPoint = (point: DataPoint): GithubTrendingRow | null => {
   const [repo, ...rest] = raw.split(' · ').map((s) => s.trim());
   if (!repo) return null;
   const details = parseDetails(rest);
-  return { rank: rankOf(point), repo, url: point.display?.source_url ?? null, ...details };
+  return { rank: rankOf(point), repo, url: safeExternalUrl(point.display?.source_url), ...details };
 };
 
 const parseDetails = (

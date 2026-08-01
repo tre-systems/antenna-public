@@ -1,4 +1,5 @@
-import { humaniseKey, updateConfigDraft, type ConfigDraft } from './config-draft';
+import { configKeyLabel } from '../../config-labels';
+import { updateConfigDraft, type ConfigDraft } from './config-draft';
 
 type ConfigEntry = readonly [string, string | number];
 
@@ -48,7 +49,7 @@ function ConfigInput({ configKey, original, current, disabled, onDraftChange }: 
 
   return (
     <label class="block">
-      <span class="text-xs text-slate-500 dark:text-slate-400">{humaniseKey(configKey)}</span>
+      <span class="text-xs text-slate-500 dark:text-slate-400">{configKeyLabel(configKey)}</span>
       <input
         type={isNumber ? 'number' : 'text'}
         value={String(current)}

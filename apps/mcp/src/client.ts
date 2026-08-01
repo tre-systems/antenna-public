@@ -37,9 +37,9 @@ export class AntennaApiError extends Error {
   }
 }
 
-export type AntennaReadClient = ReturnType<typeof createAntennaReadClient>;
+export type AntennaClient = ReturnType<typeof createAntennaClient>;
 
-export function createAntennaReadClient(options: AntennaClientOptions) {
+export function createAntennaClient(options: AntennaClientOptions) {
   const fetchImpl = options.fetchImpl ?? fetch;
   const baseUrl = normalizeBaseUrl(options.baseUrl);
 
@@ -133,10 +133,17 @@ export function createAntennaReadClient(options: AntennaClientOptions) {
         headers: { 'Content-Type': 'application/json' },
       });
     },
-    proposeSignal(prompt: string): Promise<PlanRecord> {
+    proposeSignal(prompt: string, collectionId?: string): Promise<PlanRecord> {
       return requestJson<PlanRecord>('/api/plan', {
         method: 'POST',
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, collection_id: collectionId }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    },
+    proposeTemplateSignal(templateId: string, collectionId?: string): Promise<PlanRecord> {
+      return requestJson<PlanRecord>('/api/plan', {
+        method: 'POST',
+        body: JSON.stringify({ template_id: templateId, collection_id: collectionId }),
         headers: { 'Content-Type': 'application/json' },
       });
     },

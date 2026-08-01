@@ -1,7 +1,6 @@
 import { prefersReducedMotion } from './flip';
 
-// Floating copy of a card that tracks the pointer during a drag. It is
-// pointer-events:none so elementFromPoint hit-tests the grid cells beneath it.
+// Ignore the floating card so hit tests reach the grid beneath it.
 export type DragGhost = {
   readonly moveTo: (dx: number, dy: number) => void;
   readonly settleInto: (target: DOMRect) => void;

@@ -2,14 +2,10 @@ import { and, asc, eq, or, sql, type SQL } from 'drizzle-orm';
 import { signalStatus, collections, signals } from '../../db/schema';
 import type { Client, Joined } from './types';
 
-// One tick's worth of work. The dispatcher runs every minute, so this caps the
-// adapter fetches, D1 writes, and Durable Object notifies a single invocation
-// can produce — independent of how many collections exist.
+// Cap the adapter, D1, and Durable Object work produced by one tick.
 export const DISPATCH_TICK_LIMIT = 250;
 
-// Due-ness is decided in SQL rather than by pulling every signal in the
-// database into the isolate and filtering there. The predicate lives here and
-// nowhere else, so callers take these rows as already-due.
+// Decide due state in SQL so callers receive only bounded due rows.
 export const loadDueDispatchRows = async (
   client: Client,
   now: number,
@@ -25,8 +21,7 @@ export const loadDueDispatchRows = async (
     .limit(limit)
     .all();
 
-// Someone is waiting on a manual refresh, so it jumps the scheduled queue and
-// is honoured even for on-demand collections.
+// Manual refreshes take priority, including for on-demand collections.
 const manualRefreshRequested = (): SQL =>
   sql`(${signalStatus.lastManualRequestAt} IS NOT NULL
        AND (${signalStatus.updatedAt} IS NULL
@@ -43,8 +38,5 @@ const scheduledAndElapsed = (now: number): SQL =>
 
 const manualFirst = (): SQL => sql`CASE WHEN ${manualRefreshRequested()} THEN 0 ELSE 1 END`;
 
-// Fairness key: least-recently-attempted first. `updated_at` advances on every
-// attempt, success or failure, so a signal that keeps erroring rotates to the
-// back of the queue rather than starving everyone else's. Never-attempted
-// signals sort first.
+// Order by oldest attempt so failures rotate instead of starving other signals.
 const lastAttemptedAt = (): SQL => sql`COALESCE(${signalStatus.updatedAt}, 0)`;

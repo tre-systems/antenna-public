@@ -54,13 +54,12 @@ function LoadingGrid() {
 function EmptyGrid() {
   return (
     <div class="antenna-panel rounded-2xl p-6 text-sm text-slate-500 dark:text-slate-400">
-      No signals yet — use Add signal in the toolbar to create your first one.
+      No signals yet — ask your connected agent to add one.
     </div>
   );
 }
 
-// One flat grid in the user's stored order — no fixed sections, so any card can
-// be dragged to any slot.
+// Keep one flat grid so every card can move to every slot.
 function FlatSignalGrid({ signals }: { readonly signals: ApiSignal[] }) {
   const gridRef = useRef<HTMLDivElement>(null);
   useGridFlip(gridRef);

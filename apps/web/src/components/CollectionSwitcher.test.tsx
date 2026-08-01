@@ -1,6 +1,4 @@
-// Render-only tests via preact-render-to-string. Listing fetch is gated
-// behind the open dropdown, so the static markup only covers the trigger.
-// The expanded menu + active item highlighting are exercised in e2e.
+// String rendering covers the closed trigger; e2e covers the fetched menu.
 import { describe, expect, it } from 'vitest';
 import renderToString from 'preact-render-to-string';
 import { CollectionSwitcher } from './CollectionSwitcher';
@@ -15,8 +13,7 @@ describe('CollectionSwitcher', () => {
   });
 
   it('shows the active collection title fallback when no listing has loaded yet', () => {
-    // Without the listing fetched, even a non-null activeId falls back to
-    // the primary title we got from the parent collection fetch.
+    // The parent title is the fallback before menu data loads.
     const html = renderToString(
       <CollectionSwitcher activeId="abc123" primaryTitle="Trading desk" onCreateClick={() => {}} />,
     );

@@ -81,7 +81,7 @@
       <header><a href="/">← Antenna</a></header>
       <main>
         <h1>Privacy Policy</h1>
-        <p><strong>Last updated:</strong> 24 July 2026</p>
+        <p><strong>Last updated:</strong> 1 August 2026</p>
         <p>
           Antenna is self-hosted software. The person or organisation that made this deployment
           available is its operator and data controller. This notice explains the data an Antenna
@@ -91,8 +91,9 @@
 
         <h2>Who this applies to</h2>
         <p>
-          Interactive access is limited to Google accounts on an operator-maintained allowlist. If
-          you are not on the allowlist, you cannot create an account or use authenticated features.
+          Access depends on operator configuration. With <code>ALLOWED_EMAILS</code> unset, any
+          Google account can sign up; when set, only listed addresses can sign in. An operator can
+          block an email address at any time, immediately ending its sessions and agent access.
         </p>
 
         <h2>Information we collect</h2>
@@ -100,7 +101,8 @@
         <p>
           When you sign in with Google, we receive basic profile information from Google, including
           your name, email address, and profile image. We use this to identify your account, enforce
-          the access allowlist, and display your profile in the app.
+          the deployment's access policy, and display your profile in the app. Antenna does not
+          request access to Google Calendar, Gmail, Drive, or other Google account data.
         </p>
         <h3>Collections, signals, and agent access</h3>
         <p>
@@ -137,10 +139,10 @@
         <h2>How we store and protect data</h2>
         <p>
           Antenna runs on Cloudflare Workers with D1, R2, and related Cloudflare services. Google
-          provider access, refresh, and ID tokens are discarded before account persistence. MCP
-          OAuth grants remain high-trust service data. Sessions, collections, and signals are
-          private by default. Public or shared views expose only what the Worker source policy
-          allows.
+          provider access and refresh tokens are encrypted before account persistence; the unused
+          Google ID token is discarded. MCP OAuth grants remain high-trust service data. Sessions,
+          collections, and signals are private by default. Public or shared views expose only what
+          the Worker source policy allows.
         </p>
 
         <h2>Retention</h2>

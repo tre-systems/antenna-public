@@ -1,5 +1,4 @@
-// Render-only tests plus pure helper tests. The async edit/save flow
-// needs a real DOM and is exercised in e2e.
+// Async editing requires DOM coverage; string rendering covers its stable surface.
 import { describe, expect, it } from 'vitest';
 import renderToString from 'preact-render-to-string';
 import { appendConfig, WatchlistAppend } from './WatchlistAppend';

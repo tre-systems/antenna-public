@@ -1,5 +1,4 @@
-// Render-only tests. The expand/collapse interaction needs a real DOM and
-// is exercised in e2e.
+// Expand/collapse interaction remains e2e coverage.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import renderToString from 'preact-render-to-string';
 import { ShareDisplayMatrix } from './ShareDisplayMatrix';

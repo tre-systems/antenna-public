@@ -102,11 +102,7 @@ describe('sectorMoversYahoo', () => {
     expect(xlk?.value).toBe(1);
   });
 
-  // The card renders each row's `sector` dimension as its only title (the
-  // compact summary drops the ticker subtitle). Two points sharing a sector
-  // therefore render as indistinguishable rows that read like a duplicate-row
-  // bug. Guard the source invariant: one row per ETF, each with a distinct
-  // sector label and ticker, so a future SECTORS edit can't reintroduce that.
+  // Distinct labels prevent separate ETFs from rendering as duplicate compact rows.
   it('emits one row per ETF with distinct sector labels and tickers', async () => {
     mockYahoo();
 

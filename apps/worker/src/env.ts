@@ -1,14 +1,10 @@
 import type { MiddlewareEnv } from './auth/middleware';
-import type { DigestEnv } from './cron/digest/types';
 import type { DispatchEnv } from './cron/dispatch/types';
 import type { BeaconEnv } from './routes/beacon';
 
-// Every binding the deployed Worker holds, composed once: adding a secret should
-// touch this type only. CHANNELS is required here even though NotifyEnv treats it
-// as optional, because the deployed Worker always binds it.
+// Compose every deployed binding in one type.
 export type WorkerEnv = MiddlewareEnv &
   DispatchEnv &
-  DigestEnv &
   BeaconEnv & {
     readonly ASSETS: Fetcher;
     readonly CHANNELS: DurableObjectNamespace;

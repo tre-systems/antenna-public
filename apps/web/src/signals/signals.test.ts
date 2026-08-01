@@ -1,14 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  activeCollectionId,
   displayedSignals,
   loadSignals,
   pendingRemoval,
+  fetchError,
+  isOffline,
+  setSignalSnapshotOwner,
   signals,
   startRemoval,
   undoRemoval,
   UNDO_WINDOW_MS,
 } from './signals';
 import { jsonResponse, mockFetch, resetSignalState, sampleSignal, urlOf } from './test-support';
+import { connectorRequests, currentPlan, planError, planSubmitting } from './plan';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -114,5 +119,79 @@ describe('signal removal', () => {
     resolveDelete?.(jsonResponse({ deleted: true }));
     await vi.runAllTimersAsync();
     expect(displayedSignals.value?.map((s) => s.id)).toEqual(['b']);
+  });
+
+  it('clears private transient state when the signed-in owner changes', () => {
+    signals.value = [sampleSignal('a')];
+    startRemoval(sampleSignal('a'));
+    fetchError.value = 'old owner error';
+    isOffline.value = true;
+    currentPlan.value = {
+      id: 'p1',
+      collection_id: 'c1',
+      prompt: 'private prompt',
+      status: 'proposed',
+      plan: { prompt: 'private prompt', signals: [], unmatched: [] },
+      created_at: 0,
+    };
+    planError.value = 'old plan error';
+    planSubmitting.value = true;
+    connectorRequests.value = [
+      {
+        id: 'r1',
+        prompt: 'private request',
+        fragment: 'private',
+        count: 1,
+        created_at: 0,
+        updated_at: 0,
+      },
+    ];
+
+    setSignalSnapshotOwner('different-owner');
+
+    expect(signals.value).toBeNull();
+    expect(pendingRemoval.value).toBeNull();
+    expect(fetchError.value).toBeNull();
+    expect(isOffline.value).toBe(false);
+    expect(currentPlan.value).toBeNull();
+    expect(planError.value).toBeNull();
+    expect(planSubmitting.value).toBe(false);
+    expect(connectorRequests.value).toEqual([]);
+  });
+
+  it('ignores a signal response from the previous owner', async () => {
+    let resolveFetch: ((response: Response) => void) | undefined;
+    mockFetch(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+    setSignalSnapshotOwner('owner-a');
+
+    const loading = loadSignals(null, 'owner-a');
+    setSignalSnapshotOwner('owner-b');
+    resolveFetch?.(jsonResponse([sampleSignal('private-owner-a')]));
+    await loading;
+
+    expect(signals.value).toBeNull();
+  });
+
+  it('ignores a signal response from the previously active collection', async () => {
+    let resolveFetch: ((response: Response) => void) | undefined;
+    mockFetch(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+    activeCollectionId.value = 'collection-a';
+
+    const loading = loadSignals('collection-a');
+    activeCollectionId.value = 'collection-b';
+    resolveFetch?.(jsonResponse([sampleSignal('collection-a-signal')]));
+    await loading;
+
+    expect(signals.value).toBeNull();
   });
 });

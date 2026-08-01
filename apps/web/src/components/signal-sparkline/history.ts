@@ -1,5 +1,5 @@
 import type { HistoryPoint } from '../../api';
-import { pointLabel } from '../../signalFormat';
+import { pointLabel } from '../../signal-format';
 import type { SeriesPoint, SeriesWithLabel } from './types';
 
 type GroupedPoint = {
@@ -8,14 +8,27 @@ type GroupedPoint = {
   readonly point: SeriesPoint;
 };
 
-export const bestSeries = (points: readonly HistoryPoint[]): SeriesWithLabel => {
+type SeriesOptions = {
+  readonly groupByLabel?: boolean;
+  readonly preferredLabel?: string | null;
+};
+
+export const bestSeries = (
+  points: readonly HistoryPoint[],
+  options: SeriesOptions = {},
+): SeriesWithLabel => {
   const grouped = new Map<string, SeriesWithLabel>();
   for (const point of points) {
-    const groupedPoint = toGroupedPoint(point);
+    const groupedPoint = toGroupedPoint(point, options.groupByLabel === true);
     if (groupedPoint !== null) appendGroupedPoint(grouped, groupedPoint);
   }
 
-  return [...grouped.values()].reduce(longestSeries, emptySeries());
+  const series = [...grouped.values()];
+  const preferred = options.preferredLabel?.toLocaleLowerCase('en-GB');
+  return (
+    series.find((candidate) => candidate.label.toLocaleLowerCase('en-GB') === preferred) ??
+    series.reduce(longestSeries, emptySeries())
+  );
 };
 
 export const pointTimestamp = (point: HistoryPoint): number =>
@@ -27,13 +40,14 @@ const appendGroupedPoint = (grouped: Map<string, SeriesWithLabel>, groupedPoint:
   grouped.set(groupedPoint.key, existing);
 };
 
-const toGroupedPoint = (point: HistoryPoint): GroupedPoint | null => {
+const toGroupedPoint = (point: HistoryPoint, groupByLabel: boolean): GroupedPoint | null => {
   if (typeof point.value !== 'number' || !Number.isFinite(point.value)) return null;
   const ts = pointTimestamp(point);
   if (!Number.isFinite(ts)) return null;
+  const label = pointLabel(point);
   return {
-    key: point.metric_key,
-    label: pointLabel(point),
+    key: groupByLabel ? label.toLocaleLowerCase('en-GB') : point.metric_key,
+    label,
     point: { ts, value: point.value },
   };
 };

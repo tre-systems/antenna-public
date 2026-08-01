@@ -3,7 +3,7 @@ import {
   type WeatherCardData,
   type WeatherCondition,
   type WeatherForecastHour,
-} from '../../signalFormat';
+} from '../../signal-format';
 import { WeatherIcon } from '../WeatherIcon';
 
 export function WeatherHero({ data }: { readonly data: WeatherCardData }) {

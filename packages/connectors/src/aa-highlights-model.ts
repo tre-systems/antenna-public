@@ -15,8 +15,7 @@ export const CATEGORY_DATASET_NAMES: Record<AaCategory, readonly string[]> = {
   price: ['Price', 'Pricing: Cache Hit, Input, and Output'],
 };
 
-// AA renames homepage JSON-LD fields without notice; accept the reviewed
-// aliases we have seen so a wording change does not blank the cards.
+// Accept reviewed AA field aliases so upstream renames do not blank the cards.
 export const CATEGORY_VALUE_KEYS: Record<AaCategory, readonly string[]> = {
   intelligence: ['artificialAnalysisIntelligenceIndex', 'intelligenceIndex'],
   speed: ['medianOutputSpeed', 'outputSpeed', 'speed'],
