@@ -1,4 +1,8 @@
-import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
+import {
+  createMcpHandler,
+  isLegacyRequest,
+  WebStandardStreamableHTTPServerTransport,
+} from '@modelcontextprotocol/server';
 import { createAntennaMcpServer } from '@antenna/mcp/factory';
 import type { FetchLike } from '@antenna/mcp';
 import { Hono } from 'hono';
@@ -48,18 +52,37 @@ export function createMcpRoute(options: McpRouteOptions = {}) {
           dispatch(new Request(input, init), c.env, c.executionCtx as unknown as ExecutionContext)
       : options.fetchImpl;
 
-    const server = createAntennaMcpServer({
-      baseUrl: new URL(c.req.url).origin,
-      token: bearerToken ?? undefined,
-      sessionCookie: bearerToken === null ? sessionCookie : undefined,
-      fetchImpl,
-    });
-    const transport = new WebStandardStreamableHTTPServerTransport({
-      enableJsonResponse: true,
+    const serverFactory = () =>
+      createAntennaMcpServer({
+        baseUrl: new URL(c.req.url).origin,
+        token: bearerToken ?? undefined,
+        sessionCookie: bearerToken === null ? sessionCookie : undefined,
+        fetchImpl,
+      });
+
+    if (await isLegacyRequest(c.req.raw)) {
+      const transport = new WebStandardStreamableHTTPServerTransport({
+        sessionIdGenerator: undefined,
+        enableJsonResponse: true,
+      });
+      const server = serverFactory();
+      await server.connect(transport);
+      try {
+        return await transport.handleRequest(c.req.raw);
+      } finally {
+        await transport.close();
+      }
+    }
+
+    const handler = createMcpHandler(serverFactory, {
+      legacy: 'reject',
     });
 
-    await server.connect(transport);
-    return transport.handleRequest(c.req.raw);
+    try {
+      return await handler.fetch(c.req.raw);
+    } finally {
+      await handler.close();
+    }
   });
 
   return route;

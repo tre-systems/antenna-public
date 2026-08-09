@@ -1,4 +1,4 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import type { AntennaClient } from './client.js';
 import { jsonToolResult } from './factory-results.js';
@@ -29,9 +29,9 @@ export function registerReadTools(server: McpServer, client: AntennaClient): voi
       title: 'Get collection',
       description:
         'Return one signed-in user collection by id, including collection metadata and ordered signal summaries.',
-      inputSchema: {
+      inputSchema: z.object({
         collectionId: z.string().min(1).describe('Collection id returned by list_collections.'),
-      },
+      }),
     },
     async (input) => jsonToolResult(await getCollectionTool(client, input)),
   );
@@ -42,7 +42,7 @@ export function registerReadTools(server: McpServer, client: AntennaClient): voi
       title: 'List collection signals',
       description:
         'List signed-in user collection signals, including status, source, latest point, and source policy metadata. Pass collectionId from list_collections when the target collection is known.',
-      inputSchema: {
+      inputSchema: z.object({
         collectionId: z
           .string()
           .min(1)
@@ -53,7 +53,7 @@ export function registerReadTools(server: McpServer, client: AntennaClient): voi
           .optional()
           .describe('Optional exact signal status filter.'),
         templateId: z.string().optional().describe('Optional template id filter.'),
-      },
+      }),
     },
     async (input) => jsonToolResult(await listSignalsTool(client, input)),
   );
@@ -63,13 +63,13 @@ export function registerReadTools(server: McpServer, client: AntennaClient): voi
     {
       title: 'Get signal history',
       description: 'Return historical data points for a chartable collection signal.',
-      inputSchema: {
+      inputSchema: z.object({
         signalId: z.string().min(1).describe('Collection signal id.'),
         range: z
           .enum(['1m', '3m', '6m', '1y', 'all'])
           .optional()
           .describe('History range, defaulting to 1y.'),
-      },
+      }),
     },
     async (input) => jsonToolResult(await getSignalHistoryTool(client, input)),
   );
@@ -80,9 +80,9 @@ export function registerReadTools(server: McpServer, client: AntennaClient): voi
       title: 'Get collection signal',
       description:
         'Return one signed-in user collection signal, including status, source, config, and latest raw points.',
-      inputSchema: {
+      inputSchema: z.object({
         signalId: z.string().min(1).describe('Collection signal id.'),
-      },
+      }),
     },
     async (input) => jsonToolResult(await getSignalTool(client, input)),
   );
