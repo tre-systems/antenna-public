@@ -1,4 +1,4 @@
-import { ResourceTemplate, type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { ResourceTemplate, type McpServer } from '@modelcontextprotocol/server';
 import type { AntennaClient } from './client.js';
 import { stringVariable } from './factory-results.js';
 import { getSignalTool, listSignalsTool } from './tools.js';

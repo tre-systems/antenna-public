@@ -1,4 +1,4 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer } from '@modelcontextprotocol/server';
 import { createAntennaClient, type AntennaClientOptions } from './client.js';
 import { registerPrompts } from './factory-prompts.js';
 import { registerReadTools } from './factory-read-tools.js';

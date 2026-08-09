@@ -75,9 +75,10 @@ after repeated stream failures. The PWA never becomes authoritative for source o
 
 ### Agent Access
 
-The Worker hosts a stateless streamable-HTTP MCP endpoint at `/api/mcp`; the repository also ships a
-local stdio entry point using the same server factory. Both call the existing owner-scoped Worker
-API and expose the same tools, resources, and prompts.
+The Worker hosts a `2026-07-28` per-request Stateless MCP endpoint at `/api/mcp`, with a stateless
+`2025-11-25` compatibility path; the repository also ships a local stdio entry point using the same
+server factory. Both call the existing owner-scoped Worker API and expose the same tools, resources,
+and prompts.
 
 MCP OAuth is the supported credential flow. Owners can inspect and disconnect clients. Historical
 manual `pbk_` credentials remain revocable, but new manual-token issuance is disabled. Read tools

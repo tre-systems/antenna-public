@@ -113,6 +113,43 @@ describe('/api/mcp', () => {
     expect(fetches).toEqual(['GET https://collection.test/api/signals Bearer pbk_test-token']);
   });
 
+  it('serves 2026-07-28 Stateless MCP without a session handshake', async () => {
+    const app = new Hono<{ Bindings: MiddlewareEnv; Variables: AuthVars }>();
+    app.route('/api/mcp', createMcpRoute());
+
+    const res = await app.request('/api/mcp', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: 'Bearer pbk_test-token',
+        'mcp-method': 'tools/list',
+        'mcp-protocol-version': '2026-07-28',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 2026,
+        method: 'tools/list',
+        params: {
+          _meta: {
+            'io.modelcontextprotocol/protocolVersion': '2026-07-28',
+            'io.modelcontextprotocol/clientInfo': {
+              name: 'antenna-modern-test',
+              version: '0',
+            },
+            'io.modelcontextprotocol/clientCapabilities': {},
+          },
+        },
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('mcp-session-id')).toBeNull();
+    const body: {
+      result: { tools: Array<{ name: string }> };
+    } = await res.json();
+    expect(body.result.tools.map((tool) => tool.name)).toContain('list_signals');
+  });
+
   it('scopes MCP reads to the caller token so user A cannot read user B signal', async () => {
     const forwarded: string[] = [];
     // Emulate the owner-scoped internal signal API with existence hiding.

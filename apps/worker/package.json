@@ -17,7 +17,7 @@
     "@antenna/mcp": "*",
     "@antenna/registry": "*",
     "@antenna/shared": "*",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/server": "^2.0.0",
     "@sentry/cloudflare": "^10.68.0",
     "better-auth": "^1.6.25",
     "drizzle-orm": "^0.45.2",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260722.1",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@types/better-sqlite3": "^7.6.12",
     "better-sqlite3": "^12.0.0",
     "drizzle-kit": "^1.0.0-beta.22",

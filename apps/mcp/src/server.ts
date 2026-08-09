@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { createAntennaMcpServer } from './factory.js';
 import type { AntennaClientOptions } from './client.js';
 
@@ -27,11 +27,10 @@ export function readConfigFromEnv(env: NodeJS.ProcessEnv = process.env): Antenna
   return config;
 }
 
-export async function runStdioServer(
-  config: AntennaClientOptions = readConfigFromEnv(),
-): Promise<void> {
-  const server = createAntennaMcpServer(config);
-  await server.connect(new StdioServerTransport());
+export function runStdioServer(config: AntennaClientOptions = readConfigFromEnv()): Promise<void> {
+  return Promise.resolve().then(() => {
+    serveStdio(() => createAntennaMcpServer(config));
+  });
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
