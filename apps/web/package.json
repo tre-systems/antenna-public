@@ -13,7 +13,7 @@
     "@antenna/shared": "*",
     "@preact/signals": "^2.0.5",
     "@sentry/browser": "^10.75.0",
-    "preact": "^10.27.0"
+    "preact": "^11.0.0"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.2",
