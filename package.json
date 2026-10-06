@@ -70,6 +70,10 @@
   "overrides": {
     "@hono/node-server": "2.0.11",
     "esbuild": "^0.28.1",
+    "miniflare@5.20261001.0-alpha": {
+      "sharp": "0.35.5",
+      "undici": "$undici"
+    },
     "undici": "$undici"
   },
   "license": "MIT"
