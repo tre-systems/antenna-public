@@ -7,8 +7,8 @@ import { createAntennaMcpServer } from '@antenna/mcp/factory';
 import type { FetchLike } from '@antenna/mcp';
 import { Hono } from 'hono';
 import type { AuthVars, MiddlewareEnv } from '../auth/middleware';
-import { authenticateOAuthToken, extractBearerToken, TOKEN_PREFIX } from '../auth/mcp-token';
-import { db } from '../db/client';
+import { extractBearerToken, TOKEN_PREFIX } from '../auth/mcp-token';
+import { authenticateOAuthRequest } from '../auth/oauth-access';
 import { err } from './http';
 
 type Bindings = MiddlewareEnv;
@@ -30,7 +30,7 @@ export function createMcpRoute(options: McpRouteOptions = {}) {
     const isLegacyBearer = bearerToken !== null && bearerToken.startsWith(TOKEN_PREFIX);
     if (!isLegacyBearer && sessionCookie === undefined) {
       const oauthUser =
-        bearerToken === null ? null : await authenticateOAuthToken(db(c.env), bearerToken);
+        bearerToken === null ? null : await authenticateOAuthRequest(c.env, bearerToken);
       if (oauthUser === null) {
         const resourceMetadata = `${new URL(c.req.url).origin}/.well-known/oauth-protected-resource`;
         c.header('WWW-Authenticate', `Bearer resource_metadata="${resourceMetadata}"`);

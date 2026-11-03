@@ -61,20 +61,22 @@
     "prettier": "^3.9.9",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.1",
-    "undici": "7.30.0",
+    "undici": "7.30.1",
     "vitest": "^5.0.3"
   },
   "engines": {
     "node": ">=22"
   },
   "overrides": {
-    "@hono/node-server": "2.0.11",
+    "@better-auth/core": "1.7.14",
+    "@hono/node-server": "2.1.3",
     "esbuild": "^0.28.1",
     "miniflare@5.20261001.0-alpha": {
       "sharp": "0.35.5",
       "undici": "$undici"
     },
-    "undici": "$undici"
+    "undici": "$undici",
+    "zod": "4.6.7"
   },
   "license": "MIT"
 }

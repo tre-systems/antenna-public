@@ -2,13 +2,17 @@
 
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { betterAuth } from 'better-auth/minimal';
-import { mcp } from 'better-auth/plugins';
 import { db, type Env as DbEnv } from '../db/client';
 import {
   account,
-  oauthAccessToken,
-  oauthApplication,
-  oauthConsent,
+  oauthClient,
+  oauthResource,
+  oauthClientResource,
+  oauth2AccessToken,
+  oauth2RefreshToken,
+  oauth2Consent,
+  oauthClientAssertion,
+  jwks,
   session,
   user,
   verification,
@@ -16,6 +20,7 @@ import {
 import { protectAccountTokens } from './account-tokens';
 import { accessRules, assertSessionUserPermitted, emailPermitted, refusalReason } from './access';
 import { ensureUserCollection } from './ensure-user-collection';
+import { oauthOrigin, oauthPlugins } from './oauth-provider';
 
 export { ensureUserCollection } from './ensure-user-collection';
 export { recordStarterSignalDismissal } from './starter-signals';
@@ -52,7 +57,8 @@ export const createAuth = (env: AuthEnv) => {
 
   return betterAuth({
     secret: env.BETTER_AUTH_SECRET,
-    ...(env.BETTER_AUTH_URL ? { baseURL: env.BETTER_AUTH_URL } : {}),
+    baseURL: oauthOrigin(env.BETTER_AUTH_URL),
+    disabledPaths: ['/token'],
     database: drizzleAdapter(client, {
       provider: 'sqlite',
       schema: {
@@ -60,21 +66,19 @@ export const createAuth = (env: AuthEnv) => {
         session,
         account,
         verification,
-        oauthApplication,
-        oauthAccessToken,
-        oauthConsent,
+        oauthClient,
+        oauthResource,
+        oauthClientResource,
+        oauthAccessToken: oauth2AccessToken,
+        oauthRefreshToken: oauth2RefreshToken,
+        oauthConsent: oauth2Consent,
+        oauthClientAssertion,
+        jwks,
       },
       // Our BA tables are declared in singular form to match BA defaults.
       usePlural: false,
     }),
-    plugins: [
-      // Issue audience-bound MCP access tokens without exposing Google tokens.
-      mcp({
-        loginPage: '/',
-        // Repeat loginPage to satisfy OIDCOptions; the plugin uses the top-level value.
-        oidcConfig: { loginPage: '/', requirePKCE: true },
-      }),
-    ],
+    plugins: oauthPlugins(oauthOrigin(env.BETTER_AUTH_URL)),
     emailAndPassword: { enabled: false },
     account: {
       storeStateStrategy: 'database',

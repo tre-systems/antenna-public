@@ -2,6 +2,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { mcpTokens, oauthAccessToken, oauthApplication, user } from '../db/schema';
 import type { SessionUser } from './middleware';
+import { retryOAuthRead } from './oauth-read-retry';
 
 export const TOKEN_PREFIX = 'pbk_';
 
@@ -63,25 +64,27 @@ export async function authenticateMcpToken(
   };
 }
 
-// Enforce OAuth expiry explicitly because the plugin session lookup does not.
+// Retired grant reader; the cutover migration disables every legacy OAuth client.
 export async function authenticateOAuthToken(
   client: TokenDb,
   token: string,
 ): Promise<{ readonly user: SessionUser } | null> {
-  const [row] = await client
-    .select({
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      image: user.image,
-      expiresAt: oauthAccessToken.accessTokenExpiresAt,
-    })
-    .from(oauthAccessToken)
-    .innerJoin(user, eq(user.id, oauthAccessToken.userId))
-    .innerJoin(oauthApplication, eq(oauthApplication.clientId, oauthAccessToken.clientId))
-    .where(and(eq(oauthAccessToken.accessToken, token), eq(oauthApplication.disabled, false)))
-    .limit(1)
-    .all();
+  const [row] = await retryOAuthRead(() =>
+    client
+      .select({
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+        expiresAt: oauthAccessToken.accessTokenExpiresAt,
+      })
+      .from(oauthAccessToken)
+      .innerJoin(user, eq(user.id, oauthAccessToken.userId))
+      .innerJoin(oauthApplication, eq(oauthApplication.clientId, oauthAccessToken.clientId))
+      .where(and(eq(oauthAccessToken.accessToken, token), eq(oauthApplication.disabled, false)))
+      .limit(1)
+      .all(),
+  );
 
   if (row === undefined) return null;
   // `access_token_expires_at` is NOT NULL, so it is always a Date here.
@@ -101,12 +104,14 @@ export async function authenticateOAuthToken(
 export async function authenticateBearer(
   client: TokenDb,
   token: string,
+  oauthAuthenticator: (token: string) => Promise<{ readonly user: SessionUser } | null> = () =>
+    Promise.resolve(null),
 ): Promise<{ readonly user: SessionUser } | null> {
   if (token.startsWith(TOKEN_PREFIX)) {
     const result = await authenticateMcpToken(client, token);
     return result === null ? null : { user: result.user };
   }
-  return authenticateOAuthToken(client, token);
+  return oauthAuthenticator(token);
 }
 
 function hex(bytes: Uint8Array): string {

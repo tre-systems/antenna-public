@@ -1,9 +1,7 @@
 import * as Sentry from '@sentry/cloudflare';
-import { oAuthDiscoveryMetadata, oAuthProtectedResourceMetadata } from 'better-auth/plugins';
 import { Hono } from 'hono';
 import { routePath } from 'hono/route';
 import { createAuth } from './auth';
-import { refreshTokenBeingRotated, retireRotatedOAuthGrant } from './auth/oauth-rotation';
 import { requireUser, type AuthVars } from './auth/middleware';
 import type { WorkerEnv } from './env';
 import { alertsRoute } from './routes/alerts';
@@ -37,6 +35,7 @@ import { securityHeaders } from './security-headers';
 import { templatesRoute } from './routes/templates';
 import { reportWorkerInvocationException } from './invocation-exception-telemetry';
 import { recordAntennaUsage } from './antenna-usage';
+import { oauthConsentRoute } from './routes/oauth-consent';
 
 export { CollectionChannel } from './do/collection-channel';
 export { RateLimiter } from './do/rate-limiter';
@@ -70,7 +69,7 @@ const isAuthOAuthCallbackRequest = (c: {
 // Cap anonymous MCP client registration by requester IP.
 const isMcpRegisterRequest = (c: {
   readonly req: { readonly method: string; readonly path: string };
-}): boolean => c.req.method === 'POST' && /^\/api\/auth\/mcp\/register(?:\/|$)/.test(c.req.path);
+}): boolean => c.req.method === 'POST' && /^\/api\/auth\/oauth2\/register(?:\/|$)/.test(c.req.path);
 
 app.use('/api/auth/*', createAuthOAuthStartRateLimit({ shouldLimit: isAuthOAuthStartRequest }));
 app.use(
@@ -78,28 +77,16 @@ app.use(
   createAuthOAuthCallbackRateLimit({ shouldLimit: isAuthOAuthCallbackRequest }),
 );
 app.use('/api/auth/*', createMcpRegisterRateLimit({ shouldLimit: isMcpRegisterRequest }));
-app.all('/api/auth/*', async (c) => {
-  const rotatingRefreshToken = /^\/api\/auth\/mcp\/token(?:\/|$)/.test(c.req.path)
-    ? await refreshTokenBeingRotated(c.req.raw.clone())
-    : null;
-  const response = await createAuth(c.env).handler(c.req.raw);
-  if (response.ok && rotatingRefreshToken !== null) {
-    // Remove the consumed grant only after its replacement succeeds.
-    await retireRotatedOAuthGrant(c.env, rotatingRefreshToken);
-  }
-  return response;
-});
+app.all('/api/auth/*', (c) => createAuth(c.env).handler(c.req.raw));
 
 // Mirror Better Auth metadata at the root paths MCP clients probe.
-app.get('/.well-known/oauth-authorization-server', (c) =>
-  oAuthDiscoveryMetadata(createAuth(c.env))(c.req.raw),
-);
-app.get('/.well-known/oauth-protected-resource', (c) =>
-  oAuthProtectedResourceMetadata(createAuth(c.env))(c.req.raw),
-);
-app.get('/.well-known/oauth-protected-resource/api/mcp', (c) =>
-  oAuthProtectedResourceMetadata(createAuth(c.env))(c.req.raw),
-);
+app.get('/.well-known/oauth-authorization-server', (c) => {
+  const url = new URL(c.req.url);
+  url.pathname = '/.well-known/oauth-authorization-server/api/auth';
+  return createAuth(c.env).handler(new Request(url, c.req.raw));
+});
+app.all('/.well-known/*', (c) => createAuth(c.env).handler(c.req.raw));
+app.route('/api/oauth', oauthConsentRoute);
 
 // External reads precede session auth but still enforce visibility and source policy.
 const publicReadRateLimit = createPublicReadRateLimit();

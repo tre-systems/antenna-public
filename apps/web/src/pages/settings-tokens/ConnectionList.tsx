@@ -47,7 +47,9 @@ export function ConnectionList({ state, disconnecting, onDisconnect }: Props) {
             <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
               Connected {relativeTime(connection.created_at)} · Last refreshed{' '}
               {relativeTime(connection.last_refreshed_at)} · Grant expires{' '}
-              {relativeTime(connection.refresh_expires_at)}
+              {connection.refresh_expires_at === null
+                ? 'on disconnect'
+                : relativeTime(connection.refresh_expires_at)}
             </p>
           </div>
           <button

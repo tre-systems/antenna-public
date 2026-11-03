@@ -7,6 +7,7 @@ import { accessRules, emailPermitted } from './access';
 import { ensureUserCollection } from './ensure-user-collection';
 import { createAuth, type AuthEnv } from './index';
 import { authenticateBearer, extractBearerToken } from './mcp-token';
+import { authenticateOAuthRequest } from './oauth-access';
 
 export type SessionUser = {
   readonly id: string;
@@ -51,7 +52,9 @@ export const requireUser =
     const bearerToken = extractBearerToken(c.req.raw.headers.get('authorization'));
     if (bearerToken !== null) {
       // Both long-lived and OAuth MCP bearers resolve to owner-scoped users.
-      const result = await authenticateBearer(db(c.env), bearerToken);
+      const result = await authenticateBearer(db(c.env), bearerToken, (token) =>
+        authenticateOAuthRequest(c.env, token),
+      );
       if (result === null || !permitted(c.env, result.user.email)) return unauthorized(c);
       c.set('user', result.user);
       await next();

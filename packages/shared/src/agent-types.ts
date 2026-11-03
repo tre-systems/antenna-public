@@ -11,7 +11,7 @@ export type McpOAuthConnectionRecord = {
   readonly name: string;
   readonly created_at: number;
   readonly last_refreshed_at: number;
-  readonly access_expires_at: number;
-  readonly refresh_expires_at: number;
+  readonly access_expires_at: number | null;
+  readonly refresh_expires_at: number | null;
   readonly scopes: ReadonlyArray<string>;
 };

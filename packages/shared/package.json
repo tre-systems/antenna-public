@@ -3,6 +3,7 @@
   "private": true,
   "license": "MIT",
   "type": "module",
+  "sideEffects": false,
   "main": "src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit"

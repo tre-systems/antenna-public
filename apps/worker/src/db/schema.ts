@@ -1,5 +1,13 @@
 import { sql } from 'drizzle-orm';
-import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import {
+  index,
+  integer,
+  primaryKey,
+  real,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from 'drizzle-orm/sqlite-core';
 import type { CollectionPlan } from '@antenna/shared';
 
 // JSON shapes use TEXT columns with call-site serialization and validation.
@@ -376,6 +384,7 @@ export const account = sqliteTable(
     index('account_user_id_idx').on(t.userId),
     // Support Better Auth's provider and account lookup on sign-in.
     index('account_provider_account_idx').on(t.providerId, t.accountId),
+    uniqueIndex('account_provider_account_unique_idx').on(t.providerId, t.accountId),
   ],
 );
 
@@ -460,3 +469,6 @@ export const oauthConsent = sqliteTable(
 
 // Re-export `sql` so callers building raw fragments don't need a second import path.
 export { sql };
+export * from './oauth-clients';
+export * from './oauth-grants';
+export * from './oauth-keys';

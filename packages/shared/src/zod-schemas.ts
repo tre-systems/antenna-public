@@ -127,6 +127,13 @@ export const signalUpdateSchema = z
       body.visibility !== undefined,
   );
 
+export const oauthConsentFormSchema = z
+  .object({
+    oauth_query: z.string().min(1).max(12000),
+    accept: z.enum(['allow', 'deny']),
+  })
+  .strict();
+
 export const collectionLayoutSlotSchema = z.object({
   signal_id: z.string().min(1),
   x: z.number().int().nonnegative(),

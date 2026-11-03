@@ -1,6 +1,7 @@
 import { and, eq, lte, notExists } from 'drizzle-orm';
 import { db, type Env as DbEnv } from '../db/client';
 import { oauthAccessToken, oauthApplication, oauthConsent } from '../db/schema';
+import { cleanupOAuthProviderState } from './oauth-provider-cleanup';
 
 const STALE_APPLICATION_AGE_MS = 30 * 24 * 60 * 60 * 1_000;
 
@@ -10,6 +11,7 @@ export const shouldRunOAuthCleanup = (now: number): boolean => {
 };
 
 export const cleanupExpiredOAuthState = async (env: DbEnv, now = Date.now()): Promise<void> => {
+  await cleanupOAuthProviderState(env, now);
   const client = db(env);
   await client
     .delete(oauthAccessToken)
