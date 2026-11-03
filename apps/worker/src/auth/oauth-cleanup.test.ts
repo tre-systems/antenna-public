@@ -4,11 +4,15 @@ import { describe, expect, it, vi } from 'vitest';
 import type * as DbClientModule from '../db/client';
 import * as schema from '../db/schema';
 import { cleanupExpiredOAuthState, shouldRunOAuthCleanup } from './oauth-cleanup';
+import { OAUTH_MIGRATION } from './oauth-provider-test-fixtures';
 
 type Sqlite = ReturnType<typeof Database>;
 type Drizzle = BetterSQLite3Database<typeof schema>;
 
 const SCHEMA_DDL = `
+  CREATE TABLE user (id text PRIMARY KEY);
+  CREATE TABLE session (id text PRIMARY KEY);
+  CREATE TABLE account (provider_id text, account_id text);
   CREATE TABLE oauth_application (
     id text PRIMARY KEY NOT NULL, name text NOT NULL, icon text, metadata text,
     client_id text NOT NULL UNIQUE, client_secret text, redirect_urls text NOT NULL,
@@ -59,7 +63,7 @@ describe('OAuth state cleanup', () => {
   it('purges expired grants and old orphaned registrations without touching live state', async () => {
     const now = Date.parse('2026-07-11T12:17:00Z');
     const sqlite = new Database(':memory:');
-    sqlite.exec(SCHEMA_DDL);
+    sqlite.exec(SCHEMA_DDL + OAUTH_MIGRATION);
     const db = drizzle(sqlite, { schema });
     const old = now - 31 * 24 * 60 * 60 * 1_000;
     insertClient(db, 'expired-orphan', old);

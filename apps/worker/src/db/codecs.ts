@@ -15,6 +15,18 @@ export const parseStringRecord = (raw: unknown): Record<string, string> | null =
   return Object.fromEntries(entries.map(([key, entry]) => [key, String(entry)]));
 };
 
+export const parseStringArray = (raw: unknown): string[] | null => {
+  try {
+    const value: unknown = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return Array.isArray(value) &&
+      value.every((entry): entry is string => typeof entry === 'string')
+      ? value
+      : null;
+  } catch {
+    return null;
+  }
+};
+
 export const canonicalJson = (value: unknown): string => {
   if (value === undefined || value === null) return 'null';
   if (typeof value === 'bigint' || typeof value === 'symbol' || typeof value === 'function') {

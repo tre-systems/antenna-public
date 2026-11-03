@@ -129,9 +129,13 @@ Auth hooks idempotently provision a first private collection. If a `seed-collect
 signal definitions are cloned without status or points; cron fetches fresh owner-specific data.
 Returning users are not silently reconciled on sign-in.
 
-MCP OAuth uses Better Auth's server metadata and grant tables. A successful refresh retires the
-consumed grant; owners may disconnect a client, removing its grants and consent. Expired grants are
-cleaned hourly, followed by abandoned registrations after their safety window.
+MCP OAuth uses `@better-auth/mcp` and the resource-bound OAuth provider. EdDSA access tokens
+identify the issuer, MCP audience, owner, client, consent and browser session. Every request
+rechecks the live consent, client, session expiry and account policy. Refresh credentials are
+hashed and rotate without a reuse window; disconnecting removes consent and refresh grants,
+invalidating existing access tokens immediately. Expired grants are cleaned hourly, followed by
+abandoned registrations after their safety window. Legacy OAuth registrations remain disabled;
+historical manual tokens keep their separate owner-scoped authentication path.
 
 Workers Static Assets may bypass application code for ordinary assets, so `wrangler.toml` sends API,
 health, share, and OAuth discovery paths through the Worker first. `apps/web/public/_headers` applies

@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import * as schema from '../db/schema';
 import {
   authenticateBearer,
@@ -264,9 +264,13 @@ describe('MCP token auth', () => {
 
     const client = db as unknown as Parameters<typeof authenticateBearer>[0];
     await expect(authenticateBearer(client, 'pbk_live')).resolves.toEqual({ user: EXPECTED_USER });
-    await expect(authenticateBearer(client, 'oauth-live')).resolves.toEqual({
+    // Plain legacy OAuth grants fail closed unless the signed-token verifier is supplied.
+    await expect(authenticateBearer(client, 'oauth-live')).resolves.toBeNull();
+    const verifyOAuth = vi.fn().mockResolvedValue({ user: EXPECTED_USER });
+    await expect(authenticateBearer(client, 'oauth-live', verifyOAuth)).resolves.toEqual({
       user: EXPECTED_USER,
     });
+    expect(verifyOAuth).toHaveBeenCalledExactlyOnceWith('oauth-live');
     await expect(authenticateBearer(client, 'pbk_nope')).resolves.toBeNull();
   });
 });

@@ -17,7 +17,7 @@
 | Session tokens         | D1                      | opaque values, owner-scoped auth checks             |
 | Google provider tokens | D1 `account`            | AES-GCM encrypted; unused ID token discarded        |
 | MCP personal tokens    | D1 `mcp_tokens`         | one-way SHA-256 hashes                              |
-| MCP OAuth grants       | D1 OAuth tables         | high-trust database access controls                 |
+| MCP OAuth grants       | D1 OAuth tables         | hashed refresh tokens; consent/session-bound JWTs   |
 | Connector secrets      | Worker secrets          | injected only by dispatch                           |
 | Signal configuration   | D1                      | owner-only APIs; removed from anonymous reads       |
 | Normalised points      | D1                      | collection and source-policy gates                  |
@@ -38,6 +38,11 @@
   deployment-wide operational data, and only aggregate counts cross that
   boundary.
 - OAuth state and PKCE are handled by Better Auth.
+- The supported Better Auth release keeps OAuth state and Magic Link verification
+  in separate namespaces. Core and adapter packages stay on aligned, patched releases.
+  The application enables Google and MCP OAuth, not Magic Link, OAuth Proxy or
+  device authorization; isolated regression fixtures exercise cross-purpose token
+  rejection and single-use verification without sending mail or contacting providers.
 - Provider access and refresh tokens are encrypted before persistence; the ID
   token and its profile claims are discarded.
 - Sign-out invalidates the current session.

@@ -71,6 +71,21 @@ npx wrangler d1 migrations apply antenna --remote \
 The public baseline creates schema only. First sign-in creates the owner's
 initial empty collection.
 
+### Existing installations
+
+Back up D1 and test migrations on an independent staging database before upgrading
+an existing installation. Migration `0004_oauth_provider.sql` creates the supported
+OAuth provider tables and adds a unique provider/account identity index. Duplicate
+account identities stop the migration before it changes legacy grants; review
+duplicates without merging different users.
+
+The migration preserves users, sessions, collections, signals and manual tokens.
+It disables legacy OAuth registrations and expires their grants rather than
+copying plaintext credentials into the new provider. Reconnect MCP clients after
+applying the migration and deploying the matching code. Apply migrations before
+accepting traffic with the new release. Do not run this public migration against
+another installation's private migration chain.
+
 ## 7. Build and deploy
 
 ```sh
