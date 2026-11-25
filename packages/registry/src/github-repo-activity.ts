@@ -31,5 +31,6 @@ export const githubRepoActivityTemplate: ConnectorTemplate<{
   },
   rightsStatus: 'public',
   defaultRefreshSeconds: 1800,
+  snapshotVersion: 2,
   adapter: githubRepo,
 };

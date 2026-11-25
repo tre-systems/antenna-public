@@ -59,7 +59,7 @@ describe('marketOverviewStooq', () => {
     expect(fetchSpy).toHaveBeenNthCalledWith(
       1,
       'https://stooq.com/q/l/?s=VTI.US&f=sd2t2ohlcv&h&e=csv',
-      STOOQ_CSV_REQUEST_INIT,
+      { ...STOOQ_CSV_REQUEST_INIT, signal: expect.any(AbortSignal) as unknown },
     );
   });
 

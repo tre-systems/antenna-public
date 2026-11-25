@@ -45,6 +45,7 @@ type ClosePoint = {
 };
 
 export const YAHOO_CHART_REQUEST_INIT = browserRequestInit('application/json');
+const REQUEST_TIMEOUT_MS = 8_000;
 
 export const fetchYahooLatestQuote = async (symbol: string): Promise<YahooQuoteResult> => {
   const requestedSymbol = symbol.trim();
@@ -53,9 +54,10 @@ export const fetchYahooLatestQuote = async (symbol: string): Promise<YahooQuoteR
   }
 
   const url = yahooChartUrl(requestedSymbol);
+  const signal = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
   let response: Response;
   try {
-    response = await fetch(url, YAHOO_CHART_REQUEST_INIT);
+    response = await fetch(url, { ...YAHOO_CHART_REQUEST_INIT, signal });
   } catch (err) {
     return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }
@@ -69,7 +71,10 @@ export const fetchYahooLatestQuote = async (symbol: string): Promise<YahooQuoteR
   try {
     body = await response.json();
   } catch (err) {
-    return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
+    return {
+      ok: false,
+      error: { code: signal.aborted ? 'fetch_failed' : 'parse_failed', message: errorMessage(err) },
+    };
   }
 
   const quote = parseYahooLatestQuote(body, requestedSymbol);

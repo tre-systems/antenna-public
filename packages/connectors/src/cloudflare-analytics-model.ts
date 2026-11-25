@@ -58,7 +58,9 @@ export const firstGraphqlError = (payload: unknown): string | null => {
     first !== null &&
     typeof (first as { message?: unknown }).message === 'string'
   ) {
-    return (first as { message: string }).message;
+    return /auth|permission|denied|forbidden/i.test((first as { message: string }).message)
+      ? 'GraphQL permission denied'
+      : 'GraphQL query failed';
   }
   return 'GraphQL query failed';
 };

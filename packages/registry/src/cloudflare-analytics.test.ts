@@ -27,6 +27,7 @@ describe('cloudflareAnalyticsTemplate metadata', () => {
   it('is requires-auth with a server-injected analytics token', () => {
     expect(cloudflareAnalyticsTemplate.paramKeys).toEqual(['account_id']);
     expect(cloudflareAnalyticsTemplate.rightsStatus).toBe('requires-auth');
+    expect(cloudflareAnalyticsTemplate.snapshotVersion).toBe(2);
     expect(cloudflareAnalyticsTemplate.serverSecret?.env).toBe('CF_ANALYTICS_API_TOKEN');
   });
 

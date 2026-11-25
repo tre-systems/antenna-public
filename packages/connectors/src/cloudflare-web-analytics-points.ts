@@ -3,14 +3,23 @@ import type { DataPoint } from './types';
 
 export type RumRow = {
   readonly count: number;
+  readonly avg: { readonly sampleInterval: number };
   readonly sum: { readonly visits: number };
   readonly dimensions: { readonly date: string; readonly requestHost: string };
+};
+
+export type RumRowSets = {
+  readonly recent: RumRow[];
+  readonly previous: RumRow[];
+  readonly lookback: RumRow[];
 };
 
 type TrafficTotals = {
   recentVisits: number;
   previousVisits: number;
   recentPageloads: number;
+  recentSampled: boolean;
+  previousSampled: boolean;
   lastSeen: string;
 };
 
@@ -18,26 +27,49 @@ const emptyTotals = (): TrafficTotals => ({
   recentVisits: 0,
   previousVisits: 0,
   recentPageloads: 0,
+  recentSampled: false,
+  previousSampled: false,
   lastSeen: '',
 });
 
-export const readRumRows = (payload: unknown): RumRow[] | null => {
+export const readRumRowSets = (payload: unknown): RumRowSets | null => {
+  const account = readAccount(payload);
+  if (account === null) return null;
+  const recent = readRows(account.recent);
+  const previous = readRows(account.previous);
+  const lookback = readRows(account.lookback);
+  return recent && previous && lookback ? { recent, previous, lookback } : null;
+};
+
+export const readRecentRumRows = (payload: unknown): RumRow[] | null => {
+  const account = readAccount(payload);
+  return account === null ? null : readRows(account.recent);
+};
+
+const readAccount = (
+  payload: unknown,
+): { recent?: unknown; previous?: unknown; lookback?: unknown } | null => {
   if (typeof payload !== 'object' || payload === null) return null;
   const accounts = (payload as { data?: { viewer?: { accounts?: unknown } } }).data?.viewer
     ?.accounts;
   if (!Array.isArray(accounts) || accounts.length === 0) return null;
-  const rows = (accounts[0] as { rumPageloadEventsAdaptiveGroups?: unknown })
-    .rumPageloadEventsAdaptiveGroups;
-  return Array.isArray(rows) ? rows.filter(isRumRow) : null;
+  const account: unknown = accounts[0];
+  return typeof account === 'object' && account !== null ? account : null;
 };
+
+const readRows = (value: unknown): RumRow[] | null =>
+  Array.isArray(value) && value.every(isRumRow) ? value : null;
 
 const isRumRow = (row: unknown): row is RumRow => {
   if (typeof row !== 'object' || row === null) return false;
   const candidate = row as Record<string, unknown>;
+  const avg = candidate.avg as Record<string, unknown> | undefined;
   const sum = candidate.sum as Record<string, unknown> | undefined;
   const dimensions = candidate.dimensions as Record<string, unknown> | undefined;
   return (
     isFiniteNumber(candidate.count) &&
+    isFiniteNumber(avg?.sampleInterval) &&
+    avg.sampleInterval > 0 &&
     isFiniteNumber(sum?.visits) &&
     typeof dimensions?.date === 'string' &&
     typeof dimensions.requestHost === 'string'
@@ -81,10 +113,13 @@ const addRow = (
   previousBoundary: string,
 ): void => {
   if (row.dimensions.date >= recentBoundary) {
+    // GraphQL already scales sampled aggregates; preserve its estimate without rescaling.
     totals.recentVisits += row.sum.visits;
     totals.recentPageloads += row.count;
+    totals.recentSampled ||= row.avg.sampleInterval !== 1;
   } else if (row.dimensions.date >= previousBoundary) {
     totals.previousVisits += row.sum.visits;
+    totals.previousSampled ||= row.avg.sampleInterval !== 1;
   }
 };
 
@@ -105,6 +140,8 @@ const trafficPoint = (
     last_seen: totals.lastSeen,
     telemetry_state: totals.recentVisits > 0 ? 'active' : totals.lastSeen ? 'quiet' : 'unseen',
     days,
+    visits_quality: totals.recentSampled ? 'estimated' : 'unsampled',
+    comparison_quality: totals.recentSampled || totals.previousSampled ? 'estimated' : 'unsampled',
   },
   value: Math.round(totals.recentVisits),
   unit: 'visits',

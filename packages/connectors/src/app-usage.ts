@@ -1,7 +1,5 @@
-import { ACCOUNT_ID_RX, analyticsSqlUrl, SLUG_RX } from './analytics-engine';
+import { ACCOUNT_ID_RX, fetchAnalyticsRows, SLUG_RX } from './analytics-engine';
 import { boundedInt } from './config-values';
-import { discardResponse } from './discard-response';
-import { errorMessage } from './error-message';
 import type { Adapter, AdapterResult, DataPoint } from './types';
 
 // Events come from the Antenna beacon or direct Analytics Engine writes.
@@ -57,41 +55,9 @@ export const appUsage: Adapter<AppUsageConfig> = async (config): Promise<Adapter
     `FORMAT JSON`,
   ].join(' ');
 
-  let response: Response;
-  try {
-    response = await fetch(analyticsSqlUrl(accountId), {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiToken}` },
-      body: sql,
-    });
-  } catch (err) {
-    return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
-  }
-
-  if (response.status === 401 || response.status === 403) {
-    await discardResponse(response);
-    return {
-      ok: false,
-      error: { code: 'unauthorized', message: `analytics SQL API HTTP ${response.status}` },
-    };
-  }
-  if (response.status === 429) {
-    await discardResponse(response);
-    return { ok: false, error: { code: 'rate_limited', message: 'analytics SQL API rate limit' } };
-  }
-  if (!response.ok) {
-    await discardResponse(response);
-    return { ok: false, error: { code: 'fetch_failed', message: `HTTP ${response.status}` } };
-  }
-
-  let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch (err) {
-    return { ok: false, error: { code: 'parse_failed', message: errorMessage(err) } };
-  }
-
-  const rows = readRows(payload);
+  const response = await fetchAnalyticsRows(accountId, apiToken, sql);
+  if (!response.ok) return response;
+  const rows = readRows(response.payload);
   if (rows === undefined) {
     return { ok: false, error: { code: 'parse_failed', message: 'unexpected SQL API payload' } };
   }

@@ -15,6 +15,7 @@ const extractProject = (prompt: string): string | undefined => {
 
 export const appUsageTemplate: ConnectorTemplate = {
   id: 'app-usage',
+  deploymentAdminOnly: true,
   displayName: 'App usage',
   configSchema: z.object({
     project: z.string().regex(SLUG_PATTERN),

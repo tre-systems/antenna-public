@@ -12,5 +12,6 @@ export const aaFrontierTemplate: ConnectorTemplate<AaFrontierConfig> = {
   rightsStatus: 'with-attribution',
   defaultRefreshSeconds: 21_600,
   pointRetentionDays: 90,
+  snapshotVersion: 3,
   adapter: (config) => aaFrontier(config),
 };

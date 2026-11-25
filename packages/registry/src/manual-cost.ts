@@ -67,17 +67,47 @@ const periodFromPrompt = (prompt: string): string => {
 const providerFromPrompt = (prompt: string): string | undefined =>
   PROVIDERS.find(([pattern]) => pattern.test(prompt))?.[1];
 
+function matchingBillingTotal(config: ManualCostConfig): boolean {
+  const { amount, fixedFees, usageOverages } = config;
+  if (fixedFees === undefined && usageOverages === undefined) return true;
+  if (
+    fixedFees === undefined ||
+    usageOverages === undefined ||
+    typeof amount !== 'number' ||
+    config.topUps !== undefined ||
+    config.creditBalance !== undefined
+  )
+    return false;
+  const sum = fixedFees + usageOverages;
+  const tolerance = Number.EPSILON * Math.max(Math.abs(sum), Math.abs(amount)) * 2;
+  return Number.isFinite(sum) && Math.abs(amount - sum) <= tolerance;
+}
+
 export const manualCostTemplate: ConnectorTemplate<ManualCostConfig> = {
   id: 'manual-cost',
   displayName: 'Manual cost',
-  configSchema: z.object({
-    amount: z.union([z.literal(''), z.coerce.number().nonnegative()]),
-    currency: z.string().regex(/^[A-Z]{3}$/),
-    period: z.enum(['today', 'month_to_date', 'last_month', 'monthly']),
-    provider: z.string().trim().min(1).max(80),
-    service: z.string().trim().min(1).max(120).default('All services'),
-    project: z.string().trim().min(1).max(120).optional(),
-  }),
+  configSchema: z
+    .object({
+      amount: z.union([z.literal(''), z.coerce.number().nonnegative()]),
+      currency: z.string().regex(/^[A-Z]{3}$/),
+      period: z.enum(['today', 'month_to_date', 'last_month', 'monthly']),
+      provider: z.string().trim().min(1).max(80),
+      service: z.string().trim().min(1).max(120).default('All services'),
+      project: z.string().trim().min(1).max(120).optional(),
+      topUps: z.number().nonnegative().optional(),
+      creditBalance: z.number().optional(),
+      fixedFees: z.number().nonnegative().optional(),
+      usageOverages: z.number().nonnegative().optional(),
+      asOf: z.iso.datetime().optional(),
+      creditBalanceAsOf: z.iso.datetime().optional(),
+      periodMonth: z
+        .string()
+        .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
+        .optional(),
+    })
+    .refine(matchingBillingTotal, {
+      message: 'Fixed fees and overages require a matching total without prepaid credit',
+    }),
   paramKeys: ['provider', 'amount', 'currency', 'period'] as const,
   matchHints: [
     /\b(?:cost|costs|spend|spending|bill|billing)\b/i,
@@ -92,5 +122,6 @@ export const manualCostTemplate: ConnectorTemplate<ManualCostConfig> = {
   rightsStatus: 'requires-auth',
   defaultRefreshSeconds: 86_400,
   pointRetentionDays: 400,
+  snapshotVersion: 2,
   adapter: manualCost,
 };

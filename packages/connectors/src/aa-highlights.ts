@@ -3,7 +3,6 @@ import {
   CATEGORY_UNIT,
   CATEGORY_VALUE_KEYS,
   detailsUrl,
-  extractDataset,
   firstNumericField,
   itemLabel,
   METRIC_NAME,
@@ -12,6 +11,7 @@ import {
   valuesByModel,
   type AaCategory,
 } from './aa-highlights-model';
+import { extractAaDatasets } from './aa-homepage-data';
 import { HTML_PAGE_REQUEST_INIT } from './browser-request';
 import { boundedInt } from './config-values';
 import { discardResponse } from './discard-response';
@@ -38,7 +38,7 @@ export const aaHighlights: Adapter<AaHighlightsConfig> = async (config): Promise
   if (!page.ok) return page;
 
   const datasetNames = CATEGORY_DATASET_NAMES[category];
-  const dataset = extractDataset(page.html, datasetNames);
+  const dataset = extractAaDatasets(page.html)[category];
   if (!dataset) {
     return {
       ok: false,
@@ -79,9 +79,7 @@ export const aaFrontier: Adapter<AaFrontierConfig> = async (config): Promise<Ada
   const page = await fetchAaPage();
   if (!page.ok) return page;
 
-  const intelligence = extractDataset(page.html, CATEGORY_DATASET_NAMES.intelligence);
-  const speed = extractDataset(page.html, CATEGORY_DATASET_NAMES.speed);
-  const price = extractDataset(page.html, CATEGORY_DATASET_NAMES.price);
+  const { intelligence, speed, price } = extractAaDatasets(page.html);
   if (!intelligence) {
     return {
       ok: false,
@@ -136,7 +134,8 @@ const fetchAaPage = async (): Promise<
 > => {
   let response: Response;
   try {
-    response = await fetch(SOURCE_URL, HTML_PAGE_REQUEST_INIT);
+    // The comparison page retains output-token prices; the homepage now shows cost per task.
+    response = await fetch(`${SOURCE_URL}/models`, HTML_PAGE_REQUEST_INIT);
   } catch (err) {
     return { ok: false, error: { code: 'fetch_failed', message: errorMessage(err) } };
   }

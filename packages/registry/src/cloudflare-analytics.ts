@@ -8,6 +8,7 @@ import { type ConnectorTemplate } from './types';
 
 export const cloudflareAnalyticsTemplate: ConnectorTemplate = {
   id: 'cloudflare-analytics',
+  deploymentAdminOnly: true,
   displayName: 'Cloudflare traffic',
   configSchema: z.object({
     account_id: z.string().regex(ACCOUNT_ID_PATTERN),
@@ -25,6 +26,7 @@ export const cloudflareAnalyticsTemplate: ConnectorTemplate = {
   rightsStatus: 'requires-auth',
   defaultRefreshSeconds: 3_600,
   pointRetentionDays: 90,
+  snapshotVersion: 2,
   serverSecret: {
     env: 'CF_ANALYTICS_API_TOKEN',
     configKey: 'apiToken',

@@ -37,7 +37,10 @@ describe('fetchYahooLatestQuote', () => {
 
     const result = await fetchYahooLatestQuote('VTI');
 
-    expect(fetchSpy).toHaveBeenCalledWith(yahooChartUrl('VTI'), YAHOO_CHART_REQUEST_INIT);
+    expect(fetchSpy).toHaveBeenCalledWith(yahooChartUrl('VTI'), {
+      ...YAHOO_CHART_REQUEST_INIT,
+      signal: expect.any(AbortSignal) as unknown,
+    });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.quote).toMatchObject({

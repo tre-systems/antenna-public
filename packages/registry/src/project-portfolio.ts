@@ -6,6 +6,7 @@ import { type ConnectorTemplate } from './types';
 
 export const projectPortfolioTemplate: ConnectorTemplate = {
   id: 'project-portfolio',
+  deploymentAdminOnly: true,
   displayName: 'Project portfolio',
   configSchema: z.object({
     projects: z.string().regex(SLUG_LIST_PATTERN),

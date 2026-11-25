@@ -32,5 +32,6 @@ export const aaHighlightsTemplate: ConnectorTemplate<AaHighlightsConfig> = {
   rightsStatus: 'with-attribution',
   defaultRefreshSeconds: 3600,
   pointRetentionDays: 90,
+  snapshotVersion: 3,
   adapter: (config) => aaHighlights(config),
 };

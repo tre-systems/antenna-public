@@ -25,7 +25,20 @@ export const appHealth: Adapter<AppHealthConfig> = async (config): Promise<Adapt
   const points = await Promise.all(
     projects.map((project, rank) => probeProject(project, rank + 1, manifest[project])),
   );
-  return { ok: true, points, rawPayload: { checked: projects.length } };
+  const unavailable = points.filter((point) => point.value === 'unknown').length;
+  return {
+    ok: true,
+    points,
+    rawPayload: { checked: projects.length },
+    ...(unavailable > 0
+      ? {
+          warning: {
+            code: 'fetch_failed' as const,
+            message: `${String(unavailable)} health probes unavailable; application availability is unknown`,
+          },
+        }
+      : {}),
+  };
 };
 
 const readManifest = (value: string): Readonly<Record<string, string>> | null => {
@@ -61,18 +74,33 @@ const probeProject = async (
 
   try {
     const response = await fetch(url, {
-      redirect: 'follow',
+      redirect: 'manual',
       signal: AbortSignal.timeout(TIMEOUT_MS),
       headers: { Accept: 'application/json,text/plain,text/html;q=0.5' },
     });
     const latency = Date.now() - startedAt;
-    const state = response.ok ? (latency >= 2_000 ? 'degraded' : 'healthy') : 'down';
+    const state = responseState(response, latency);
     await discardResponse(response);
     return healthPoint(project, rank, state, response.status, latency, startedAt, url);
   } catch (err) {
     const message = errorMessage(err).slice(0, 120);
-    return healthPoint(project, rank, 'down', 0, Date.now() - startedAt, startedAt, url, message);
+    return healthPoint(
+      project,
+      rank,
+      'probe_error',
+      0,
+      Date.now() - startedAt,
+      startedAt,
+      url,
+      message,
+    );
   }
+};
+
+const responseState = (response: Response, latency: number): string => {
+  if (response.ok) return latency >= 2_000 ? 'degraded' : 'healthy';
+  if (response.status >= 300 && response.status < 400) return 'redirect';
+  return response.status >= 400 ? 'down' : 'probe_error';
 };
 
 const healthPoint = (
@@ -94,7 +122,7 @@ const healthPoint = (
     latency_ms: latencyMs,
     ...(error ? { error } : {}),
   },
-  value: state === 'healthy' || state === 'degraded' ? 1 : 0,
+  value: state === 'healthy' || state === 'degraded' ? 1 : state === 'down' ? 0 : 'unknown',
   unit: 'available',
   ts,
   sourceUrl,

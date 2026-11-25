@@ -25,6 +25,8 @@ export interface ConnectorTemplate<C extends SignalConfig = SignalConfig> {
   plannerEnabled?: boolean;
   // Allows an authenticated exact-template proposal without enabling prompt matching or catalogue UI.
   directProposalEnabled?: boolean;
+  // Deployment credentials/data are not delegated to ordinary collection owners.
+  deploymentAdminOnly?: boolean;
   rightsStatus: SourceRightsStatus;
   defaultRefreshSeconds: number;
   // Omitted templates fall back to the Worker's conservative 180-day default.

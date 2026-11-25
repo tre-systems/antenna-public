@@ -6,6 +6,7 @@ import { type ConnectorTemplate } from './types';
 
 export const cloudflareWebAnalyticsTemplate: ConnectorTemplate = {
   id: 'cloudflare-web-analytics',
+  deploymentAdminOnly: true,
   displayName: 'Web visits',
   configSchema: z.object({
     account_id: z.string().regex(ACCOUNT_ID_PATTERN),

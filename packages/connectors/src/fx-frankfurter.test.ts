@@ -180,6 +180,6 @@ describe('fxFrankfurter', () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.error.code).toBe('fetch_failed');
-    expect(result.error.message).toBe('still down');
+    expect(result.error.message).toBe('Source operation failed');
   });
 });

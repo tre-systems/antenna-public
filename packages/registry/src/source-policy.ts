@@ -335,26 +335,26 @@ const SOURCE_POLICIES: Readonly<Record<string, SourcePolicy>> = {
   'aa-highlights': {
     sourceId: 'artificial-analysis-highlights',
     label: 'Artificial Analysis',
-    sourceUrl: 'https://artificialanalysis.ai/',
+    sourceUrl: 'https://artificialanalysis.ai/models',
     rightsStatus: 'with-attribution',
     executionMode: 'public_cloud',
     publicDisplayEligible: false,
     attribution: 'Artificial Analysis (artificialanalysis.ai)',
     reviewNotes:
-      'Highlights extracted from schema.org Dataset JSON-LD embedded in the public homepage; attribution required, public display needs rights review.',
-    lastReviewed: REVIEW_DATE,
+      'Highlights extracted from public model-comparison JSON-LD or initial model chart props. Price is output-token USD per million, not cost per task. Attribution required, public display needs rights review.',
+    lastReviewed: '2026-10-27',
   },
   'aa-frontier': {
     sourceId: 'artificial-analysis-frontier',
     label: 'Artificial Analysis',
-    sourceUrl: 'https://artificialanalysis.ai/',
+    sourceUrl: 'https://artificialanalysis.ai/models',
     rightsStatus: 'with-attribution',
     executionMode: 'public_cloud',
     publicDisplayEligible: false,
     attribution: 'Artificial Analysis (artificialanalysis.ai)',
     reviewNotes:
-      'Joins intelligence, speed, and price fields from reviewed homepage JSON-LD; private display with attribution.',
-    lastReviewed: REVIEW_DATE,
+      'Joins intelligence, speed, and output-token price fields from public model-comparison JSON-LD or initial model chart props; private display with attribution. No encrypted data manifests are fetched.',
+    lastReviewed: '2026-10-27',
   },
   'tbench-leaderboard': {
     sourceId: 'tbench-ai-leaderboard',

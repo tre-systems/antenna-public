@@ -56,6 +56,8 @@ export const pointSourceUrl = (templateId: string, point: RegistryPointInput): s
 
 const METRIC_LABELS: Readonly<Record<string, string>> = {
   cost: 'Cost',
+  fixed_subscription_fees: 'Fixed subscription fees',
+  usage_overages: 'Usage overages',
   total_users: 'Total users',
   active_users_7d: 'Active (7d)',
   new_users_7d: 'New (7d)',
@@ -70,6 +72,11 @@ const METRIC_LABELS: Readonly<Record<string, string>> = {
   hourly_temperature: 'Forecast temp',
   hourly_precipitation_probability: 'Rain chance',
   hourly_weather_code: 'Forecast',
+  daily_temp_max: 'High',
+  daily_temp_min: 'Low',
+  daily_rain_prob: 'Rain chance',
+  daily_weather_code: 'Day condition',
+  hourly_aqi: 'AQI trend',
   pm10: 'PM10',
   pm2_5: 'PM2.5',
   aqi: 'AQI',

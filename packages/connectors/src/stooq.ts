@@ -4,6 +4,7 @@ import { errorMessage } from './error-message';
 import type { AdapterResult } from './types';
 
 export const STOOQ_CSV_REQUEST_INIT = browserRequestInit('text/csv,*/*;q=0.8');
+const REQUEST_TIMEOUT_MS = 8_000;
 
 type CsvFetchResult =
   { readonly ok: true; readonly body: string } | Extract<AdapterResult, { ok: false }>;
@@ -34,7 +35,10 @@ const fetchStooqHost = async (
   const url = stooqCsvUrl(host, ticker);
   let response: Response;
   try {
-    response = await fetch(url, STOOQ_CSV_REQUEST_INIT);
+    response = await fetch(url, {
+      ...STOOQ_CSV_REQUEST_INIT,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
   } catch (err) {
     return {
       ok: false,

@@ -15,6 +15,8 @@ export type AdapterError = {
 };
 
 export type AdapterResult =
-  { ok: true; points: DataPoint[]; rawPayload: unknown } | { ok: false; error: AdapterError };
+  // A warning preserves partial observations without claiming a complete successful check.
+  | { ok: true; points: DataPoint[]; rawPayload: unknown; warning?: AdapterError }
+  | { ok: false; error: AdapterError };
 
 export type Adapter<C extends SignalConfig = SignalConfig> = (config: C) => Promise<AdapterResult>;

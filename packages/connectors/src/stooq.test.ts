@@ -24,10 +24,10 @@ describe('fetchStooqCsv', () => {
       body: 'Symbol,Date,Time,Open,High,Low,Close,Volume\nVTI.US,N/D,N/D,N/D,N/D,N/D,N/D,N/D',
     });
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy).toHaveBeenCalledWith(
-      stooqCsvUrl('stooq.com', 'VTI.US'),
-      STOOQ_CSV_REQUEST_INIT,
-    );
+    expect(fetchSpy).toHaveBeenCalledWith(stooqCsvUrl('stooq.com', 'VTI.US'), {
+      ...STOOQ_CSV_REQUEST_INIT,
+      signal: expect.any(AbortSignal) as unknown,
+    });
   });
 
   it('falls back to stooq.pl when stooq.com fails', async () => {
@@ -50,16 +50,14 @@ describe('fetchStooqCsv', () => {
       ok: true,
       body: 'Symbol,Date,Time,Open,High,Low,Close,Volume\nVTI.US,N/D,N/D,N/D,N/D,N/D,N/D,N/D',
     });
-    expect(fetchSpy).toHaveBeenNthCalledWith(
-      1,
-      stooqCsvUrl('stooq.com', 'VTI.US'),
-      STOOQ_CSV_REQUEST_INIT,
-    );
-    expect(fetchSpy).toHaveBeenNthCalledWith(
-      2,
-      stooqCsvUrl('stooq.pl', 'VTI.US'),
-      STOOQ_CSV_REQUEST_INIT,
-    );
+    expect(fetchSpy).toHaveBeenNthCalledWith(1, stooqCsvUrl('stooq.com', 'VTI.US'), {
+      ...STOOQ_CSV_REQUEST_INIT,
+      signal: expect.any(AbortSignal) as unknown,
+    });
+    expect(fetchSpy).toHaveBeenNthCalledWith(2, stooqCsvUrl('stooq.pl', 'VTI.US'), {
+      ...STOOQ_CSV_REQUEST_INIT,
+      signal: expect.any(AbortSignal) as unknown,
+    });
   });
 
   it('falls back to stooq.pl when stooq.com returns non-CSV content with HTTP 200', async () => {

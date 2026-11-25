@@ -129,7 +129,7 @@ describe('appUsage', () => {
     const network = await appUsage(baseConfig);
     expect(network).toEqual({
       ok: false,
-      error: { code: 'fetch_failed', message: 'boom' },
+      error: { code: 'fetch_failed', message: 'Source operation failed' },
     });
   });
 });

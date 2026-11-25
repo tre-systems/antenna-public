@@ -6,6 +6,7 @@ import { type ConnectorTemplate } from './types';
 
 export const antennaUsersTemplate: ConnectorTemplate = {
   id: 'antenna-users',
+  deploymentAdminOnly: true,
   displayName: 'Antenna users',
   configSchema: z.object({
     total_users: z.number().optional(),

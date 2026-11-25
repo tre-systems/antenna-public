@@ -1,10 +1,12 @@
 import { isFiniteNumber } from './config-values';
+import { parseOpenMeteoTs, rawArray } from './openmeteo-time';
+import { buildDailyPoints } from './weather-openmeteo-daily';
 import type { DataPoint } from './types';
 
 export type WeatherConfig = { lat: number; lon: number; location?: string };
 
 type OpenMeteoCurrent = {
-  time?: string;
+  time?: unknown;
   temperature_2m?: number;
   relative_humidity_2m?: number;
   wind_speed_10m?: number;
@@ -22,7 +24,7 @@ type OpenMeteoHourly = {
   weather_code?: unknown;
 };
 
-type OpenMeteoResponse = { current?: OpenMeteoCurrent; hourly?: OpenMeteoHourly };
+type OpenMeteoResponse = { current?: OpenMeteoCurrent; hourly?: OpenMeteoHourly; daily?: unknown };
 
 export const CURRENT_FIELDS = [
   'temperature_2m',
@@ -45,11 +47,11 @@ const SOURCE_PAGE = 'https://open-meteo.com/';
 
 export const buildWeatherPoints = (body: unknown, config: WeatherConfig): DataPoint[] => {
   if (!body || typeof body !== 'object') return [];
-  const { current, hourly } = body as OpenMeteoResponse;
+  const { current, hourly, daily } = body as OpenMeteoResponse;
   if (!current || typeof current !== 'object') return [];
 
   const location = config.location ?? `${config.lat},${config.lon}`;
-  const ts = parseTs(current.time);
+  const ts = parseOpenMeteoTs(current.time);
   const points: DataPoint[] = [];
 
   pushCurrentNumber(points, location, 'temperature', current.temperature_2m, '°C', ts);
@@ -61,6 +63,7 @@ export const buildWeatherPoints = (body: unknown, config: WeatherConfig): DataPo
   pushCurrentNumber(points, location, 'uv_index', current.uv_index, undefined, ts);
   pushCurrentNumber(points, location, 'is_day', current.is_day, undefined, ts);
   points.push(...hourlyPoints(hourly, location));
+  points.push(...buildDailyPoints(daily, location));
   return points;
 };
 
@@ -84,7 +87,7 @@ const pushCurrentNumber = (
 
 const hourlyPoints = (hourly: OpenMeteoHourly | undefined, location: string): DataPoint[] => {
   if (!hourly || typeof hourly !== 'object') return [];
-  const times = stringArray(hourly.time).slice(0, 12);
+  const times = rawArray(hourly.time).slice(0, 12);
   if (times.length === 0) return [];
 
   const temperatures = numberArray(hourly.temperature_2m);
@@ -94,7 +97,7 @@ const hourlyPoints = (hourly: OpenMeteoHourly | undefined, location: string): Da
 
   for (let index = 0; index < times.length; index += 1) {
     const hour = index + 1;
-    const ts = parseTs(times[index]);
+    const ts = parseOpenMeteoTs(times[index]);
     pushHourlyNumber(points, location, 'hourly_temperature', hour, temperatures[index], '°C', ts);
     pushHourlyNumber(
       points,
@@ -137,14 +140,5 @@ const pushHourlyNumber = (
   });
 };
 
-const stringArray = (value: unknown): string[] =>
-  Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
-
 const numberArray = (value: unknown): number[] =>
   Array.isArray(value) ? value.filter(isFiniteNumber) : [];
-
-const parseTs = (time: string | undefined): number => {
-  if (typeof time !== 'string') return Date.now();
-  const parsed = Date.parse(time);
-  return Number.isFinite(parsed) ? parsed : Date.now();
-};

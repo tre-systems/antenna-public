@@ -7,6 +7,8 @@ import type { Adapter, AdapterResult, DataPoint } from './types';
 type GithubConfig = { owner: string; repo: string; githubToken?: string };
 
 type RepoResponse = {
+  private?: boolean;
+  visibility?: string;
   stargazers_count?: number;
   open_issues_count?: number;
   forks_count?: number;
@@ -18,6 +20,7 @@ export const githubRepo: Adapter<GithubConfig> = async (config): Promise<Adapter
   let response: Response;
   try {
     response = await fetch(url, {
+      redirect: 'manual',
       headers: {
         'User-Agent': 'antenna',
         Accept: 'application/vnd.github+json',
@@ -59,20 +62,29 @@ const buildPoints = (body: unknown, config: GithubConfig): DataPoint[] => {
   const repo = `${config.owner}/${config.repo}`;
   const ts = Date.now();
   const data = body as RepoResponse;
+  if (data.private !== false || data.visibility !== 'public') return [];
   const points: DataPoint[] = [];
 
   if (isFiniteNumber(data.stargazers_count)) {
-    points.push({ dimensions: { repo, metric: 'stars' }, value: data.stargazers_count, ts });
+    points.push({
+      dimensions: { repo, visibility: 'public', metric: 'stars' },
+      value: data.stargazers_count,
+      ts,
+    });
   }
   if (isFiniteNumber(data.open_issues_count)) {
     points.push({
-      dimensions: { repo, metric: 'open_issues' },
+      dimensions: { repo, visibility: 'public', metric: 'open_issues' },
       value: data.open_issues_count,
       ts,
     });
   }
   if (isFiniteNumber(data.forks_count)) {
-    points.push({ dimensions: { repo, metric: 'forks' }, value: data.forks_count, ts });
+    points.push({
+      dimensions: { repo, visibility: 'public', metric: 'forks' },
+      value: data.forks_count,
+      ts,
+    });
   }
   return points;
 };

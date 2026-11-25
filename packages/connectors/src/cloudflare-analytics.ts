@@ -6,7 +6,7 @@ import {
   serialiseWindows,
   type AccountRows,
 } from './cloudflare-analytics-model';
-import { dailyPoint, windowPoint, workerPoints } from './cloudflare-analytics-points';
+import { dailyPoint, windowPoint, workerDetailPoints } from './cloudflare-analytics-points';
 import { boundedInt } from './config-values';
 import { discardResponse } from './discard-response';
 import { errorMessage } from './error-message';
@@ -21,6 +21,8 @@ type CloudflareAnalyticsConfig = {
 
 const DEFAULT_DAYS = 7;
 const MAX_DAYS = 30;
+// Sized so a full personal fleet (24+ workers) survives ranking; reads allow 100.
+const MAX_POINTS = 80;
 const GRAPHQL_URL = 'https://api.cloudflare.com/client/v4/graphql';
 
 // Every user-controlled input is a GraphQL variable.
@@ -148,12 +150,19 @@ export const cloudflareAnalytics: Adapter<CloudflareAnalyticsConfig> = async (
   }
 
   const scoped = scopeRows(account, script);
-  const points: DataPoint[] = [
-    ...scoped.daily.map(dailyPoint),
-    ...workerPoints(scoped.current, 'current', windows.current, 'worker'),
+  const dailyPoints = scoped.daily.map(dailyPoint);
+  const windowPoints = [
     windowPoint(scoped.current, 'current', windows.current, script),
     windowPoint(scoped.previous, 'previous', windows.previous, script),
   ];
+  const detailPoints = workerDetailPoints(
+    scoped.current,
+    scoped.previous,
+    windows.current,
+    windows.previous,
+    MAX_POINTS - dailyPoints.length - windowPoints.length,
+  );
+  const points: DataPoint[] = [...dailyPoints, ...detailPoints, ...windowPoints];
 
   return {
     ok: true,

@@ -7,6 +7,15 @@ afterEach(() => {
 });
 
 describe('cloudflareAnalytics errors', () => {
+  it.each(['query failed for account PRIVATE', 'permission denied for token PRIVATE'])(
+    'never returns upstream query or credential details',
+    async (message) => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(gqlResponse({ errors: [{ message }] })));
+      const result = await cloudflareAnalytics(baseConfig);
+      expect(result.ok).toBe(false);
+      expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    },
+  );
   it('surfaces GraphQL permission errors as unauthorized', async () => {
     vi.stubGlobal(
       'fetch',

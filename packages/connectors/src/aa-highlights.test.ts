@@ -251,7 +251,7 @@ describe('aaHighlights', () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.error.code).toBe('fetch_failed');
-    expect(result.error.message).toContain('network error');
+    expect(result.error.message).toBe('Source operation failed');
   });
 });
 

@@ -6,6 +6,7 @@ import { type ConnectorTemplate } from './types';
 
 export const appHealthTemplate: ConnectorTemplate = {
   id: 'app-health',
+  deploymentAdminOnly: true,
   displayName: 'App health',
   configSchema: z.object({
     projects: z.string().regex(SLUG_LIST_PATTERN),
