@@ -1,4 +1,5 @@
 import type { AirQualityCardData } from '../../signal-format';
+import { AirQualityTrendChart } from './AirQualityTrendChart';
 
 export function AirQualityHero({ data }: { readonly data: AirQualityCardData }) {
   return (
@@ -10,6 +11,7 @@ export function AirQualityHero({ data }: { readonly data: AirQualityCardData }) 
         <span class="text-sm text-slate-500 dark:text-slate-400">EAQI</span>
         <span class={`text-sm font-medium ${data.band.textClass}`}>{data.band.label}</span>
       </div>
+      <AirQualityTrendChart trend={data.trend} color={data.band.markerFill} />
       <AirQualityGauge data={data} />
       <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">{data.band.health}</p>
       <p class="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">

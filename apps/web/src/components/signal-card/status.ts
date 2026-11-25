@@ -4,6 +4,8 @@ import type { CardStatus } from './types';
 const SETUP_REQUIRED_PREFIX = 'setup_required:';
 
 export const PILL_STYLES: Record<CardStatus, string> = {
+  snapshot:
+    'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10',
   live: 'bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-400/20',
   loading:
     'animate-pulse bg-slate-100 text-slate-600 ring-slate-200 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10',
@@ -16,6 +18,7 @@ export const PILL_STYLES: Record<CardStatus, string> = {
 };
 
 export const PILL_TOOLTIPS: Record<CardStatus, string> = {
+  snapshot: 'Saved snapshot — refreshing this card does not check the billing source',
   live: 'Fresh data — last fetched within the refresh interval',
   loading: 'Waiting for the first successful fetch',
   stale: 'Last successful fetch is older than expected — the next tick should refresh it',
@@ -24,6 +27,7 @@ export const PILL_TOOLTIPS: Record<CardStatus, string> = {
 };
 
 export const PILL_LABELS: Record<CardStatus, string> = {
+  snapshot: 'snapshot',
   live: 'live',
   loading: 'loading',
   stale: 'stale',

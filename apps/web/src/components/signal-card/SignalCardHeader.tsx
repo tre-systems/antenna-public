@@ -1,5 +1,6 @@
 import { signalSourceLabel, signalSourceUrl, signalTitle } from '../../signal-format';
 import { relativeTime } from '../../relative-time';
+import { isManualSnapshot, snapshotTime, snapshotLabel } from '../../manual-snapshot';
 import { sourcePosture } from './source-posture';
 import { SignalActions } from './SignalActions';
 import type { ApiSignal } from '../../api';
@@ -109,7 +110,11 @@ function SignalMeta({
       {sourceUrl ? <SourceLink source={source} sourceUrl={sourceUrl} /> : source}
       <Separator />
       <time class="text-slate-400 dark:text-slate-500">
-        {signal.status.last_ok_at !== null ? relativeTime(signal.status.last_ok_at) : 'never'}
+        {isManualSnapshot(signal)
+          ? snapshotLabel(snapshotTime(signal))
+          : signal.status.last_ok_at !== null
+            ? relativeTime(signal.status.last_ok_at)
+            : 'never'}
       </time>
       {posture ? <PostureMeta posture={posture} /> : null}
     </p>

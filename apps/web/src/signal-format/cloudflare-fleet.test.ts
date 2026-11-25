@@ -1,97 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cloudflareFleetCardData } from './cloudflare-fleet';
-import type { ApiSignal, DataPoint } from '../api';
+import type { DataPoint } from '../api';
+import {
+  baseSignal,
+  comparisonPoint,
+  dayPoint,
+  scopedWindow,
+  TODAY,
+  workerPoint,
+} from './cloudflare-fleet-test-fixtures';
 
 describe('cloudflareFleetCardData', () => {
-  const TODAY = Date.UTC(2026, 6, 11); // 2026-07-11 UTC
-
-  const dayPoint = (day: string, requests: number): DataPoint => ({
-    dimensions: { source: 'cloudflare-analytics', kind: 'day', day, metric: 'requests' },
-    value: requests,
-    unit: 'requests',
-    ts: Date.parse(`${day}T00:00:00Z`),
-  });
-  // Dimensions round-trip through JSON as strings, so errors arrives as a string.
-  const workerPoint = (script: string, requests: number, errors: number): DataPoint => ({
-    dimensions: {
-      source: 'cloudflare-analytics',
-      kind: 'worker',
-      window: 'current',
-      script,
-      errors: String(errors),
-      error_rate_ppm: errors > 0 ? String(Math.round((errors / requests) * 1_000_000)) : '0',
-      metric: 'requests',
-    },
-    value: requests,
-    unit: 'requests',
-    ts: TODAY,
-  });
-
-  const baseSignal: ApiSignal = {
-    id: 'cf1',
-    template_id: 'cloudflare-analytics',
-    visibility: 'private',
-    config: { account_id: 'a'.repeat(32), days: 7 },
-    refresh_seconds: 3600,
-    status: {
-      status: 'live',
-      last_ok_at: TODAY,
-      last_attempt_at: TODAY,
-      last_error: null,
-      last_manual_request_at: null,
-    },
-    points: [
-      dayPoint('2026-07-09', 100),
-      dayPoint('2026-07-10', 250),
-      workerPoint('antenna', 300, 2),
-      workerPoint('cepheus', 50, 0),
-      {
-        dimensions: {
-          source: 'cloudflare-analytics',
-          kind: 'worker-comparison',
-          window: 'previous',
-          script: 'antenna',
-          errors: '1',
-          error_rate_ppm: '5000',
-          metric: 'requests',
-        },
-        value: 200,
-        unit: 'requests',
-        ts: TODAY,
-      },
-      {
-        dimensions: {
-          source: 'cloudflare-analytics',
-          kind: 'fleet-window',
-          window: 'current',
-          window_start: '2026-07-10T08:00:00.000Z',
-          window_end: '2026-07-11T08:00:00.000Z',
-          errors: '2',
-          error_rate_ppm: '5714',
-          metric: 'requests',
-        },
-        value: 350,
-        unit: 'requests',
-        ts: TODAY,
-      },
-      {
-        dimensions: {
-          source: 'cloudflare-analytics',
-          kind: 'fleet-window',
-          window: 'previous',
-          window_start: '2026-07-09T08:00:00.000Z',
-          window_end: '2026-07-10T08:00:00.000Z',
-          errors: '1',
-          error_rate_ppm: '4000',
-          metric: 'requests',
-        },
-        value: 250,
-        unit: 'requests',
-        ts: TODAY,
-      },
-    ],
-  };
-
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(TODAY));
@@ -123,11 +42,32 @@ describe('cloudflareFleetCardData', () => {
         script: 'antenna',
         requests: 300,
         errors: 2,
+        previousRequests: 200,
+        previousErrors: 1,
+        requestChangePercent: 50,
+        statuses: [
+          {
+            status: 'scriptThrewException',
+            statusClass: 'error',
+            requests: 2,
+            errors: 2,
+          },
+          {
+            status: 'clientDisconnected',
+            statusClass: 'disconnect',
+            requests: 8,
+            errors: 0,
+          },
+        ],
       },
       {
-        script: 'cepheus',
+        script: 'other-worker',
         requests: 50,
         errors: 0,
+        previousRequests: null,
+        previousErrors: 0,
+        requestChangePercent: null,
+        statuses: [],
       },
     ]);
     expect(data.currentWindowRequests).toBe(350);
@@ -156,19 +96,6 @@ describe('cloudflareFleetCardData', () => {
         script: 'sample-worker',
       },
     };
-    const scopedWindow = (window: 'current' | 'previous', value: number): DataPoint => ({
-      dimensions: {
-        source: 'cloudflare-analytics',
-        kind: 'fleet-window',
-        window,
-        script: 'sample-worker',
-        errors: '0',
-        error_rate_ppm: '0',
-      },
-      value,
-      unit: 'requests',
-      ts: TODAY,
-    });
     const data = cloudflareFleetCardData({
       ...baseSignal,
       config: { ...baseSignal.config, script: 'sample-worker' },
@@ -176,6 +103,7 @@ describe('cloudflareFleetCardData', () => {
         ...baseSignal.points,
         scopedDay,
         workerPoint('sample-worker', 75, 0),
+        comparisonPoint('sample-worker', 50, 0),
         scopedWindow('current', 75),
         scopedWindow('previous', 50),
       ],
@@ -184,7 +112,17 @@ describe('cloudflareFleetCardData', () => {
     expect(data).toMatchObject({
       totalRequests: 80,
       workerCount: 1,
-      workers: [{ script: 'sample-worker', requests: 75, errors: 0 }],
+      workers: [
+        {
+          script: 'sample-worker',
+          requests: 75,
+          errors: 0,
+          previousRequests: 50,
+          previousErrors: 0,
+          requestChangePercent: 50,
+          statuses: [],
+        },
+      ],
       currentWindowRequests: 75,
       previousWindowRequests: 50,
       requestChangePercent: 50,

@@ -233,4 +233,30 @@ describe('compactRowsCardData', () => {
       chipTone: 'warn',
     });
   });
+
+  it('orders web analytics hosts busiest-first regardless of connector rank', () => {
+    const row = (rank: number, host: string, value: number) => ({
+      dimensions: {
+        metric: 'host_traffic',
+        rank,
+        host,
+        previous: 0,
+        change: 0,
+        telemetry_state: 'active',
+      },
+      value,
+    });
+    const visits = compactRowsCardData(
+      makeSignal({
+        template_id: 'cloudflare-web-analytics',
+        points: [row(1, 'quiet.example', 0), row(4, 'busy.example', 40), row(2, 'mid.example', 10)],
+      }),
+    );
+    expect(visits?.rows.map((r) => r.title)).toEqual([
+      'busy.example',
+      'mid.example',
+      'quiet.example',
+    ]);
+    expect(visits?.rows.map((r) => r.rank)).toEqual([1, 2, 3]);
+  });
 });

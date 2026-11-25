@@ -1,16 +1,17 @@
 // A direct /api/me probe rather than Better Auth's framework client, to keep the bundle tiny.
 
 import type { CollectionQuota, MeResponse } from '@antenna/shared';
+import { invalidateSession, sessionVersion } from './session-invalidation';
 
 export type User = MeResponse;
 
 export async function getCurrentUser(): Promise<User | null> {
   // credentials: 'include' so the session cookie rides on cross-origin dev requests.
-  const res = await fetch('/api/me', {
+  const res = await fetch('/api/me?session_probe=1', {
     credentials: 'include',
     headers: { Accept: 'application/json' },
   });
-  if (res.status === 401) return null;
+  if (res.status === 204 || res.status === 401) return null;
   if (!res.ok) {
     throw new Error(`GET /api/me → ${res.status} ${res.statusText}`);
   }
@@ -57,6 +58,7 @@ const parseUser = (raw: unknown): User => {
 };
 
 export async function signOut(): Promise<void> {
+  const requestVersion = sessionVersion();
   // Better Auth rejects POSTs without a JSON Content-Type (415) and never clears the cookie.
   const res = await fetch('/api/auth/sign-out', {
     method: 'POST',
@@ -70,6 +72,7 @@ export async function signOut(): Promise<void> {
   if (!res.ok) {
     throw new Error(`POST /api/auth/sign-out → ${res.status} ${res.statusText}`);
   }
+  invalidateSession(requestVersion);
 }
 
 export function firstName(user: Pick<User, 'email' | 'name'>): string {

@@ -6,7 +6,13 @@ import {
   reorderSignals as reorderSignalsApi,
   type ApiSignal,
 } from '../api';
-import { readSignalSnapshot, snapshotKey, writeSignalSnapshot } from './signal-snapshot';
+import {
+  purgeSignalSnapshots,
+  readSignalSnapshot,
+  snapshotKey,
+  writeSignalSnapshot,
+} from './signal-snapshot';
+import { advanceSessionVersion, onSessionInvalidated } from '../session-invalidation';
 import { dismissNotice } from './notice';
 import { resetPlanState } from './plan';
 
@@ -53,13 +59,19 @@ export const displayedSignals = computed(() => {
 export const UNDO_WINDOW_MS = 5000;
 
 export function setSignalSnapshotOwner(ownerId: string | null): void {
-  if (activeSnapshotOwnerId.value === ownerId) return;
+  if (ownerId !== null && activeSnapshotOwnerId.value === ownerId) return;
+  purgeSignalSnapshots(ownerId);
+  advanceSessionVersion();
   resetOwnerState();
   activeSnapshotOwnerId.value = ownerId;
   signals.value = null;
   lastFetchedAt.value = null;
   currentSnapshotKey = null;
 }
+
+onSessionInvalidated(() => {
+  setSignalSnapshotOwner(null);
+});
 
 function resetOwnerState(): void {
   const pending = pendingRemoval.value;

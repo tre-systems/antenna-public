@@ -21,11 +21,18 @@ const rankedRowPoints = (points: ReadonlyArray<DataPoint>, templateId: string): 
     .sort((a, b) => compareRows(a, b, templateId))
     .slice(0, compactRowLimit(templateId));
 
+// Activity lists read best busiest-first; other lists keep the connector's ranking.
+const VALUE_ORDERED_TEMPLATES = new Set(['project-portfolio', 'cloudflare-web-analytics']);
+
 const compareRows = (a: DataPoint, b: DataPoint, templateId: string): number => {
   const rankDelta = rankOf(a) - rankOf(b);
-  if (templateId !== 'project-portfolio') return rankDelta;
-  const eventDelta = Number(b.value) - Number(a.value);
-  return eventDelta || rankDelta;
+  if (!VALUE_ORDERED_TEMPLATES.has(templateId)) return rankDelta;
+  const coverageOrder =
+    Number(a.dimensions?.telemetry_state === 'disabled') -
+    Number(b.dimensions?.telemetry_state === 'disabled');
+  if (coverageOrder) return coverageOrder;
+  const valueDelta = Number(b.value) - Number(a.value);
+  return valueDelta || rankDelta;
 };
 
 const projectedRows = (signal: RenderSignal, points: ReadonlyArray<DataPoint>): CompactRow[] => {

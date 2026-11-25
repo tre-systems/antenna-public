@@ -1,5 +1,6 @@
 import type { ApiSignal, DataPoint } from '../../api';
 import {
+  airQualityCardData,
   appUsageCardData,
   cloudflareFleetCardData,
   compactNumber,
@@ -7,14 +8,17 @@ import {
   costCardData,
   githubTrendingCardData,
   pointValueText,
+  weatherCardData,
   type AppUsageCardData,
   type CloudflareFleetCardData,
   type CompactRow,
   type GithubTrendingRow,
 } from '../../signal-format';
 import { SignalSparkline } from '../SignalSparkline';
+import { AirQualitySummary } from './AirQualitySummary';
 import { AppUsageBars } from './AppUsageBars';
 import { CostHero } from './CostHero';
+import { WeatherSummary } from './WeatherSummary';
 import type { CardStatus, RenderSignal } from './types';
 
 type Props = {
@@ -33,6 +37,12 @@ export function SignalCardSummary({ signal, cardStatus, points, editableSignal }
 
   const fleet = cloudflareFleetCardData(signal);
   if (fleet) return <FleetSummary data={fleet} />;
+
+  const weather = weatherCardData(signal);
+  if (weather) return <WeatherSummary data={weather} />;
+
+  const airQuality = airQualityCardData(signal);
+  if (airQuality) return <AirQualitySummary data={airQuality} />;
 
   const trendingRows = githubTrendingCardData(signal);
   if (trendingRows && trendingRows.length > 0) {

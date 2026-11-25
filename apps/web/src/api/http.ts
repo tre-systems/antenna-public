@@ -1,4 +1,7 @@
+import { invalidateSession, sessionVersion } from '../session-invalidation';
+
 export async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const requestVersion = sessionVersion();
   const headers = new Headers(init?.headers);
   if (!headers.has('Accept')) headers.set('Accept', 'application/json');
   if (init?.body !== undefined && !headers.has('Content-Type')) {
@@ -6,7 +9,10 @@ export async function fetchJson<T>(path: string, init?: RequestInit): Promise<T>
   }
 
   const res = await fetch(path, { ...init, headers });
-  if (!res.ok) throw new Error(await errorMessage(path, init, res));
+  if (!res.ok) {
+    if (res.status === 401 || res.status === 403) invalidateSession(requestVersion);
+    throw new Error(await errorMessage(path, init, res));
+  }
   return (await res.json()) as T;
 }
 

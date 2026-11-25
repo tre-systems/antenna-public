@@ -1,4 +1,5 @@
 import type { DataPoint } from '../api';
+import { appHealthSummary } from './app-health-display';
 import { capitalize, configOf, numOf } from './common';
 import type { RenderSignal } from './types';
 
@@ -22,23 +23,14 @@ export const summaryFor = (signal: RenderSignal, rowCount: number): string | nul
   return null;
 };
 
-const appHealthSummary = (points: ReadonlyArray<DataPoint>): string => {
-  const rows = points.filter((point) => point.dimensions?.metric === 'app_health');
-  const healthy = rows.filter((point) => point.dimensions?.state === 'healthy').length;
-  const degraded = rows.filter((point) => point.dimensions?.state === 'degraded').length;
-  const down = rows.filter((point) => point.dimensions?.state === 'down').length;
-  if (down) return `${String(down)} down${degraded ? ` · ${String(degraded)} degraded` : ''}`;
-  return degraded
-    ? `${String(degraded)} degraded`
-    : `${String(healthy)}/${String(rows.length)} healthy`;
-};
-
 const webAnalyticsSummary = (points: ReadonlyArray<DataPoint>): string => {
   const rows = points.filter((point) => point.dimensions?.metric === 'host_traffic');
+  if (!rows.length) return 'Visit counts unavailable';
   const visits = rows.reduce((sum, point) => sum + Math.max(0, Number(point.value) || 0), 0);
   const active = rows.filter((point) => Number(point.value) > 0).length;
   const unseen = rows.filter((point) => point.dimensions?.telemetry_state === 'unseen').length;
-  return `${visits.toLocaleString('en-GB')} visits · ${String(active)}/${String(rows.length)} active${
+  const estimated = rows.some((point) => point.dimensions?.visits_quality === 'estimated');
+  return `${visits.toLocaleString('en-GB')} ${estimated ? 'estimated ' : ''}visits · ${String(active)}/${String(rows.length)} active${
     unseen ? ` · ${String(unseen)} unseen` : ''
   }`;
 };

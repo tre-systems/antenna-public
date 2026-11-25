@@ -3,6 +3,7 @@ import { fixed1 } from './common';
 import type { RenderSignal } from './types';
 import { deriveWeatherAdvice } from './weather-advice';
 import { weatherCondition } from './weather-conditions';
+import { extractDaily } from './weather-daily';
 import { extractForecast } from './weather-forecast';
 import type { WeatherCardData, WeatherCondition } from './weather-types';
 
@@ -26,7 +27,8 @@ export function weatherCardData(signal: RenderSignal): WeatherCardData | null {
   const wind = find('wind');
   const fields = currentWeatherFields(find);
   const forecast = extractForecast(signal.points);
-  return weatherData(temp, wind, find('humidity'), fields, forecast);
+  const daily = extractDaily(signal.points);
+  return weatherData(temp, wind, find('humidity'), fields, forecast, daily);
 }
 
 const metricFinder =
@@ -58,6 +60,7 @@ const weatherData = (
   humidity: DataPoint | undefined,
   fields: CurrentWeatherFields,
   forecast: WeatherCardData['forecast'],
+  daily: WeatherCardData['daily'],
 ): WeatherCardData => {
   const windNum = typeof wind?.value === 'number' ? wind.value : null;
   return {
@@ -71,6 +74,7 @@ const weatherData = (
     ...fields,
     feelsLikeC: fields.apparentTemp,
     forecast,
+    daily,
     advice: deriveWeatherAdvice({ ...fields, forecast }),
   };
 };

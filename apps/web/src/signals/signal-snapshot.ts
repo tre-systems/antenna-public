@@ -1,6 +1,25 @@
 import type { ApiSignal } from '../api';
 
 const SNAPSHOT_KEY_PREFIX = 'antenna.signals.snapshot.v2';
+export const SNAPSHOT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+export const purgeSignalSnapshots = (retainOwner: string | null = null): void => {
+  const storage = safeStorage();
+  if (!storage) return;
+  try {
+    for (let index = storage.length - 1; index >= 0; index--) {
+      const key = storage.key(index);
+      if (
+        key?.startsWith('antenna.signals.snapshot.') &&
+        (retainOwner === null || !key.startsWith(`${SNAPSHOT_KEY_PREFIX}:${retainOwner}:`))
+      ) {
+        storage.removeItem(key);
+      }
+    }
+  } catch {
+    /* Storage can be unavailable in restricted browser contexts. */
+  }
+};
 
 type SignalSnapshot = {
   readonly signals: ApiSignal[];
@@ -14,13 +33,21 @@ export const readSignalSnapshot = (
   ownerId: string | null,
   collectionId: string | null,
 ): SignalSnapshot | null => {
+  if (ownerId === null) return null;
   const storage = safeStorage();
   if (!storage) return null;
   try {
     const raw = storage.getItem(snapshotKey(ownerId, collectionId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
-    if (!isSignalSnapshot(parsed)) return null;
+    if (
+      !isSignalSnapshot(parsed) ||
+      parsed.fetchedAt > Date.now() ||
+      Date.now() - parsed.fetchedAt >= SNAPSHOT_MAX_AGE_MS
+    ) {
+      storage.removeItem(snapshotKey(ownerId, collectionId));
+      return null;
+    }
     return parsed;
   } catch {
     return null;
@@ -32,6 +59,7 @@ export const writeSignalSnapshot = (
   collectionId: string | null,
   snap: SignalSnapshot,
 ): void => {
+  if (ownerId === null) return;
   const storage = safeStorage();
   if (!storage) return;
   try {

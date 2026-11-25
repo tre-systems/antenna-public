@@ -21,7 +21,11 @@ export const startGoogleSignIn = async (): Promise<void> => {
       Accept: 'application/json',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ provider: 'google', callbackURL: '/' }),
+    body: JSON.stringify({
+      provider: 'google',
+      callbackURL: '/',
+      ...(isOAuthLogin() ? { oauth_query: window.location.search.slice(1) } : {}),
+    }),
   });
   if (!res.ok) throw new Error(`sign-in failed: ${res.status}`);
 
@@ -30,4 +34,10 @@ export const startGoogleSignIn = async (): Promise<void> => {
     throw new Error('sign-in response did not include a URL');
   }
   window.location.assign(body.url);
+};
+
+export const isOAuthLogin = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const query = new URLSearchParams(window.location.search);
+  return query.has('client_id') && query.has('sig');
 };

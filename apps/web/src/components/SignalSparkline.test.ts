@@ -190,6 +190,32 @@ describe('watchlist history', () => {
       { ts: 2_000, value: 368 },
     ]);
   });
+
+  it('charts crypto watchlists by the pair shown on the card', () => {
+    expect(shouldFetchHistory('crypto-watchlist')).toBe(true);
+    const pairPoint = (pair: string, observed_at: number, value: number) => ({
+      metric_key: `pair=${pair}`,
+      dimensions: { pair },
+      display: { label: pair, source_url: null },
+      observed_at,
+      fetched_at: observed_at,
+      value,
+    });
+    const series = bestSeries(
+      [
+        pairPoint('BTC-USD', 1_000, 64_000),
+        pairPoint('BTC-USD', 2_000, 64_900),
+        pairPoint('ETH-USD', 1_000, 1_890),
+        pairPoint('ETH-USD', 2_000, 1_918),
+      ],
+      { groupByLabel: true, preferredLabel: 'ETH-USD' },
+    );
+    expect(series.label).toBe('ETH-USD');
+    expect(series.points).toEqual([
+      { ts: 1_000, value: 1_890 },
+      { ts: 2_000, value: 1_918 },
+    ]);
+  });
 });
 
 describe('changeColour', () => {

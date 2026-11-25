@@ -1,4 +1,5 @@
 import type { DataPoint } from '../api';
+import { appHealthState, appHealthSubtitle } from './app-health-display';
 import { numOf, strOf } from './common';
 import type { CompactRow } from './compact-row-types';
 
@@ -31,19 +32,13 @@ export const appHealthRow = (
   href: string | null,
 ): CompactRow | null => {
   const project = strOf(point.dimensions?.project);
-  const state = strOf(point.dimensions?.state);
+  const state = appHealthState(point);
   if (!project || !state) return null;
-  const latency = numOf(point.dimensions?.latency_ms);
-  const status = numOf(point.dimensions?.http_status);
-  const subtitle =
-    state === 'unconfigured'
-      ? 'No server-approved endpoint'
-      : `${status > 0 ? `HTTP ${String(Math.round(status))} · ` : ''}${Math.round(latency)} ms`;
   return {
     rank,
     title: projectLabel(project),
-    subtitle,
-    chip: state,
+    subtitle: appHealthSubtitle(point, state),
+    chip: state === 'probe_error' ? 'probe error' : state,
     chipTone: healthTone(state),
     href,
   };
@@ -56,20 +51,21 @@ export const webAnalyticsRow = (
 ): CompactRow | null => {
   const host = strOf(point.dimensions?.host);
   const visits = Number(point.value);
-  if (!host || !Number.isFinite(visits)) return null;
   const state = strOf(point.dimensions?.telemetry_state);
+  if (!host || !Number.isFinite(visits)) return null;
   return {
     rank,
     title: host,
-    subtitle: activityComparison(
-      visits,
-      numOf(point.dimensions?.previous),
-      numOf(point.dimensions?.change),
-      state,
-      strOf(point.dimensions?.last_seen),
-      'visits',
-    ),
-    chip: `${Math.round(visits).toLocaleString('en-GB')} visits`,
+    subtitle:
+      activityComparison(
+        visits,
+        numOf(point.dimensions?.previous),
+        numOf(point.dimensions?.change),
+        state,
+        strOf(point.dimensions?.last_seen),
+        'visits',
+      ) + (point.dimensions?.comparison_quality === 'estimated' ? ' · estimated' : ''),
+    chip: `${Math.round(visits).toLocaleString('en-GB')} ${point.dimensions?.visits_quality === 'estimated' ? 'est. ' : ''}visits`,
     chipTone: visits > 0 ? 'ok' : state === 'unseen' ? 'warn' : 'muted',
     href,
   };
@@ -77,7 +73,7 @@ export const webAnalyticsRow = (
 
 const healthTone = (state: string): CompactRow['chipTone'] => {
   if (state === 'healthy') return 'ok';
-  if (state === 'degraded') return 'warn';
+  if (state === 'degraded' || state === 'probe_error' || state === 'redirect') return 'warn';
   if (state === 'down') return 'urgent';
   return 'muted';
 };

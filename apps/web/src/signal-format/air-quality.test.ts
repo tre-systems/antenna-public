@@ -57,4 +57,25 @@ describe('airQualityCardData', () => {
     expect(airQualityCardData({ ...baseSignal, template_id: 'weather' })).toBeNull();
     expect(airQualityCardData({ ...baseSignal, points: [] })).toBeNull();
   });
+
+  it('collects hourly_aqi points into a trend sorted by hour offset', () => {
+    const hourly = (hour: number | string, aqi: number) => ({
+      dimensions: { location: 'London', metric: 'hourly_aqi', hour },
+      value: aqi,
+      unit: 'EAQI',
+      ts: NOW + Number(hour) * 3_600_000,
+    });
+    const withTrend: ApiSignal = {
+      ...baseSignal,
+      // Includes a D1-style string hour dimension and deliberately unsorted input.
+      points: [...baseSignal.points, hourly(5, 30), hourly('-24', 55), hourly(0, 34)],
+    };
+    const data = airQualityCardData(withTrend);
+    expect(data?.trend.map((t) => t.hour)).toEqual([-24, 0, 5]);
+    expect(data?.trend.map((t) => t.aqi)).toEqual([55, 34, 30]);
+  });
+
+  it('returns an empty trend when only current metrics exist', () => {
+    expect(airQualityCardData(baseSignal)?.trend).toEqual([]);
+  });
 });

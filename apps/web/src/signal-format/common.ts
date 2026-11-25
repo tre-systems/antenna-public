@@ -30,5 +30,12 @@ export const strOf = (raw: unknown): string | null => {
 
 export const fixed1 = (n: number): string => n.toFixed(1);
 
+// Server-read points carry observed_at; locally-built ones (tests, fixtures) carry ts.
+export const pointTs = (point: DataPoint): number | null => {
+  if (typeof point.ts === 'number') return point.ts;
+  if (typeof point.observed_at === 'number') return point.observed_at;
+  return null;
+};
+
 export const capitalize = (s: string): string =>
   s.length === 0 ? s : `${s.charAt(0).toUpperCase()}${s.slice(1)}`;

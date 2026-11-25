@@ -1,6 +1,7 @@
 import type { ApiSignal, PublicApiSignal } from './api';
+import { isManualSnapshot } from './manual-snapshot';
 
-export type DerivedStatus = 'loading' | 'live' | 'stale' | 'error';
+export type DerivedStatus = 'loading' | 'live' | 'stale' | 'error' | 'snapshot';
 
 export function deriveStatus(
   signal: ApiSignal | PublicApiSignal,
@@ -17,6 +18,7 @@ export function deriveStatus(
   if (hasFreshError) return 'error';
 
   if (last_ok_at === null && last_attempt_at === null) return 'loading';
+  if (isManualSnapshot(signal)) return 'snapshot';
 
   const refreshSeconds = 'refresh_seconds' in signal ? signal.refresh_seconds : null;
   if (

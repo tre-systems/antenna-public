@@ -7,6 +7,7 @@ import { readInitialAppRoute } from './app/routes';
 import { PublicCollection } from './pages/PublicCollection';
 import { SettingsTokens } from './pages/SettingsTokens';
 import { SignIn } from './pages/SignIn';
+import { isOAuthLogin } from './pages/sign-in/auth';
 
 export function App() {
   const [route] = useState(() => readInitialAppRoute());
@@ -21,6 +22,8 @@ export function App() {
   if (route.publicSlug !== null) {
     return <PublicCollection slug={route.publicSlug} />;
   }
+
+  if (isOAuthLogin()) return <SignIn />;
 
   if (auth.state.kind === 'loading') {
     return <LoadingScreen />;

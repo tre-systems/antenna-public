@@ -56,7 +56,8 @@ describe('SignalCard', () => {
     expect(html).toContain('Cloudflare · Antenna costs');
     expect(html).toContain('£12.34');
     expect(html).toContain('month to date');
-    expect(html).toContain('manual');
+    expect(html).toContain('data-status="snapshot"');
+    expect(html).not.toContain('data-status="live"');
   });
 
   it('starts owner cards in compact detail mode', () => {

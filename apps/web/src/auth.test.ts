@@ -25,6 +25,11 @@ describe('getCurrentUser', () => {
     vi.unstubAllGlobals();
   });
 
+  it('returns null when the anonymous session probe is empty', async () => {
+    mockFetch(() => Promise.resolve(new Response(null, { status: 204 })));
+    expect(await getCurrentUser()).toBeNull();
+  });
+
   it('returns null on 401', async () => {
     mockFetch(() => Promise.resolve(new Response(null, { status: 401 })));
     expect(await getCurrentUser()).toBeNull();
@@ -41,6 +46,10 @@ describe('getCurrentUser', () => {
     );
     const u = await getCurrentUser();
     expect(u).toEqual(apiUser);
+    expect(fetch).toHaveBeenCalledWith('/api/me?session_probe=1', {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
   });
 
   it('throws on a non-401 error', async () => {

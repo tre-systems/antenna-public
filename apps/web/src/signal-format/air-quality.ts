@@ -1,5 +1,5 @@
 import type { DataPoint } from '../api';
-import { fixed1 } from './common';
+import { fixed1, pointTs } from './common';
 import type { RenderSignal } from './types';
 
 type AqiBand = {
@@ -67,6 +67,12 @@ export function aqiBand(value: number): AqiBand {
   return band;
 }
 
+export type AirQualityTrendPoint = {
+  readonly hour: number;
+  readonly ts: number;
+  readonly aqi: number;
+};
+
 export type AirQualityCardData = {
   readonly aqi: number;
   readonly aqiText: string;
@@ -74,6 +80,7 @@ export type AirQualityCardData = {
   readonly markerPct: number;
   readonly pm25: string;
   readonly pm10: string;
+  readonly trend: ReadonlyArray<AirQualityTrendPoint>;
 };
 
 export function airQualityCardData(signal: RenderSignal): AirQualityCardData | null {
@@ -82,8 +89,27 @@ export function airQualityCardData(signal: RenderSignal): AirQualityCardData | n
   const find = metricFinder(signal.points);
   const aqi = find('aqi');
   if (!aqi || typeof aqi.value !== 'number') return null;
-  return airQualityData(aqi.value, find('pm2_5'), find('pm10'));
+  return airQualityData(aqi.value, find('pm2_5'), find('pm10'), extractTrend(signal.points));
 }
+
+// Hour offsets are relative to the fetch: negative observed, non-negative forecast.
+const extractTrend = (points: ReadonlyArray<DataPoint>): AirQualityTrendPoint[] =>
+  points
+    .filter((p) => p.dimensions?.metric === 'hourly_aqi' && typeof p.value === 'number')
+    .map((p) => ({
+      hour: hourOf(p),
+      ts: pointTs(p) ?? 0,
+      aqi: p.value as number,
+    }))
+    .filter((t) => Number.isFinite(t.hour))
+    .sort((a, b) => a.hour - b.hour);
+
+const hourOf = (point: DataPoint): number => {
+  const raw = point.dimensions?.hour;
+  if (typeof raw === 'number') return raw;
+  if (typeof raw === 'string') return Number(raw);
+  return Number.NaN;
+};
 
 const metricFinder =
   (points: ReadonlyArray<DataPoint>) =>
@@ -94,6 +120,7 @@ const airQualityData = (
   aqi: number,
   pm25: DataPoint | undefined,
   pm10: DataPoint | undefined,
+  trend: ReadonlyArray<AirQualityTrendPoint>,
 ): AirQualityCardData => ({
   aqi,
   aqiText: String(Math.round(aqi)),
@@ -101,4 +128,5 @@ const airQualityData = (
   markerPct: Math.min(100, Math.max(0, aqi)),
   pm25: pm25 && typeof pm25.value === 'number' ? fixed1(pm25.value) : '—',
   pm10: pm10 && typeof pm10.value === 'number' ? fixed1(pm10.value) : '—',
+  trend,
 });

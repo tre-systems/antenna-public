@@ -24,6 +24,28 @@ function makeSignal(status: Partial<SignalStatus>, refresh_seconds = 60): ApiSig
 }
 
 describe('deriveStatus', () => {
+  it('keeps manual snapshots distinct from live data while preserving failures and setup', () => {
+    const signal = { ...makeSignal({ last_ok_at: NOW - 5000 }), template_id: 'manual-cost' };
+    expect(deriveStatus(signal, NOW)).toBe('snapshot');
+    expect(deriveStatus(signal, NOW + 864_000_000)).toBe('snapshot');
+    expect(
+      deriveStatus(
+        {
+          ...signal,
+          status: {
+            ...signal.status,
+            last_error: 'setup_required: Missing value',
+            last_attempt_at: NOW,
+          },
+        },
+        NOW,
+      ),
+    ).toBe('error');
+    expect(deriveStatus({ ...signal, status: { ...signal.status, status: 'stale' } }, NOW)).toBe(
+      'stale',
+    );
+  });
+
   it('returns loading when never attempted', () => {
     expect(deriveStatus(makeSignal({}), NOW)).toBe('loading');
   });

@@ -5,6 +5,7 @@ const CHARTABLE_TEMPLATES = new Set([
   'trading-economics-market',
   'fx-pair',
   'equity-watchlist',
+  'crypto-watchlist',
 ]);
 
 export const shouldFetchHistory = (templateId: string): boolean =>

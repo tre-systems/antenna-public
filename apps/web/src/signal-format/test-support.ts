@@ -75,3 +75,30 @@ export const hourPoints = (hourOffset: number, opts: HourShape): DataPoint[] => 
 
 export const twelveHourForecast = (shape: (hourOffset: number) => HourShape): DataPoint[] =>
   Array.from({ length: 12 }, (_, i) => hourPoints(i + 1, shape(i + 1))).flat();
+
+type DayShape = { tempMax?: number; tempMin?: number; rainProb?: number; code?: number };
+
+const DAY_MS = 86_400_000;
+
+// The Open-Meteo connector emits one flat DataPoint per metric per forecast day.
+export const dayPoints = (dayOffset: number, opts: DayShape): DataPoint[] => {
+  const ts = NOW + dayOffset * DAY_MS;
+  const dims = (metric: string) => ({ location: 'L', metric, day: dayOffset });
+  const out: DataPoint[] = [];
+  if (opts.tempMax !== undefined) {
+    out.push({ dimensions: dims('daily_temp_max'), value: opts.tempMax, unit: '°C', ts });
+  }
+  if (opts.tempMin !== undefined) {
+    out.push({ dimensions: dims('daily_temp_min'), value: opts.tempMin, unit: '°C', ts });
+  }
+  if (opts.rainProb !== undefined) {
+    out.push({ dimensions: dims('daily_rain_prob'), value: opts.rainProb, unit: '%', ts });
+  }
+  if (opts.code !== undefined) {
+    out.push({ dimensions: dims('daily_weather_code'), value: opts.code, ts });
+  }
+  return out;
+};
+
+export const sixDayForecast = (shape: (dayOffset: number) => DayShape): DataPoint[] =>
+  Array.from({ length: 6 }, (_, i) => dayPoints(i, shape(i))).flat();

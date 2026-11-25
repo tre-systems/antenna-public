@@ -1,5 +1,6 @@
 import type { ApiSignal } from '../../api';
 import { relativeTime } from '../../relative-time';
+import { isManualSnapshot, snapshotTime } from '../../manual-snapshot';
 import type { CardStatus, RenderSignal } from './types';
 
 type Props = {
@@ -51,14 +52,23 @@ function signalDetails(
   const details: Detail[] = [
     { label: 'Source', value: source },
     {
-      label: 'Last updated',
-      value: signal.status.last_ok_at ? relativeTime(signal.status.last_ok_at) : 'never',
+      label: isManualSnapshot(signal) ? 'Snapshot as of' : 'Last updated',
+      value: isManualSnapshot(signal)
+        ? snapshotTime(signal)
+        : signal.status.last_ok_at
+          ? relativeTime(signal.status.last_ok_at)
+          : 'never',
     },
     { label: 'Status', value: statusLabel(cardStatus) },
   ];
   if (editableSignal) {
     details.push(
-      { label: 'Refresh', value: refreshLabel(editableSignal.refresh_seconds) },
+      {
+        label: 'Refresh',
+        value: isManualSnapshot(signal)
+          ? 'When source is checked'
+          : refreshLabel(editableSignal.refresh_seconds),
+      },
       { label: 'Visibility', value: visibilityLabel(editableSignal.visibility) },
     );
   }

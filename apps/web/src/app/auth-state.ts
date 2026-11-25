@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { getCurrentUser, signOut, type User } from '../auth';
 import { setSignalSnapshotOwner } from '../signals/signals';
+import { onSessionInvalidated, sessionVersion } from '../session-invalidation';
 
 type AuthState =
   | { readonly kind: 'loading' }
@@ -13,6 +14,14 @@ type SessionFlag = { cancelled: boolean };
 export const useAuthSession = (skipSessionProbe: boolean) => {
   const [state, setState] = useState<AuthState>({ kind: 'loading' });
   const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(
+    () =>
+      onSessionInvalidated(() => {
+        setState({ kind: 'signed-out' });
+      }),
+    [],
+  );
 
   useSessionProbe(skipSessionProbe, setState);
   useSignalSnapshotOwner(state);
@@ -44,6 +53,7 @@ const useSessionProbe = (skipSessionProbe: boolean, setState: (state: AuthState)
 
 const useSignalSnapshotOwner = (state: AuthState): void => {
   useEffect(() => {
+    if (state.kind === 'loading' || state.kind === 'error') return;
     setSignalSnapshotOwner(state.kind === 'signed-in' ? state.user.id : null);
   }, [state]);
 };
@@ -52,12 +62,13 @@ const loadSession = async (
   flag: SessionFlag,
   setState: (state: AuthState) => void,
 ): Promise<void> => {
+  const requestVersion = sessionVersion();
   try {
     const user = await getCurrentUser();
-    if (flag.cancelled) return;
+    if (flag.cancelled || sessionVersion() !== requestVersion) return;
     setState(user ? { kind: 'signed-in', user } : { kind: 'signed-out' });
   } catch (err) {
-    if (flag.cancelled) return;
+    if (flag.cancelled || sessionVersion() !== requestVersion) return;
     setState({ kind: 'error', message: errorMessage(err, 'Failed to load session.') });
   }
 };

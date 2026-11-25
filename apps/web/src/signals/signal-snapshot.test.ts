@@ -12,7 +12,7 @@ afterEach(() => {
 describe('signal snapshots', () => {
   it('round-trips a valid owner-scoped snapshot', () => {
     ({ restore } = stubLocalStorage());
-    const snapshot = { signals: [sampleSignal('a')], fetchedAt: 123 };
+    const snapshot = { signals: [sampleSignal('a')], fetchedAt: Date.now() };
 
     writeSignalSnapshot('user-a', 'collection-a', snapshot);
 

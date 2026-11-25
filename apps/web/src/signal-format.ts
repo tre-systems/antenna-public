@@ -16,16 +16,22 @@ export type { KarpathyCardData } from './signal-format/karpathy';
 export { karpathyCardData } from './signal-format/karpathy';
 export type { AppUsageCardData } from './signal-format/app-usage';
 export { appUsageCardData } from './signal-format/app-usage';
-export type { CloudflareFleetCardData, FleetWorker } from './signal-format/cloudflare-fleet';
+export type {
+  CloudflareFleetCardData,
+  FleetWorker,
+  FleetWorkerStatus,
+} from './signal-format/cloudflare-fleet';
 export { cloudflareFleetCardData } from './signal-format/cloudflare-fleet';
 export type { CostCardData } from './signal-format/cost';
 export { costCardData } from './signal-format/cost';
-export type { AirQualityCardData } from './signal-format/air-quality';
+export type { AirQualityCardData, AirQualityTrendPoint } from './signal-format/air-quality';
 export { airQualityCardData } from './signal-format/air-quality';
 export type {
   WeatherCardData,
   WeatherCondition,
+  WeatherForecastDay,
   WeatherForecastHour,
 } from './signal-format/weather-types';
 export { forecastHourLabel } from './signal-format/weather-forecast';
+export { forecastDayLabel } from './signal-format/weather-daily';
 export { weatherCardData } from './signal-format/weather-card';

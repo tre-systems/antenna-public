@@ -42,7 +42,8 @@ export function SignalSparkline({
   }, [signalId, fetchHistory, lastOk]);
 
   if (!fetchHistory || history === null) return null;
-  const watchlist = signal.template_id === 'equity-watchlist';
+  const watchlist =
+    signal.template_id === 'equity-watchlist' || signal.template_id === 'crypto-watchlist';
   const series = bestSeries(history, {
     groupByLabel: watchlist,
     preferredLabel: watchlist && signal.points[0] ? pointLabel(signal.points[0]) : null,

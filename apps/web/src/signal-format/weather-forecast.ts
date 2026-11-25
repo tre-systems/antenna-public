@@ -1,4 +1,5 @@
 import type { DataPoint } from '../api';
+import { pointTs } from './common';
 import { weatherCondition } from './weather-conditions';
 import type { WeatherForecastHour } from './weather-types';
 
@@ -63,7 +64,7 @@ const hourOffsetOf = (point: DataPoint): number => {
 };
 
 const initialBucket = (point: DataPoint): ForecastBucket => ({
-  ts: typeof point.ts === 'number' ? point.ts : 0,
+  ts: pointTs(point) ?? 0,
   temp: null,
   rainProb: null,
   code: null,
@@ -75,7 +76,8 @@ const applyForecastPoint = (
   point: DataPoint,
 ): ForecastBucket => {
   const next = { ...bucket };
-  if (typeof point.ts === 'number' && point.ts > next.ts) next.ts = point.ts;
+  const ts = pointTs(point);
+  if (ts !== null && ts > next.ts) next.ts = ts;
   if (typeof point.value !== 'number') return next;
   if (metric === 'hourly_temperature') next.temp = point.value;
   else if (metric === 'hourly_precipitation_probability') next.rainProb = point.value;

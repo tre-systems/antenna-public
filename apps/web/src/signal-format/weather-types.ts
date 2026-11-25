@@ -10,6 +10,15 @@ export type WeatherForecastHour = {
   readonly code: number | null;
 };
 
+export type WeatherForecastDay = {
+  readonly dayOffset: number;
+  readonly ts: number;
+  readonly condition: WeatherCondition;
+  readonly tempMax: number;
+  readonly tempMin: number;
+  readonly rainProb: number | null;
+};
+
 export type WeatherCardData = {
   readonly tempText: string;
   readonly tempUnit: string;
@@ -26,5 +35,6 @@ export type WeatherCardData = {
   readonly uvIndex: number | null;
   readonly isDay: boolean | null;
   readonly forecast: ReadonlyArray<WeatherForecastHour>;
+  readonly daily: ReadonlyArray<WeatherForecastDay>;
   readonly advice: string;
 };
