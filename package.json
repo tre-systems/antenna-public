@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "prepare": "husky",
+    "prepare": "node scripts/prepare-hooks.mjs",
     "diagrams": "node scripts/render-diagrams.mjs",
     "check:diagrams": "node scripts/check-diagrams.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,css,html}\"",
