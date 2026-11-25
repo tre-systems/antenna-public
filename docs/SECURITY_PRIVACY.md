@@ -12,18 +12,19 @@
 
 ## Sensitive data
 
-| Data                   | Location                | Protection                                          |
-| ---------------------- | ----------------------- | --------------------------------------------------- |
-| Session tokens         | D1                      | opaque values, owner-scoped auth checks             |
-| Google provider tokens | D1 `account`            | AES-GCM encrypted; unused ID token discarded        |
-| MCP personal tokens    | D1 `mcp_tokens`         | one-way SHA-256 hashes                              |
-| MCP OAuth grants       | D1 OAuth tables         | hashed refresh tokens; consent/session-bound JWTs   |
-| Connector secrets      | Worker secrets          | injected only by dispatch                           |
-| Signal configuration   | D1                      | owner-only APIs; removed from anonymous reads       |
-| Normalised points      | D1                      | collection and source-policy gates                  |
-| Optional raw payloads  | R2                      | registry retention decision and owner access        |
-| Anonymous usage events | Analytics Engine        | curated fields only; no stable user/device ID       |
-| Shared fetch snapshots | D1 `upstream_snapshots` | public-cloud sources only; no owner, no credentials |
+| Data                   | Location                | Protection                                              |
+| ---------------------- | ----------------------- | ------------------------------------------------------- |
+| Session tokens         | D1                      | opaque values, owner-scoped auth checks                 |
+| Google provider tokens | D1 `account`            | AES-GCM encrypted; unused ID token discarded            |
+| MCP personal tokens    | D1 `mcp_tokens`         | one-way SHA-256 hashes                                  |
+| MCP OAuth grants       | D1 OAuth tables         | hashed refresh tokens; consent/session-bound JWTs       |
+| Connector secrets      | Worker secrets          | injected only by dispatch                               |
+| Signal configuration   | D1                      | owner-only APIs; removed from anonymous reads           |
+| Normalised points      | D1                      | collection and source-policy gates                      |
+| Optional raw payloads  | R2                      | registry retention decision and owner access            |
+| Anonymous usage events | Analytics Engine        | curated fields only; no stable user/device ID           |
+| Shared fetch snapshots | D1 `upstream_snapshots` | public-cloud sources only; no owner, no credentials     |
+| Offline card snapshots | browser `localStorage`  | owner-scoped; expire after 24 hours; purged on sign-out |
 
 ## Authentication controls
 
@@ -35,8 +36,11 @@
   creation, and on every authenticated request, so editing either ends live
   sessions and MCP tokens immediately rather than at the next sign-in.
 - `ADMIN_EMAILS` is not an access gate. It decides who may read
-  deployment-wide operational data, and only aggregate counts cross that
-  boundary.
+  deployment-wide operational data and who may use the signals backed by
+  deployment credentials: Cloudflare traffic, web visits, app usage, the project
+  portfolio, app health, and Antenna users. The check runs at dispatch and at
+  read time, including stored history and alerts. Other owners may delete such a
+  signal but cannot read, edit, or refresh it.
 - OAuth state and PKCE are handled by Better Auth.
 - The supported Better Auth release keeps OAuth state and Magic Link verification
   in separate namespaces. Core and adapter packages stay on aligned, patched releases.
@@ -46,6 +50,10 @@
 - Provider access and refresh tokens are encrypted before persistence; the ID
   token and its profile claims are discarded.
 - Sign-out invalidates the current session.
+- Cookie-authenticated writes are refused when the request comes from another
+  origin. Bearer clients and non-browser clients are unaffected.
+- An MCP access token is issued or refreshed only while its owner session,
+  consent, scope, and resource are all still live.
 - Production pins `NODE_ENV=production`; the E2E bypass checks this value before
   accepting a synthetic principal.
 
@@ -80,11 +88,30 @@ Only the fetch is shared. Points, status, alerts, and history stay owner-scoped,
 so a shared result is indistinguishable from a private one downstream. Widening
 what may be shared means changing a source policy under review, not a cache.
 
+## Request and source limits
+
+- API request bodies are capped at 256 KiB before route parsing; MCP requests
+  have the same cap and a bound on tool-input elements.
+- An owner holds at most ten collections, and a collection at most fifty
+  signals. Preflight checks return a quota response; D1 insert triggers enforce
+  the same limits under concurrent requests, and a plan confirmation that would
+  exceed them rolls back whole. Rows already over a limit stay readable,
+  editable, and deletable.
+- Dispatch interleaves owners and gives one owner at most fifty attempts per
+  tick. Signal edits and manual refreshes share an owner-scoped rate limit, as
+  do stream connections, which are also capped per collection and time-limited.
+- GitHub repository signals produce points only for repositories that report
+  public visibility. Repository requests and app-health probes do not follow
+  redirects; a redirect is recorded as unavailable.
+
 ## Logging and observability
 
 Sentry and Worker logs remove credentials, cookies, query strings, share slugs,
-request bodies, and database query details. New logging must use stable
-identifiers and bounded metadata rather than payloads or personal data.
+request bodies, and database query details. The browser and the Worker apply the
+same recursive redaction to error events, transactions, spans, and breadcrumbs.
+Connector and cron failures are stored and logged as fixed classifications
+rather than copied exception text. New logging must use stable identifiers and
+bounded metadata rather than payloads or personal data.
 
 Do not log:
 

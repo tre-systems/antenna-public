@@ -61,6 +61,7 @@ NODE_ENV=development
 
 # ----- Optional private observability connectors -----
 # Use distinct scoped tokens for independent deployments.
+# Signals that use these refresh only for accounts in ADMIN_EMAILS.
 # BEACON_INGEST_TOKEN=
 # CF_ANALYTICS_API_TOKEN=
 # APP_HEALTH_MANIFEST={"my-app":"https://my-app.example/healthz"}

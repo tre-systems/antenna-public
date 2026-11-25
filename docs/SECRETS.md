@@ -18,13 +18,17 @@ Never commit real values. Local Worker secrets belong in
 | --------------------------- | --------------------------------------------------------------- |
 | `ALLOWED_EMAILS`            | optional sign-in allowlist; unset means open Google sign-up     |
 | `BLOCKED_EMAILS`            | addresses always refused; wins over `ALLOWED_EMAILS`            |
-| `ADMIN_EMAILS`              | readers of aggregate deployment-wide operational signals        |
+| `ADMIN_EMAILS`              | accounts that may use deployment analytics and health signals   |
 | `GITHUB_TOKEN`              | higher GitHub API limits for supported connectors               |
 | `TRADING_ECONOMICS_API_KEY` | authenticated economic-data fallback                            |
 | `BEACON_INGEST_TOKEN`       | authenticates application-event ingestion                       |
 | `CF_ANALYTICS_API_TOKEN`    | reads configured Analytics Engine and Cloudflare analytics data |
 | `APP_HEALTH_MANIFEST`       | JSON allowlist mapping app IDs to operator-owned health URLs    |
 | `SENTRY_DSN`                | Worker error reporting                                          |
+
+Signals backed by `CF_ANALYTICS_API_TOKEN` or `APP_HEALTH_MANIFEST`, and the
+Antenna users signal, refresh only for accounts listed in `ADMIN_EMAILS`. For
+any other owner they report `setup_required`.
 
 Optional connector secrets are injected only when their registered template
 declares them. Missing values produce `setup_required`; they must never be

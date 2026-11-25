@@ -42,6 +42,15 @@ stores successful observations. A recoverable source failure keeps prior good da
 first or unrecoverable failure becomes `error`. The browser also presents old `live` data as stale
 when it is older than twice the configured refresh interval.
 
+Manual signals display a neutral **snapshot** status. Their source observation date is separate
+from the dispatch time; refreshing a saved value does not make it newly observed. Undated manual
+values explicitly show an unknown snapshot date. Manual cost cards can show usage costs, prepaid
+top-ups for the same billing month, and remaining service credit separately. Credit balances retain
+their own observation date and are never added to usage costs. Missing values are not zeroes.
+Billing cards can instead show fixed subscription fees and usage overages as separate components
+of a matching pre-tax total for the current billing period. This total is not a final invoice amount
+and does not include prepaid purchases, remaining credit, taxes, or invoice adjustments.
+
 ### Signal Authoring
 
 MCP is the primary authoring surface. An agent:

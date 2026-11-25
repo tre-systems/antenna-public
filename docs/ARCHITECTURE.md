@@ -122,8 +122,8 @@ token is not retained.
 
 `ALLOWED_EMAILS` is an optional deployment allowlist; `BLOCKED_EMAILS` always wins. Policy is checked
 during user/session creation and on every authenticated request, so a newly refused account loses
-browser and MCP access immediately. `ADMIN_EMAILS` is separate and gates only aggregate
-deployment-wide operational data.
+browser and MCP access immediately. `ADMIN_EMAILS` is separate and gates deployment-wide operational
+data, server-owned analytics connectors, and health manifests at dispatch and read time.
 
 Auth hooks idempotently provision a first private collection. If a `seed-collection` exists, its
 signal definitions are cloned without status or points; cron fetches fresh owner-specific data.
@@ -137,6 +137,13 @@ invalidating existing access tokens immediately. Expired grants are cleaned hour
 abandoned registrations after their safety window. Legacy OAuth registrations remain disabled;
 historical manual tokens keep their separate owner-scoped authentication path.
 
+The MCP OAuth credential read and Better Auth's session-by-token lookup (including its owner)
+retry D1 `internal error` failures, including Drizzle-wrapped causes, at most twice after 100 and
+200 ms. Retries read fresh database state. Missing, expired, revoked, or policy-blocked credentials
+remain denied. Other failures and exhausted retries reach the existing exception boundary.
+Only the reads repeat: session renewal and cleanup, legacy-token last-use writes, grant rotation,
+and downstream request handlers run outside the retry boundary.
+
 Workers Static Assets may bypass application code for ordinary assets, so `wrangler.toml` sends API,
 health, share, and OAuth discovery paths through the Worker first. `apps/web/public/_headers` applies
 the matching browser security policy to static responses.
@@ -145,9 +152,12 @@ the matching browser security policy to static responses.
 
 ![Scheduled signal ingestion](diagrams/ingestion-flow.png)
 
-The cron runs every minute. Its dispatcher selects due rows in SQL, puts manual requests first and
-then least-recently-attempted work, caps a tick at 250 signals, and processes up to eight upstream
-calls concurrently.
+The cron runs every minute. Its dispatcher ranks due rows within each owner in SQL, with manual
+requests first and then least-recently-attempted work. Selection interleaves owners before taking
+their next ranked row, caps each owner at 50 signals and the tick at 250, and processes up to eight
+upstream calls concurrently. Configuration edits clear obsolete data without resetting refresh
+cooldowns, attempt age, or retry gates. Owner-scoped mutation limits also cover PATCH and manual
+refresh calls across HTTP and MCP.
 
 For each row it:
 
@@ -179,10 +189,15 @@ daily in isolated periodic jobs.
 Each collection maps to one `CollectionChannel` Durable Object. The authenticated SSE route verifies
 ownership before subscribing. Dispatcher notifications contain invalidation information only; the
 browser refetches the owner API. Notifications never determine durable state and never block cron.
+Each channel admits at most five concurrent streams, buffers at most 16 KiB per reader, and closes
+slow readers or streams older than fifteen minutes. Owner-scoped connection-rate limits bound
+reconnect churn; browser polling remains the fallback when a stream is refused.
 
 After repeated stream failures the browser polls every 30 seconds and defensively refetches after a
 minute of silence. A local snapshot is keyed to the current owner and collection, validated on read,
-and used only for offline presentation.
+and expires after 24 hours. Sign-out and authorization failures purge snapshots and private working
+state; switching owners purges other owners' snapshots. Only genuine network failures retain the
+offline presentation. Responses from an earlier session cannot invalidate a newly selected owner.
 
 ## Signal Authoring
 
