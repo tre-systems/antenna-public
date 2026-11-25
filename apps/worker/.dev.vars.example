@@ -7,6 +7,10 @@
 #   wrangler secret put NAME --config apps/worker/wrangler.toml
 # (or from inside apps/worker: `wrangler secret put NAME`)
 
+# Sign-in needs all four values in the next three sections. With any of them
+# empty the Worker still starts and /healthz still answers, but the sign-in
+# button fails. To look around without a Google client, use BYPASS_AUTH below.
+
 # ----- Google OAuth -----
 # From https://console.cloud.google.com/apis/credentials
 # OAuth client: type = Web application
@@ -22,26 +26,30 @@ BETTER_AUTH_SECRET=
 
 # ----- Google token encryption -----
 # 32-byte hex key for AES-GCM encryption of reusable provider tokens.
-# Generate: `openssl rand -hex 32`
+# Generate a second, different value: `openssl rand -hex 32`
 ENCRYPTION_KEY=
 
 # ----- Access policy -----
-# Leave empty for open sign-up; set to close access to listed addresses.
-ALLOWED_EMAILS=owner@example.com
+# Unset means any Google account may sign in, which is fine on localhost.
+# Set ALLOWED_EMAILS to a comma-separated list to admit only those addresses;
+# an address that is not on the list is refused, including your own.
+# ALLOWED_EMAILS=you@example.com
 # BLOCKED_EMAILS=
-# ADMIN_EMAILS=owner@example.com
+# ADMIN_EMAILS=you@example.com
 
 # ----- Environment -----
 # `wrangler dev` defaults to "development" if unset, but being explicit makes
 # the BYPASS_AUTH gate (below) easy to reason about.
 NODE_ENV=development
 
-# ----- E2E auth bypass -----
-# Set to "1" ONLY when running the Playwright suite against `wrangler dev`.
-# When active, the auth middleware skips Better Auth entirely and injects a
-# fake { id: "e2e-user", email: "e2e@test.local" } principal. Hard-gated to
-# NODE_ENV !== "production"; wrangler.toml pins NODE_ENV="production" on the
-# deployed Worker so this can never accidentally leak.
+# ----- Local auth bypass -----
+# Set to "1" to run without Google sign-in. The auth middleware then skips
+# Better Auth and treats every request as the fixed local user
+# { id: "e2e-user", email: "e2e@test.local" }, so the app opens signed in.
+# It also skips the access lists above, for anyone who can reach the port:
+# keep `wrangler dev` on localhost while it is on. The Playwright suite sets
+# this itself. Hard-gated to NODE_ENV !== "production"; wrangler.toml pins
+# NODE_ENV="production" on the deployed Worker so this can never leak there.
 # BYPASS_AUTH=1
 
 # ----- Optional connector credentials -----

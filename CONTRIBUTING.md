@@ -24,11 +24,16 @@ npm run verify
 Run the browser suite with:
 
 ```sh
+npx playwright install chromium
 npm run test:e2e
 ```
 
-The E2E wrapper creates isolated local D1 state and sets a synthetic principal.
-The auth bypass is hard-gated off in production.
+The first command is needed once per machine. The E2E wrapper starts its own
+Worker on port 8787, which must be free, creates isolated local D1 state, and
+sets a synthetic principal. The auth bypass is hard-gated off in production.
+
+To use the app by hand, follow "Local development" in the
+[README](README.md#local-development).
 
 ## Changes
 

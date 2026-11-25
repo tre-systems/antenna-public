@@ -1,9 +1,7 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
-const DEFAULT_BASE_URL = 'https://antenna.example';
-
-const baseUrl = process.env.ANTENNA_BASE_URL ?? DEFAULT_BASE_URL;
+const baseUrl = process.env.ANTENNA_BASE_URL;
 const token = process.env.ANTENNA_TOKEN;
 const sessionCookie = process.env.ANTENNA_SESSION;
 const required = process.env.ANTENNA_REQUIRE_HTTP_SMOKE === '1';
@@ -16,6 +14,10 @@ if (token === undefined && sessionCookie === undefined) {
   }
   console.log(message);
   process.exit(0);
+}
+
+if (baseUrl === undefined || baseUrl.trim().length === 0) {
+  throw new Error('Set ANTENNA_BASE_URL to the origin of the Antenna Worker under test.');
 }
 
 const transport = new StreamableHTTPClientTransport(

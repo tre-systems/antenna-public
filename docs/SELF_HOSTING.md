@@ -6,8 +6,10 @@ identifiers, OAuth clients, or credentials from another installation.
 ## Prerequisites
 
 - Node.js 22 or later
-- a Cloudflare account with Workers, D1, R2, Durable Objects, and Analytics
-  Engine available
+- a Cloudflare account on the Workers Paid plan, with D1, R2, and Analytics
+  Engine available. The Durable Object classes in `apps/worker/wrangler.toml`
+  are declared with `new_classes`, the key-value storage backend, and the
+  Workers Free plan offers only the SQLite backend.
 - Wrangler authentication
 - a Google Cloud OAuth web client
 - a domain or Workers.dev hostname
@@ -27,14 +29,24 @@ npx wrangler r2 bucket create antenna-payloads
 ```
 
 Copy the returned D1 database ID into `apps/worker/wrangler.toml`. Change the
-Worker name and R2 bucket name if they are already used in your account.
+Worker name and R2 bucket name if they are already used in your account. The
+bucket name appears in `wrangler.toml` and in the two `r2:lifecycle` scripts in
+`apps/worker/package.json`; change all three together.
+
+Raw payloads expire after 365 days through a bucket lifecycle rule. Add it to
+the new bucket once:
+
+```sh
+npm run r2:lifecycle --workspace=apps/worker
+```
 
 Analytics Engine is declared by dataset name and does not require a separate
 creation command. Durable Object migrations are applied during Worker deploy.
 
 ## 3. Configure the URL
 
-Set `BETTER_AUTH_URL` to the final HTTPS origin. Either:
+Set `BETTER_AUTH_URL` under `[vars]` in `apps/worker/wrangler.toml` to the
+final HTTPS origin; it ships as `http://localhost:8787`. Either:
 
 - leave `workers_dev = true` and use the assigned Workers.dev hostname, or
 - set `workers_dev = false` and add your own `[[routes]]` custom-domain entry.
@@ -52,7 +64,8 @@ Google sign-in requests only `openid`, `email`, and `profile`.
 
 ## 5. Set secrets
 
-Follow [SECRETS.md](SECRETS.md).
+Follow [SECRETS.md](SECRETS.md). The Worker does not exist until step 7, so the
+first `wrangler secret put` asks whether to create it; answer yes.
 
 Set `ALLOWED_EMAILS` before the first deployment. Access is decided by two
 lists: with `ALLOWED_EMAILS` set, only those addresses can sign in; leave it
@@ -89,9 +102,11 @@ another installation's private migration chain.
 ## 7. Build and deploy
 
 ```sh
-npm run build
 npm run deploy
 ```
+
+`npm run deploy` builds the MCP package and the web app before it deploys the
+Worker.
 
 Then verify:
 
@@ -111,9 +126,31 @@ sign-in:
 claude mcp add --transport http antenna https://your-host.example/api/mcp
 ```
 
-The local stdio entry point requires `ANTENNA_BASE_URL` plus either a Better
-Auth session cookie or a historical manual token. New manual-token issuance is
-disabled; historical tokens remain revocable from the connections screen.
+### Local stdio server
+
+`npm run build` writes the stdio entry point to `apps/mcp/dist/server.js`. It
+reads three environment variables:
+
+| Name               | Value                                                                    |
+| ------------------ | ------------------------------------------------------------------------ |
+| `ANTENNA_BASE_URL` | origin of the Worker, for example `http://localhost:8787`; required      |
+| `ANTENNA_SESSION`  | the `better-auth.session_token` cookie value, or a whole `Cookie` header |
+| `ANTENNA_TOKEN`    | a historical manual token, used in place of `ANTENNA_SESSION`            |
+
+Copy the session cookie from the browser's developer tools after signing in.
+Against a local Worker running with `BYPASS_AUTH=1`, the credential is not
+checked but one must still be present, so any placeholder works:
+
+```sh
+claude mcp add antenna \
+  --env ANTENNA_BASE_URL=http://localhost:8787 \
+  --env ANTENNA_SESSION=local \
+  -- node /absolute/path/to/apps/mcp/dist/server.js
+```
+
+New manual-token issuance is disabled. `apps/mcp/dist/token-cli.js` lists and
+revokes historical tokens with the same three variables; they are also
+revocable from the connections screen.
 
 ## Production hardening
 

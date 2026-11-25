@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 import type { McpTokenRecord } from '@antenna/shared';
-import { normalizeBaseUrl, normalizeCookie } from './url.js';
-
-const DEFAULT_BASE_URL = 'https://antenna.example';
+import { normalizeCookie, requireBaseUrl } from './url.js';
 
 export type TokenCliEnv = {
   readonly ANTENNA_BASE_URL?: string;
@@ -55,8 +53,8 @@ export async function runTokenCli(options: TokenCliOptions): Promise<number> {
 }
 
 function createTokenClient(env: TokenCliEnv, fetchImpl: typeof fetch) {
-  const baseUrl = normalizeBaseUrl(env.ANTENNA_BASE_URL ?? DEFAULT_BASE_URL);
   const headers = createHeaders(env);
+  const baseUrl = requireBaseUrl(env.ANTENNA_BASE_URL);
 
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetchImpl(new URL(path, baseUrl), {
@@ -128,7 +126,7 @@ function helpText(): string {
     'Environment:',
     '  ANTENNA_SESSION  Better Auth session cookie value or full Cookie header',
     '  ANTENNA_TOKEN    Existing legacy pbk_ token for list/revoke',
-    '  ANTENNA_BASE_URL Defaults to production Worker',
+    '  ANTENNA_BASE_URL Origin of your Antenna Worker, for example http://localhost:8787',
     '',
   ].join('\n');
 }

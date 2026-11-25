@@ -48,8 +48,9 @@ Requirements:
 
 - Node.js 22 or later
 - npm
-- Graphviz for diagram verification
-- a Google OAuth client for interactive sign-in
+- Graphviz for diagram verification (`npm run verify`)
+- a Chromium build for Playwright, for the browser tests only:
+  `npx playwright install chromium`
 
 ```sh
 cp .env.example .env
@@ -60,17 +61,39 @@ npm run build
 npm run dev --workspace=apps/worker
 ```
 
-The local Worker runs at `http://localhost:8787`. Set the Google OAuth redirect
-URI to `http://localhost:8787/api/auth/callback/google`.
+The local Worker runs at `http://localhost:8787`, and
+`http://localhost:8787/healthz` answers as soon as it is up. The copied
+`.dev.vars` has no credentials in it, so the sign-in button does not work yet.
+Choose one of two ways in, then restart the Worker.
 
-For a test-only session that does not use Google OAuth, follow the E2E setup in
-[CONTRIBUTING.md](CONTRIBUTING.md). The bypass is ignored whenever
-`NODE_ENV=production`.
+### Without Google
+
+Uncomment `BYPASS_AUTH=1` in `apps/worker/.dev.vars`. Every request is then the
+fixed local user `e2e@test.local`, and the app opens signed in at the welcome
+screen of a new, empty collection. The bypass skips sign-in and the access
+lists for anyone who can reach the port, so keep the Worker on localhost. It is
+ignored whenever `NODE_ENV=production`, which the deployed Worker pins.
+
+### With Google sign-in
+
+Fill four values in `apps/worker/.dev.vars`:
+
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from a Google Cloud OAuth client
+  of type Web application, with the redirect URI
+  `http://localhost:8787/api/auth/callback/google`
+- `BETTER_AUTH_SECRET` and `ENCRYPTION_KEY`, each a separate
+  `openssl rand -hex 32`
+
+Leave `ALLOWED_EMAILS` unset locally. When it is set, only the listed addresses
+can sign in, including your own. [docs/SECRETS.md](docs/SECRETS.md) describes
+every variable.
 
 ## Deploying
 
 Antenna is infrastructure-dependent and intentionally does not ship a production
-deployment target. Before deploying:
+deployment target. It needs the Workers Paid plan: its Durable Objects use the
+key-value storage backend, which the Workers Free plan does not offer. Before
+deploying:
 
 1. Create your own D1 database and R2 bucket.
 2. Replace the placeholder resource identifiers in
@@ -86,7 +109,7 @@ See [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md) for the complete sequence.
 
 - `apps/worker` — HTTP API, auth, persistence, cron dispatch, source gates
 - `apps/web` — Preact single-page application
-- `apps/mcp` — MCP server and token CLI
+- `apps/mcp` — MCP server, and a CLI that lists and revokes historical tokens
 - `packages/connectors` — pure source adapters
 - `packages/registry` — connector templates and source policy
 - `packages/shared` — shared wire types and validation schemas
@@ -105,7 +128,8 @@ npm run audit:security
 
 `npm run verify` checks formatting, documentation links, import boundaries,
 lint, types, generated skill content, MCP build smoke tests, diagrams, prompt
-parity, and unit tests.
+parity, and unit tests. `npm run test:e2e` starts its own Worker with the auth
+bypass, so it needs port 8787 free and the Playwright Chromium build.
 
 ## Security
 
