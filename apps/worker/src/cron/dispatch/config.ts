@@ -21,6 +21,9 @@ export const prepareAdapterConfig = async (
   collection: CollectionRow,
   template: DispatchTemplate,
 ): Promise<ConfigResult> => {
+  if (template.deploymentAdminOnly && !(await isAdminUser(client, env, collection.ownerId))) {
+    return { ok: false, message: 'setup_required: source is available to deployment admins only' };
+  }
   const parsedConfig = parseJsonRecord(signal.config);
   const withGithubToken = injectGithubToken(env, template.id, parsedConfig);
   const withSecret = injectServerSecret(env, template, withGithubToken);

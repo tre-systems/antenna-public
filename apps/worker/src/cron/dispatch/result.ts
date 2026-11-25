@@ -33,7 +33,7 @@ export const processResult = async (
   options: ResultOptions,
 ): Promise<boolean> => {
   if (!result.ok) return processAdapterError(ctx, client, env, signal, now, result.error);
-  return recordSuccessfulResult(ctx, client, env, signal, now, result, options);
+  return recordObservation(ctx, client, env, signal, now, result, options);
 };
 
 const processAdapterError = async (
@@ -64,7 +64,7 @@ const shouldMarkStale = async (
   return previous?.lastOkAt !== null && previous?.lastOkAt !== undefined;
 };
 
-const recordSuccessfulResult = async (
+const recordObservation = async (
   ctx: DispatchContext,
   client: Client,
   env: DispatchEnv,
@@ -85,11 +85,25 @@ const recordSuccessfulResult = async (
   if (snapshot.persist) {
     await insertPoints(client, signal.id, result.points, now, rawKey);
   }
-  await writeStatus(client, signal.id, now, null);
+  const succeeded = await recordObservationStatus(ctx, client, env, signal, now, result.warning);
   if (snapshot.persist) {
     await recordSnapshotState(client, signal.id, snapshot.hash, now);
   }
+  if (!succeeded) return false;
   await notifySignalUpdated(ctx, env, signal, now, snapshot.persist ? result.points.length : 0);
+  return true;
+};
+
+const recordObservationStatus = async (
+  ctx: DispatchContext,
+  client: Client,
+  env: DispatchEnv,
+  signal: SignalRow,
+  now: number,
+  warning: AdapterError | undefined,
+): Promise<boolean> => {
+  if (warning) return processAdapterError(ctx, client, env, signal, now, warning);
+  await writeStatus(client, signal.id, now, null);
   return true;
 };
 

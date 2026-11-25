@@ -97,7 +97,18 @@ const updateSignalRow = async (
 
 const clearSignalData = async (client: Client, signalId: string): Promise<void> => {
   await client.delete(signalPoints).where(eq(signalPoints.signalId, signalId)).run();
-  await client.delete(signalStatus).where(eq(signalStatus.signalId, signalId)).run();
+  // Changing data must not reset retry gates, attempt age or manual-refresh cooldowns.
+  await client
+    .update(signalStatus)
+    .set({
+      status: 'loading',
+      lastOkAt: null,
+      lastError: null,
+      lastDataHash: null,
+      lastDataAt: null,
+    })
+    .where(eq(signalStatus.signalId, signalId))
+    .run();
 };
 
 const resolveNextConfig = (

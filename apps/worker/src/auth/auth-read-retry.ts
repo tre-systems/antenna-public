@@ -1,7 +1,7 @@
 const RETRY_DELAYS_MS = [100, 200] as const;
 
-// Only the idempotent OAuth credential SELECT may use this retry boundary.
-export async function retryOAuthRead<T>(read: () => T | PromiseLike<T>): Promise<T> {
+// Only idempotent credential and session reads may use this retry boundary.
+export async function retryAuthRead<T>(read: () => T | PromiseLike<T>): Promise<T> {
   for (let attempt = 0; ; attempt++) {
     try {
       return await read();

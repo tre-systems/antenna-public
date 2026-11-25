@@ -14,6 +14,15 @@ const buildApp = () => {
 };
 
 describe('securityHeaders', () => {
+  it.each(['same-origin', 'no-referrer'])('preserves sensitive route policy %s', async (policy) => {
+    const app = new Hono();
+    app.use('*', securityHeaders());
+    app.get('/api/oauth/consent', (c) => {
+      c.header('Referrer-Policy', policy);
+      return c.text('consent');
+    });
+    expect((await app.request('/api/oauth/consent')).headers.get('referrer-policy')).toBe(policy);
+  });
   it('sets a restrictive browser security baseline', async () => {
     const response = await buildApp().request('/');
 

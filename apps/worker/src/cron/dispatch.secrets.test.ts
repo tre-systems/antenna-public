@@ -71,11 +71,15 @@ describe('runDispatch server secrets', () => {
   it('injects GITHUB_TOKEN into GitHub adapter configs when configured', async () => {
     env = { ...env, GITHUB_TOKEN: 'ghp_worker' };
     seedSignal(db, 'repo', 'github-repo-activity', { owner: 'tre', repo: 'collection' }, 900);
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        jsonResponse({ stargazers_count: 1, open_issues_count: 0, forks_count: 0 }),
-      );
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        private: false,
+        visibility: 'public',
+        stargazers_count: 1,
+        open_issues_count: 0,
+        forks_count: 0,
+      }),
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     expect(await runDispatch(env)).toEqual({ ran: 1, ok: 1, failed: 0 });

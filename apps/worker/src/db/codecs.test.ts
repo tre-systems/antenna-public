@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { canonicalJson, parseJsonRecord, parseStringRecord, toTimestampMs } from './codecs';
+import {
+  canonicalJson,
+  parseJsonRecord,
+  parseStringRecord,
+  parseStringArray,
+  toTimestampMs,
+} from './codecs';
 
 describe('db codecs', () => {
+  it('narrows decoded or serialized string arrays without accepting substring permissions', () => {
+    expect(parseStringArray(['antenna'])).toEqual(['antenna']);
+    expect(parseStringArray('["antenna"]')).toEqual(['antenna']);
+    for (const value of ['antenna', '["antenna",1]', '{}', null, { antenna: true }]) {
+      expect(parseStringArray(value)).toBeNull();
+    }
+  });
   it('parses JSON object records from text columns', () => {
     expect(parseJsonRecord('{"base":"GBP","quote":"USD"}')).toEqual({
       base: 'GBP',

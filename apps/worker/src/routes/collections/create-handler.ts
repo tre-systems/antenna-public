@@ -2,6 +2,7 @@ import { collectionTemplates, type CollectionTemplate } from '@antenna/registry'
 import { collectionCreateSchema, type CollectionRecord } from '@antenna/shared';
 import type { z } from 'zod';
 import { db } from '../../db/client';
+import { isQuotaError } from '../../db/quota-error';
 import { signalStatus, collections, signals } from '../../db/schema';
 import { toCollectionRecord } from '../collection-record';
 import { err, errWith } from '../http';
@@ -35,7 +36,13 @@ export const createCollection = async (c: CollectionsContext): Promise<Response>
   const templateRows = templateRowsForCollection(collectionTemplate.template, row);
   if (!templateRows.ok) return templateRowsFailure(c, templateRows);
 
-  await client.insert(collections).values(row).run();
+  try {
+    await client.insert(collections).values(row).run();
+  } catch (error) {
+    if (!isQuotaError(error, 'collection_quota_exceeded')) throw error;
+    const quota = collectionQuotaFromCount(await countCollectionsForUser(client, userId));
+    return errWith(c, 'collection_quota_exceeded', { quota }, 409);
+  }
   await insertTemplateRows(client, templateRows);
   return c.json(toCollectionRecord(row) satisfies CollectionRecord, 201);
 };

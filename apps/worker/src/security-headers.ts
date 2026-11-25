@@ -32,7 +32,12 @@ const SECURITY_HEADERS: Readonly<Record<string, string>> = {
 export const securityHeaders = (): MiddlewareHandler => async (c, next) => {
   await next();
   const headers = new Headers(c.res.headers);
-  for (const [name, value] of Object.entries(SECURITY_HEADERS)) headers.set(name, value);
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    const existing = headers.get(name);
+    if (name === 'Referrer-Policy' && (existing === 'no-referrer' || existing === 'same-origin'))
+      continue;
+    headers.set(name, value);
+  }
   if (c.req.path.startsWith('/api/')) {
     headers.set('Cache-Control', 'no-store');
     headers.set('Pragma', 'no-cache');

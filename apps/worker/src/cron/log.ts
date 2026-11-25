@@ -7,5 +7,4 @@ export const logErrorEvent = (payload: Readonly<Record<string, unknown>>): void 
   console.error(JSON.stringify(payload));
 };
 
-export const errorMessage = (err: unknown): string =>
-  err instanceof Error ? err.message : String(err);
+export const errorMessage = (_err: unknown): string => 'Operation failed';

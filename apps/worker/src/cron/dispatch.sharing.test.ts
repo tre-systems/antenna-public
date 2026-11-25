@@ -1,6 +1,7 @@
 // The whole point of sharing: adoption must not multiply upstream load.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { templates } from '@antenna/registry';
 import * as schema from '../db/schema';
 import { runDispatch, type DispatchEnv } from './dispatch';
 import {
@@ -16,6 +17,7 @@ vi.mock('../db/client', async () => (await import('./test-db')).inMemoryDbClient
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 // Match the requested base so adapter fallback does not distort fetch counts.
@@ -115,5 +117,23 @@ describe('runDispatch shared upstream fetches', () => {
 
     expect(summary.failed).toBe(1);
     expect(db.select().from(schema.upstreamSnapshots).all()).toEqual([]);
+  });
+
+  it('does not turn a partial observation into a cached success for another signal', async () => {
+    const template = templates.find((candidate) => candidate.id === 'fx-pair');
+    if (!template) throw new Error('missing fx-pair fixture');
+    const adapter = vi.spyOn(template, 'adapter').mockResolvedValue({
+      ok: true,
+      points: [{ dimensions: { metric: 'rate' }, value: 1.08, ts: Date.now() }],
+      rawPayload: null,
+      warning: { code: 'fetch_failed', message: 'Incomplete observation' },
+    });
+    seedFx('collection-1', 'user-1-fx', { base: 'EUR', quote: 'USD' });
+    expect(await runDispatch(env)).toEqual({ ran: 1, ok: 0, failed: 1 });
+    expect(db.select().from(schema.upstreamSnapshots).all()).toEqual([]);
+    seedFx('collection-2', 'user-2-fx', { base: 'EUR', quote: 'USD' });
+    expect(await runDispatch(env)).toEqual({ ran: 1, ok: 0, failed: 1 });
+    expect(adapter).toHaveBeenCalledTimes(2);
+    expect(pointsFor(db, 'user-2-fx')).toHaveLength(1);
   });
 });

@@ -1,6 +1,9 @@
 // One in-memory SSE fan-out per collection, addressed with idFromName(collectionId).
 
 const KEEPALIVE_MS = 20_000;
+export const SSE_MAX_CONNECTIONS = 5;
+export const SSE_MAX_BUFFER_BYTES = 16 * 1024;
+export const SSE_MAX_LIFETIME_MS = 15 * 60_000;
 const SSE_HEADERS = {
   'content-type': 'text/event-stream',
   'cache-control': 'no-cache, no-transform',
@@ -22,6 +25,7 @@ export const encodeSseKeepalive = (): Uint8Array => encoder.encode(`:keepalive\n
 type Writer = {
   readonly controller: ReadableStreamDefaultController<Uint8Array>;
   readonly keepalive: ReturnType<typeof setInterval>;
+  readonly expiresAt: number;
   closed: boolean;
 };
 
@@ -46,24 +50,34 @@ export class CollectionChannel implements DurableObject {
   }
 
   private subscribe(): Response {
+    if (this.writers.size >= SSE_MAX_CONNECTIONS) {
+      return new Response('stream_connection_limit', {
+        status: 429,
+        headers: { 'Retry-After': '30' },
+      });
+    }
     let writer: Writer | null = null;
-    const stream = new ReadableStream<Uint8Array>({
-      start: (controller) => {
-        writer = {
-          controller,
-          keepalive: setInterval(() => {
-            if (writer) this.sendKeepalive(writer);
-          }, KEEPALIVE_MS),
-          closed: false,
-        };
-        this.writers.add(writer);
-        // Prime the connection so the browser flips into "open" state.
-        this.safeEnqueue(writer, encodeSseKeepalive());
+    const stream = new ReadableStream<Uint8Array>(
+      {
+        start: (controller) => {
+          writer = {
+            controller,
+            keepalive: setInterval(() => {
+              if (writer) this.sendKeepalive(writer);
+            }, KEEPALIVE_MS),
+            closed: false,
+            expiresAt: Date.now() + SSE_MAX_LIFETIME_MS,
+          };
+          this.writers.add(writer);
+          // Prime the connection so the browser flips into "open" state.
+          this.safeEnqueue(writer, encodeSseKeepalive());
+        },
+        cancel: () => {
+          if (writer) this.closeWriter(writer);
+        },
       },
-      cancel: () => {
-        if (writer) this.closeWriter(writer);
-      },
-    });
+      { highWaterMark: SSE_MAX_BUFFER_BYTES, size: (chunk) => chunk.byteLength },
+    );
     return new Response(stream, { headers: SSE_HEADERS });
   }
 
@@ -81,6 +95,10 @@ export class CollectionChannel implements DurableObject {
 
   private safeEnqueue(writer: Writer, bytes: Uint8Array): void {
     if (writer.closed) return;
+    if (Date.now() >= writer.expiresAt || (writer.controller.desiredSize ?? 0) < bytes.byteLength) {
+      this.closeWriter(writer);
+      return;
+    }
     try {
       writer.controller.enqueue(bytes);
     } catch {
@@ -100,6 +118,11 @@ export class CollectionChannel implements DurableObject {
     writer.closed = true;
     clearInterval(writer.keepalive);
     this.writers.delete(writer);
+    try {
+      writer.controller.close();
+    } catch {
+      /* Cancellation already closed the stream. */
+    }
   }
 }
 

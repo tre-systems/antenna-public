@@ -38,6 +38,7 @@ const buildApp = () => {
   const app = new Hono<{ Bindings: TestEnv; Variables: AuthVars }>();
   app.use('/api/*', requireUser());
   app.get('/api/me', (c) => c.json(c.get('user')));
+  app.post('/api/plan', (c) => c.json({ written: true }));
   return app;
 };
 
@@ -47,6 +48,38 @@ const invoke = async (env: TestEnv, headers?: Record<string, string>, path = '/a
 };
 
 describe('auth/middleware', () => {
+  it('rejects a same-site malicious origin before resolving the cookie session', async () => {
+    const res = await buildApp().request(
+      '/api/plan',
+      {
+        method: 'POST',
+        headers: {
+          cookie: 'better-auth.session=abc',
+          origin: 'https://evil.example.test',
+          'content-type': 'text/plain',
+        },
+        body: '{"prompt":"add weather"}',
+      },
+      { ...baseEnv, BETTER_AUTH_URL: 'https://antenna.example.test' },
+    );
+    expect(res.status).toBe(403);
+    expect(mockGetSession).not.toHaveBeenCalled();
+  });
+  it('does not use cookie origin rules for explicitly authenticated MCP bearers', async () => {
+    mockAuthenticateBearer.mockResolvedValueOnce({
+      user: { id: 'u1', email: 'member@example.test', name: 'Member' },
+    });
+    const res = await buildApp().request(
+      '/api/plan',
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer pbk_test', origin: 'https://agent.example.test' },
+      },
+      baseEnv,
+    );
+    expect(res.status).toBe(200);
+    expect(mockGetSession).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     mockGetSession.mockReset();
     mockEnsureUserCollection.mockReset();
@@ -60,6 +93,13 @@ describe('auth/middleware', () => {
     const res = await invoke(baseEnv);
     expect(res.status).toBe(401);
     expect(await res.json()).toEqual({ error: 'unauthorized' });
+    expect(mockGetSession).not.toHaveBeenCalled();
+  });
+
+  it('returns an empty anonymous session probe without exposing user data', async () => {
+    const res = await invoke(baseEnv, undefined, '/api/me?session_probe=1');
+    expect(res.status).toBe(204);
+    expect(await res.text()).toBe('');
     expect(mockGetSession).not.toHaveBeenCalled();
   });
 

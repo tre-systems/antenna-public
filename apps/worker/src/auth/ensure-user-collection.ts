@@ -1,4 +1,6 @@
 import { eq } from 'drizzle-orm';
+import { sourcePolicyForTemplate, templates } from '@antenna/registry';
+import { parseJsonRecord } from '../db/codecs';
 import { PRODUCT_NAME } from '../brand';
 import type { db } from '../db/client';
 import { runD1Batch, type BatchStatement } from '../db/batch';
@@ -60,7 +62,7 @@ const cloneSeedSignals = async (
     .all();
   if (source.length === 0) return;
   // Omit status and points so dispatch fills fresh data.
-  const cloned = source.map((row) => ({
+  const cloned = source.filter(safeSeedSignal).map((row) => ({
     ...row,
     id: crypto.randomUUID(),
     collectionId: targetCollectionId,
@@ -70,11 +72,20 @@ const cloneSeedSignals = async (
   await insertSignalRows(client, cloned, binding);
 };
 
+const safeSeedSignal = (row: typeof signals.$inferSelect): boolean => {
+  const template = templates.find((candidate) => candidate.id === row.templateId);
+  if (!template || template.deploymentAdminOnly || template.serverSecret) return false;
+  if (sourcePolicyForTemplate(row.templateId)?.executionMode !== 'public_cloud') return false;
+  const config = parseJsonRecord(row.config);
+  return !Object.keys(config).some((key) => /token|secret|password|apiKey/i.test(key));
+};
+
 const insertSignalRows = async (
   client: ReturnType<typeof db>,
   rows: ReadonlyArray<typeof signals.$inferInsert>,
   binding: D1Database | undefined,
 ): Promise<void> => {
+  if (rows.length === 0) return;
   if (binding && (await runD1Batch(binding, rows.map(signalInsertStatement)))) return;
 
   for (let i = 0; i < rows.length; i += SIGNAL_INSERT_BATCH_SIZE) {

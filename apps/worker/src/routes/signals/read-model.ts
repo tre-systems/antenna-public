@@ -34,7 +34,12 @@ export const buildSignal = (
 export const toDisplayPoints = (
   templateId: string,
   points: ReadonlyArray<PointShape>,
-): ReadonlyArray<PointShape> => points.map((point) => toDisplayPoint(templateId, point));
+): ReadonlyArray<PointShape> =>
+  points
+    .filter(
+      (point) => templateId !== 'github-repo-activity' || point.dimensions?.visibility === 'public',
+    )
+    .map((point) => toDisplayPoint(templateId, point));
 
 export const toPointShape = (row: typeof signalPoints.$inferSelect): PointShape => ({
   observed_at: toTimestampMs(row.observedAt) ?? 0,

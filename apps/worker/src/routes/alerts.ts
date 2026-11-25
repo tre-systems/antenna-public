@@ -11,8 +11,10 @@ import { db, type Env as DbEnv } from '../db/client';
 import { toTimestampMs } from '../db/codecs';
 import { signalAlerts, collections, signals } from '../db/schema';
 import { err, ok } from './http';
+import type { AdminEnv } from '../policy/admin';
+import { canReadDeploymentTemplate } from '../policy/deployment-access';
 
-type Bindings = DbEnv;
+type Bindings = DbEnv & AdminEnv;
 
 export const alertsRoute = new Hono<{ Bindings: Bindings; Variables: AuthVars }>().get(
   '/',
@@ -44,7 +46,11 @@ export const alertsRoute = new Hono<{ Bindings: Bindings; Variables: AuthVars }>
       .all();
 
     return ok(c, {
-      alerts: rows.map(({ alert, signal }) => toAlertRecord(alert, signal)),
+      alerts: rows
+        .filter(({ signal }) =>
+          canReadDeploymentTemplate(c.env, c.get('user').email, signal.templateId),
+        )
+        .map(({ alert, signal }) => toAlertRecord(alert, signal)),
     } satisfies SignalAlertListResponse);
   },
 );

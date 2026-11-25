@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import type { ProposedSignal, Visibility } from '@antenna/shared';
 import { db, type Db, type Env as DbEnv } from '../db/client';
+import { isQuotaError } from '../db/quota-error';
 import {
   collectionPlans,
   collections,
@@ -89,6 +90,9 @@ const materializeConfirmation = async (
   try {
     await writeConfirmation(env.DB, client, planId, collectionId, materialized);
   } catch (caught) {
+    if (isQuotaError(caught, 'signal_quota_exceeded')) {
+      return { ok: false, error: 'signal_quota_exceeded' };
+    }
     if (await confirmationAlreadyClaimed(client, planId)) {
       return { ok: false, error: 'plan_already_resolved' };
     }

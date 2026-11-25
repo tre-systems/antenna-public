@@ -1,5 +1,6 @@
 import { mcp } from '@better-auth/mcp';
 import { jwt } from 'better-auth/plugins';
+import { activeOAuthGrantClaims } from './oauth-grant-claims';
 
 export const oauthOrigin = (baseURL: string | undefined): string =>
   new URL(baseURL ?? 'http://localhost:8787').origin;
@@ -23,17 +24,15 @@ export const oauthPlugins = (origin: string) => [
     extensions: [
       {
         claims: {
-          accessToken: async ({ ctx, user, client, sessionId }) => {
-            if (!user || !sessionId) return {};
+          accessToken: ({ ctx, user, client, sessionId }) => {
             const { adapter: storage } = ctx.context;
-            const consent = await storage.findOne<{ id: string }>({
-              model: 'oauthConsent',
-              where: [
-                { field: 'userId', value: user.id },
-                { field: 'clientId', value: client.clientId },
-              ],
-            });
-            return { antenna_grant: consent?.id, antenna_session: sessionId };
+            return activeOAuthGrantClaims(
+              storage,
+              user?.id,
+              client.clientId,
+              sessionId,
+              `${origin}/api/mcp`,
+            );
           },
         },
       },

@@ -1,4 +1,5 @@
 import type { CloudflareOptions } from '@sentry/cloudflare';
+import { redactTelemetry } from '@antenna/shared';
 import type { WorkerEnv } from './env';
 import { beforeSend } from './sentry-redaction';
 
@@ -108,13 +109,13 @@ export const isLowValueD1TransactionName = (name: string | undefined): boolean =
 export const beforeSendSpan: BeforeSendSpan = (span) => {
   const description = normalizeTransactionName(span.description);
   if (span.op === 'db.query') {
-    return { ...span, description, data: {} };
+    return redactTelemetry({ ...span, description, data: {} });
   }
   if (!description || description === span.description) {
-    return span;
+    return redactTelemetry(span);
   }
 
-  return { ...span, description };
+  return redactTelemetry({ ...span, description });
 };
 
 export const beforeSendTransaction: BeforeSendTransaction = (event, _hint) => {
@@ -132,16 +133,16 @@ export const beforeSendTransaction: BeforeSendTransaction = (event, _hint) => {
     event.spans = event.spans.map((span) => beforeSendSpan(span));
   }
 
-  return event;
+  return redactTelemetry(event);
 };
 
 export const beforeBreadcrumb: BeforeBreadcrumb = (breadcrumb, _hint) => {
   if (breadcrumb.category !== 'query' || !breadcrumb.message) {
-    return breadcrumb;
+    return redactTelemetry(breadcrumb);
   }
 
   const message = normalizeTransactionName(breadcrumb.message);
-  return { ...breadcrumb, message, data: undefined };
+  return redactTelemetry({ ...breadcrumb, message, data: undefined });
 };
 
 export function sentryOptions(env: WorkerEnv): RuntimeCloudflareOptions | undefined {

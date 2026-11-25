@@ -3,8 +3,9 @@ import type { AuthVars } from '../../auth/middleware';
 import type { Env as DbEnv, db } from '../../db/client';
 import type { signalStatus, collections, signals } from '../../db/schema';
 import type { Visibility } from '../../policy/source-access';
+import type { AdminEnv } from '../../policy/admin';
 
-export type Bindings = DbEnv;
+export type Bindings = DbEnv & AdminEnv;
 export type CollectionsEnv = { Bindings: Bindings; Variables: AuthVars };
 export type CollectionsContext = Context<CollectionsEnv>;
 export type Client = ReturnType<typeof db>;

@@ -2,7 +2,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { mcpTokens, oauthAccessToken, oauthApplication, user } from '../db/schema';
 import type { SessionUser } from './middleware';
-import { retryOAuthRead } from './oauth-read-retry';
+import { retryAuthRead } from './auth-read-retry';
 
 export const TOKEN_PREFIX = 'pbk_';
 
@@ -69,7 +69,7 @@ export async function authenticateOAuthToken(
   client: TokenDb,
   token: string,
 ): Promise<{ readonly user: SessionUser } | null> {
-  const [row] = await retryOAuthRead(() =>
+  const [row] = await retryAuthRead(() =>
     client
       .select({
         userId: user.id,

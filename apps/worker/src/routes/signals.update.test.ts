@@ -6,7 +6,7 @@ import { buildApp, OWNER_1, seedBaseline, setup } from './signals-test-fixtures'
 vi.mock('../db/client', async () => (await import('./routes-test-fixtures')).inMemoryDbClient());
 
 describe('PATCH /api/signals/:id', () => {
-  it('updates owned signal config, clears stale points/status, and returns the validated config', async () => {
+  it('updates config and clears stale data while retaining the status record', async () => {
     const { db, env } = setup();
     seedBaseline(db);
     db.insert(schema.signalPoints)
@@ -56,7 +56,7 @@ describe('PATCH /api/signals/:id', () => {
     ).toEqual([]);
     expect(
       db.select().from(schema.signalStatus).where(eq(schema.signalStatus.signalId, 'b1')).all(),
-    ).toEqual([]);
+    ).toMatchObject([{ status: 'loading', lastOkAt: null, updatedAt: new Date(1_000) }]);
   });
 
   it('updates refresh interval without clearing current points', async () => {
@@ -144,7 +144,7 @@ describe('PATCH /api/signals/:id', () => {
         body: JSON.stringify({ config: { days: null } }),
         headers: { 'content-type': 'application/json' },
       },
-      env,
+      { ...env, ADMIN_EMAILS: OWNER_1.email },
     );
 
     expect(res.status).toBe(200);

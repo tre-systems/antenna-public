@@ -1,6 +1,7 @@
 import type { AdapterResult } from '@antenna/connectors';
 import { sourcePolicyForTemplate, templates } from '@antenna/registry';
 import { parseJsonRecord } from '../../db/codecs';
+import { InvalidTemplateConfigError } from '../../registry/config';
 import { prepareAdapterConfig } from './config';
 import { cloudRefreshEligibility } from './eligibility';
 import { errorMessage, logErrorEvent, logEvent } from '../log';
@@ -84,7 +85,10 @@ const runAdapter = async (
       result: await sharedFetch(ctx, client, signal, template, now, () => adapter(config.config)),
     };
   } catch (err) {
-    return { ok: false, message: errorMessage(err) };
+    return {
+      ok: false,
+      message: err instanceof InvalidTemplateConfigError ? err.message : errorMessage(err),
+    };
   }
 };
 
@@ -120,7 +124,9 @@ const sharedFetch = async (
   try {
     const result = await running;
     // Keep errors signal-scoped so each signal retains its own backoff.
-    if (result.ok) await writeSharedSnapshot(client, cacheKey, template.id, result.points, now);
+    if (result.ok && !result.warning) {
+      await writeSharedSnapshot(client, cacheKey, template.id, result.points, now);
+    }
     return result;
   } finally {
     ctx.inFlight.delete(cacheKey);

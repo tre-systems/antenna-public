@@ -4,6 +4,7 @@ import {
   signalUpdateSchema,
 } from '@antenna/shared';
 import { db } from '../../db/client';
+import { canReadDeploymentTemplate } from '../../policy/deployment-access';
 import { err, errWith, ok } from '../http';
 import { deleteOwnedSignal } from './delete-signal';
 import { latestPointsForSignals } from './latest-points';
@@ -34,7 +35,10 @@ export const listSignals = async (c: SignalsContext): Promise<Response> => {
 
   const client = db(c.env);
   const rows = await listOwnedSignalRows(client, c.get('user').id, parsed.data.collection_id);
-  return ok(c, await buildSignalList(client, rows));
+  const visible = rows.filter((row) =>
+    canReadDeploymentTemplate(c.env, c.get('user').email, row.signal.templateId),
+  );
+  return ok(c, await buildSignalList(client, visible));
 };
 
 export const getSignal = async (c: SignalsContext): Promise<Response> => {
@@ -42,6 +46,9 @@ export const getSignal = async (c: SignalsContext): Promise<Response> => {
   const client = db(c.env);
   const row = await loadOwnedSignalRow(client, c.get('user').id, id);
   if (!row) return err(c, 'not_found', 404);
+
+  if (!canReadDeploymentTemplate(c.env, c.get('user').email, row.signal.templateId))
+    return err(c, 'not_found', 404);
 
   const latestPoints = await latestPointsForSignals(client, [id]);
   return ok(c, buildSignal(row.signal, row.status, latestPoints.get(id) ?? []));
@@ -55,6 +62,9 @@ export const getSignalHistory = async (c: SignalsContext): Promise<Response> => 
   const client = db(c.env);
   const signal = await loadOwnedSignal(client, c.get('user').id, id);
   if (!signal) return err(c, 'not_found', 404);
+
+  if (!canReadDeploymentTemplate(c.env, c.get('user').email, signal.templateId))
+    return err(c, 'not_found', 404);
 
   const rows = await loadHistoryPoints(
     client,
@@ -70,6 +80,8 @@ export const refreshSignal = async (c: SignalsContext): Promise<Response> => {
   const client = db(c.env);
   const row = await loadOwnedSignalRow(client, c.get('user').id, id);
   if (!row) return err(c, 'not_found', 404);
+  if (!canReadDeploymentTemplate(c.env, c.get('user').email, row.signal.templateId))
+    return err(c, 'not_found', 404);
 
   const now = new Date();
   const rateLimited = manualRefreshRateLimit(row.status, now.getTime());
@@ -87,6 +99,8 @@ export const updateSignal = async (c: SignalsContext): Promise<Response> => {
   const client = db(c.env);
   const signal = await loadOwnedSignal(client, c.get('user').id, id);
   if (!signal) return err(c, 'not_found', 404);
+  if (!canReadDeploymentTemplate(c.env, c.get('user').email, signal.templateId))
+    return err(c, 'not_found', 404);
 
   const result = resolveSignalUpdate(signal, parsed.data);
   if (!result.ok) return updateFailureResponse(c, result.failure);

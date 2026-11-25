@@ -6,6 +6,7 @@ import { db, type Env as DbEnv } from '../db/client';
 import { collections } from '../db/schema';
 import type { AuthVars } from '../auth/middleware';
 import { err } from './http';
+import { createStreamConnectRateLimit } from './public-read-rate-limit';
 
 type Bindings = DbEnv & {
   readonly CHANNELS?: DurableObjectNamespace;
@@ -13,6 +14,7 @@ type Bindings = DbEnv & {
 
 export const streamRoute = new Hono<{ Bindings: Bindings; Variables: AuthVars }>().get(
   '/:collectionId/stream',
+  createStreamConnectRateLimit(),
   async (c) => {
     const channels = c.env.CHANNELS;
     if (!channels) return err(c, 'stream_unavailable', 503);
@@ -30,10 +32,12 @@ export const streamRoute = new Hono<{ Bindings: Bindings; Variables: AuthVars }>
 
     const id = channels.idFromName(row.id);
     const stub = channels.get(id);
-    // Return the Durable Object response verbatim to preserve streaming.
-    return stub.fetch(collectionSubscriptionRequest(c.req.raw));
+    // Return the Durable Object response verbatim to preserve streaming. When the client
+    // disconnects, cancellation of this response body propagates to the DO's ReadableStream.
+    // Do not also attach the incoming request's abort signal: aborting the internal DO fetch
+    // makes Cloudflare classify an ordinary SSE disconnect as `scriptThrewException`.
+    return stub.fetch(collectionSubscriptionRequest());
   },
 );
 
-export const collectionSubscriptionRequest = (incoming: Request): Request =>
-  new Request('https://do/subscribe', { signal: incoming.signal });
+export const collectionSubscriptionRequest = (): Request => new Request('https://do/subscribe');

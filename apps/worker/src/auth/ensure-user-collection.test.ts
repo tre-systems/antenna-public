@@ -94,6 +94,26 @@ const insertSeedSignal = (db: Drizzle, id: string, templateId: string, position:
 };
 
 describe('ensureUserCollection', () => {
+  it('never clones private, deployment-owned, or unknown seed sources', async () => {
+    const db = setup();
+    insertCollection(db, SEED_TEMPLATE_COLLECTION_ID, 'seed-owner');
+    for (const id of [
+      'manual-cost',
+      'manual-metric',
+      'cloudflare-analytics',
+      'app-health',
+      'unknown',
+    ])
+      insertSeedSignal(db, id, id, 0);
+    insertSeedSignal(db, 'public', 'fx-pair', 1);
+    await provision(db, 'member');
+    const copied = db
+      .select()
+      .from(schema.signals)
+      .all()
+      .filter((row) => row.collectionId !== SEED_TEMPLATE_COLLECTION_ID);
+    expect(copied.map((row) => row.templateId)).toEqual(['fx-pair']);
+  });
   it('provisions a collection for a new user', async () => {
     const db = setup();
     await provision(db, 'u1');

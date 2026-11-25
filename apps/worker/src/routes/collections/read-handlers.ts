@@ -1,5 +1,6 @@
 import type { CollectionDetailResponse, CollectionListResponse } from '@antenna/shared';
 import { db } from '../../db/client';
+import { canReadDeploymentTemplate } from '../../policy/deployment-access';
 import { buildSignal, latestPointsForSignals } from '../signals';
 import { recordCollectionVisit, toCollectionRecord } from '../collection-record';
 import { err, ok } from '../http';
@@ -31,7 +32,9 @@ export const getCollection = async (c: CollectionsContext): Promise<Response> =>
   const collection = await loadOwnedCollection(client, c.get('user').id, collectionId);
   if (!collection) return err(c, 'not_found', 404);
 
-  const rows = await listCollectionSignalsWithStatus(client, collectionId);
+  const rows = (await listCollectionSignalsWithStatus(client, collectionId)).filter((row) =>
+    canReadDeploymentTemplate(c.env, c.get('user').email, row.signal.templateId),
+  );
   const latestPoints = await latestPointsForSignals(
     client,
     rows.map((row) => row.signal.id),

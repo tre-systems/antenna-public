@@ -12,6 +12,7 @@ import { authenticateOAuthRequest } from '../auth/oauth-access';
 import { err } from './http';
 
 type Bindings = MiddlewareEnv;
+export const MCP_MAX_REQUEST_BYTES = 256 * 1024;
 
 type McpRouteOptions = {
   readonly fetchImpl?: FetchLike;
@@ -60,10 +61,13 @@ export function createMcpRoute(options: McpRouteOptions = {}) {
         fetchImpl,
       });
 
-    if (await isLegacyRequest(c.req.raw)) {
+    if (
+      await isLegacyRequest(c.req.raw, undefined, { maxRequestBodySize: MCP_MAX_REQUEST_BYTES })
+    ) {
       const transport = new WebStandardStreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
         enableJsonResponse: true,
+        maxRequestBodySize: MCP_MAX_REQUEST_BYTES,
       });
       const server = serverFactory();
       await server.connect(transport);
@@ -76,6 +80,7 @@ export function createMcpRoute(options: McpRouteOptions = {}) {
 
     const handler = createMcpHandler(serverFactory, {
       legacy: 'reject',
+      maxRequestBodySize: MCP_MAX_REQUEST_BYTES,
     });
 
     try {

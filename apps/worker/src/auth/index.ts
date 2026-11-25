@@ -1,6 +1,5 @@
 // Use Better Auth's minimal runtime with the D1 Drizzle adapter.
 
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { betterAuth } from 'better-auth/minimal';
 import { db, type Env as DbEnv } from '../db/client';
 import {
@@ -21,6 +20,7 @@ import { protectAccountTokens } from './account-tokens';
 import { accessRules, assertSessionUserPermitted, emailPermitted, refusalReason } from './access';
 import { ensureUserCollection } from './ensure-user-collection';
 import { oauthOrigin, oauthPlugins } from './oauth-provider';
+import { sessionAdapter } from './session-adapter';
 
 export { ensureUserCollection } from './ensure-user-collection';
 export { recordStarterSignalDismissal } from './starter-signals';
@@ -59,7 +59,7 @@ export const createAuth = (env: AuthEnv) => {
     secret: env.BETTER_AUTH_SECRET,
     baseURL: oauthOrigin(env.BETTER_AUTH_URL),
     disabledPaths: ['/token'],
-    database: drizzleAdapter(client, {
+    database: sessionAdapter(client, {
       provider: 'sqlite',
       schema: {
         user,

@@ -18,6 +18,7 @@ vi.mock('../db/client', async () => (await import('./test-db')).inMemoryDbClient
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 const stubFailure = () =>
@@ -30,6 +31,20 @@ describe('runDispatch failures', () => {
 
   beforeEach(() => {
     ({ db, env, r2 } = arrangeDispatch());
+  });
+
+  it('does not persist or log credentials included in upstream exceptions', async () => {
+    seedSignal(db, 'b1', 'fx-pair', { base: 'EUR', quote: 'USD' }, 900);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(new Error('https://source.test?token=SECRET')),
+    );
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    expect(await runDispatch(env)).toEqual({ ran: 1, ok: 0, failed: 1 });
+    expect(statusFor(db, 'b1')?.lastError).toBe('fetch_failed: Source operation failed');
+    expect(JSON.stringify([...log.mock.calls, ...errorLog.mock.calls])).not.toContain('SECRET');
+    expect(r2.puts).toHaveLength(0);
   });
 
   it('keeps an empty manual cost in an actionable setup state', async () => {

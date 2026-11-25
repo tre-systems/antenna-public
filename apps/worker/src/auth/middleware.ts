@@ -8,6 +8,7 @@ import { ensureUserCollection } from './ensure-user-collection';
 import { createAuth, type AuthEnv } from './index';
 import { authenticateBearer, extractBearerToken } from './mcp-token';
 import { authenticateOAuthRequest } from './oauth-access';
+import { cookieWriteAllowed } from './request-origin';
 
 export type SessionUser = {
   readonly id: string;
@@ -65,6 +66,10 @@ export const requireUser =
       return unauthorized(c);
     }
 
+    if (!cookieWriteAllowed(c.req.raw, c.env.BETTER_AUTH_URL)) {
+      return err(c, 'unauthorized', 403);
+    }
+
     const auth = createAuth(c.env);
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session) {
@@ -94,6 +99,16 @@ const permitted = (env: MiddlewareEnv, email: string): boolean =>
   emailPermitted(accessRules(env), email);
 
 const unauthorized = (c: Context<{ Bindings: MiddlewareEnv; Variables: AuthVars }>): Response => {
+  if (
+    c.req.method === 'GET' &&
+    c.req.path === '/api/me' &&
+    c.req.query('session_probe') === '1' &&
+    c.req.raw.headers.get('authorization') === null
+  ) {
+    // The signed-out web shell expects an empty session. Keep the normal API
+    // and bearer failure semantics at 401 while avoiding browser console noise.
+    return c.body(null, 204);
+  }
   if (c.req.path === '/api/mcp' || c.req.path.startsWith('/api/mcp/')) {
     const resourceMetadata = `${new URL(c.req.url).origin}/.well-known/oauth-protected-resource`;
     c.header('WWW-Authenticate', `Bearer resource_metadata="${resourceMetadata}"`);

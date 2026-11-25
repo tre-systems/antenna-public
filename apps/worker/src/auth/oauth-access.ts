@@ -6,7 +6,7 @@ import { oauthClient, oauth2Consent, session, user } from '../db/schema';
 import type { AuthEnv } from './index';
 import type { SessionUser } from './middleware';
 import { oauthOrigin } from './oauth-provider';
-import { retryOAuthRead } from './oauth-read-retry';
+import { retryAuthRead } from './auth-read-retry';
 import { verifyOAuthJwt } from './oauth-jwt';
 
 export const authenticateOAuthRequest = async (
@@ -15,7 +15,7 @@ export const authenticateOAuthRequest = async (
 ): Promise<{ readonly user: SessionUser } | null> => {
   const claims = await verifyOAuthJwt(env, token);
   if (!claims || !validOwnerClaims(claims)) return null;
-  const [row] = await retryOAuthRead(() => loadOAuthOwner(env, claims));
+  const [row] = await retryAuthRead(() => loadOAuthOwner(env, claims));
   if (!row || row.expiresAt.getTime() <= Date.now() || Number(claims.exp) * 1000 <= Date.now()) {
     return null;
   }

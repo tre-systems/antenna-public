@@ -1,4 +1,5 @@
-export const POINT_LIMIT = 50;
+// Sized for the widest snapshot: weather emits 68 points (current + hourly + daily forecast).
+export const POINT_LIMIT = 100;
 export const HISTORY_POINT_LIMIT = 5_000;
 export const MIN_REFRESH_SECONDS = 60;
 export const MAX_REFRESH_SECONDS = 7 * 86_400;

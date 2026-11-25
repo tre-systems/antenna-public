@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/cloudflare';
 import { Hono } from 'hono';
+import { apiBodyLimit } from './api-body-limit';
 import { routePath } from 'hono/route';
 import { createAuth } from './auth';
 import { requireUser, type AuthVars } from './auth/middleware';
@@ -43,6 +44,7 @@ export { RateLimiter } from './do/rate-limiter';
 const app = new Hono<{ Bindings: WorkerEnv; Variables: AuthVars }>();
 
 app.use('*', securityHeaders());
+app.use('/api/*', apiBodyLimit());
 app.onError((error, c) => {
   reportRequestException(error, {
     method: c.req.method,

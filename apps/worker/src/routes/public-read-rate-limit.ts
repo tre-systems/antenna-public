@@ -83,6 +83,20 @@ export const createPlanCreateRateLimit = defineRateLimit({
   keyForRequest: authenticatedUserKey,
 });
 
+export const createSignalMutationRateLimit = defineRateLimit({
+  bucketPrefix: 'signal-mutation',
+  maxRequests: 120,
+  windowMs: 60_000,
+  keyForRequest: authenticatedUserKey,
+});
+
+export const createStreamConnectRateLimit = defineRateLimit({
+  bucketPrefix: 'stream-connect',
+  maxRequests: 30,
+  windowMs: 60_000,
+  keyForRequest: authenticatedUserKey,
+});
+
 const createAnonymousRateLimit = (options: RequiredLimitOptions): MiddlewareHandler => {
   const maxRequests = options.maxRequests;
   const windowMs = options.windowMs;

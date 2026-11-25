@@ -1,10 +1,11 @@
 // Keep dispatch selection SQL-backed, bounded, and fair.
 
 import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import * as schema from '../../db/schema';
 import { makeSqlite, type Drizzle, type Sqlite } from '../dispatch-test-fixtures';
-import { DISPATCH_TICK_LIMIT, loadDueDispatchRows } from './due';
+import { DISPATCH_TICK_LIMIT, OWNER_DISPATCH_TICK_LIMIT, loadDueDispatchRows } from './due';
 import type { Client } from './types';
 
 const NOW = 10_000_000;
@@ -127,8 +128,8 @@ describe('loadDueDispatchRows', () => {
 
     await expect(dueIds()).resolves.toEqual([
       'never-attempted',
-      'attempted-long-ago',
       'attempted-recently',
+      'attempted-long-ago',
     ]);
   });
 
@@ -147,5 +148,24 @@ describe('loadDueDispatchRows', () => {
 
     await expect(dueIds(5)).resolves.toHaveLength(5);
     expect(DISPATCH_TICK_LIMIT).toBeGreaterThan(0);
+  });
+
+  it('shares capacity across owners before manual priority and caps an owner across collections', async () => {
+    addCollection('collection-2');
+    addCollection('other-owner');
+    db.update(schema.collections)
+      .set({ ownerId: 'owner-of-collection-1' })
+      .where(eq(schema.collections.id, 'collection-2'))
+      .run();
+    for (let i = 0; i < 300; i++) {
+      const id = `manual-${String(i)}`;
+      addSignal(id, i % 2 === 0 ? 'collection-1' : 'collection-2');
+      addStatus(id, { updatedAt: NOW - 1000, lastManualRequestAt: NOW - 500 });
+    }
+    addSignal('other-scheduled', 'other-owner');
+    const ids = await dueIds();
+    expect(ids[0]).toBe('other-scheduled');
+    expect(ids).toHaveLength(OWNER_DISPATCH_TICK_LIMIT + 1);
+    expect(await dueIds(2)).toContain('other-scheduled');
   });
 });
