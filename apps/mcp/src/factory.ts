@@ -5,12 +5,14 @@ import { registerReadTools } from './factory-read-tools.js';
 import { registerResources } from './factory-resources.js';
 import { registerWriteTools } from './factory-write-tools.js';
 
+export const MCP_MAX_TOOL_INPUT_ELEMENTS = 10_000;
+
 export function createAntennaMcpServer(options: AntennaClientOptions): McpServer {
   const client = createAntennaClient(options);
-  const server = new McpServer({
-    name: 'antenna',
-    version: '0.1.0',
-  });
+  const server = new McpServer(
+    { name: 'antenna', version: '0.1.0' },
+    { maxToolInputElements: MCP_MAX_TOOL_INPUT_ELEMENTS },
+  );
 
   registerReadTools(server, client);
   registerWriteTools(server, client);
