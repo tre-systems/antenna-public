@@ -6,7 +6,7 @@ import type { User } from '../auth';
 
 const makeUser = (overrides: Partial<User> = {}): User => ({
   id: 'u1',
-  email: 'tretest1001@gmail.com',
+  email: 'tester@example.com',
   name: 'Test User',
   image_url: null,
   first_seen_at: 0,

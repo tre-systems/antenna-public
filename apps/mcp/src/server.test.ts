@@ -140,9 +140,15 @@ describe('readConfigFromEnv', () => {
     expect(() => readConfigFromEnv({})).toThrow(/ANTENNA_SESSION or ANTENNA_TOKEN/);
   });
 
-  it('uses production as the default base URL', () => {
-    expect(readConfigFromEnv({ ANTENNA_TOKEN: 'pbk_test' })).toEqual({
-      baseUrl: 'https://antenna.example',
+  it('requires the Worker origin instead of assuming one', () => {
+    expect(() => readConfigFromEnv({ ANTENNA_TOKEN: 'pbk_test' })).toThrow(/ANTENNA_BASE_URL/);
+  });
+
+  it('reads the Worker origin and credential from the environment', () => {
+    expect(
+      readConfigFromEnv({ ANTENNA_BASE_URL: 'http://localhost:8787', ANTENNA_TOKEN: 'pbk_test' }),
+    ).toEqual({
+      baseUrl: 'http://localhost:8787/',
       token: 'pbk_test',
       sessionCookie: undefined,
     });

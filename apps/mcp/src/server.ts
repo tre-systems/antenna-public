@@ -2,8 +2,7 @@
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { createAntennaMcpServer } from './factory.js';
 import type { AntennaClientOptions } from './client.js';
-
-const DEFAULT_BASE_URL = 'https://antenna.example';
+import { requireBaseUrl } from './url.js';
 
 export type AntennaMcpConfig = {
   readonly baseUrl: string;
@@ -14,22 +13,23 @@ export type AntennaMcpConfig = {
 export { createAntennaMcpServer } from './factory.js';
 
 export function readConfigFromEnv(env: NodeJS.ProcessEnv = process.env): AntennaMcpConfig {
-  const config = {
-    baseUrl: env.ANTENNA_BASE_URL ?? DEFAULT_BASE_URL,
-    sessionCookie: env.ANTENNA_SESSION,
-    token: env.ANTENNA_TOKEN,
-  };
-
-  if (config.sessionCookie === undefined && config.token === undefined) {
+  if (env.ANTENNA_SESSION === undefined && env.ANTENNA_TOKEN === undefined) {
     throw new Error('Set ANTENNA_SESSION or ANTENNA_TOKEN before starting the Antenna MCP server.');
   }
 
-  return config;
+  return {
+    baseUrl: requireBaseUrl(env.ANTENNA_BASE_URL),
+    sessionCookie: env.ANTENNA_SESSION,
+    token: env.ANTENNA_TOKEN,
+  };
 }
 
-export function runStdioServer(config: AntennaClientOptions = readConfigFromEnv()): Promise<void> {
+// Configuration is read inside the promise so a missing variable reaches the
+// caller's handler as one line instead of an uncaught stack trace.
+export function runStdioServer(config?: AntennaClientOptions): Promise<void> {
   return Promise.resolve().then(() => {
-    serveStdio(() => createAntennaMcpServer(config));
+    const resolved = config ?? readConfigFromEnv();
+    serveStdio(() => createAntennaMcpServer(resolved));
   });
 }
 

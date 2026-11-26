@@ -6,7 +6,7 @@ describe('runTokenCli', () => {
     let error = '';
     const code = await runTokenCli({
       args: ['create', 'Claude Code'],
-      env: { ANTENNA_SESSION: 'session-value' },
+      env: { ANTENNA_BASE_URL: 'https://collection.example', ANTENNA_SESSION: 'session-value' },
       fetchImpl: jsonFetch([], {}),
       writeError: (text) => {
         error += text;
@@ -57,6 +57,22 @@ describe('runTokenCli', () => {
     expect(code).toBe(0);
     expect(requests[0]?.url).toBe('https://collection.example/api/mcp-tokens/token%2F1');
     expect(requests[0]?.method).toBe('DELETE');
+  });
+
+  it('returns failure when the Worker origin is missing', async () => {
+    let error = '';
+
+    const code = await runTokenCli({
+      args: ['list'],
+      env: { ANTENNA_TOKEN: 'pbk_existing' },
+      fetchImpl: jsonFetch([], []),
+      writeError: (text) => {
+        error += text;
+      },
+    });
+
+    expect(code).toBe(1);
+    expect(error).toContain('ANTENNA_BASE_URL');
   });
 
   it('returns failure when auth env is missing', async () => {

@@ -35,10 +35,18 @@ placed in signal configuration.
 ```sh
 cp apps/worker/.dev.vars.example apps/worker/.dev.vars
 openssl rand -hex 32
+openssl rand -hex 32
 ```
 
-Use `http://localhost:8787` as the authorised JavaScript origin and
-`http://localhost:8787/api/auth/callback/google` as the local Google redirect.
+Put the two generated values in `BETTER_AUTH_SECRET` and `ENCRYPTION_KEY`, and
+the Google client in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Sign-in
+fails until all four are set. Use `http://localhost:8787` as the authorised
+JavaScript origin and `http://localhost:8787/api/auth/callback/google` as the
+local Google redirect.
+
+`BYPASS_AUTH=1` is the alternative for local work without a Google client: every
+request becomes the fixed user `e2e@test.local`, with sign-in and the access
+lists skipped. It has no effect when `NODE_ENV` is `production`.
 
 ## Deployment
 
